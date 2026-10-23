@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="hr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d97706"><title>Evidencija sati</title>
+<style>
+:root{--pu:#7c3aed;--gy:#52525b;--rd:#dc2626;--rdx:#fff;--yl:#eab308;--gr:#16a34a;--grx:#fff;--sh:#2563eb;--shx:#fff;--bg:#f5f5f2;--card:#fff;--tx:#1d1d1b;--mu:#6b6b66;--ac:#d97706;--bd:#dcdcd6;--ok:#15803d;--er:#b91c1c;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--pu:#8b5cf6;--gy:#71717a;--rd:#f87171;--rdx:#2a0a0a;--yl:#facc15;--gr:#4ade80;--grx:#052e16;--sh:#60a5fa;--shx:#0b1220;--bg:#171716;--card:#242422;--tx:#f0f0ec;--mu:#a3a39c;--bd:#3a3a37;--ok:#4ade80;--er:#f87171;color-scheme:dark}}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:720px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px 40px}
+h1{font-size:20px;margin:6px 0 2px}h2{font-size:16px;margin:18px 0 8px}.mu{color:var(--mu);font-size:13px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--mu);margin:10px 0 4px}
+input,select{width:100%;padding:12px;font:inherit;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+.big{width:100%;margin-top:14px;padding:14px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-weight:700}
+.sm{padding:9px 12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;font-size:14px}
+.sm.pri{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+.x{color:var(--er);background:var(--bg);border:1px solid var(--bd);border-radius:10px;font-size:24px;line-height:1;width:46px;height:46px;padding:0}
+.x.e{color:var(--ac)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd)}.row:last-child{border:0}
+.dr{padding:9px 0;border-bottom:1px solid var(--bd)}.dr:last-child{border:0}.dt{overflow-wrap:anywhere}.ds{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:6px}
+.row>span:last-child{display:flex;gap:8px;flex-shrink:0}.row>div{min-width:0}
+.tabs{display:flex;gap:6px;margin:12px 0}.tabs button{flex:1;padding:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;font-weight:600}.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.msg{font-size:14px;margin-top:8px;min-height:18px}.wrap{overflow-x:auto}.hide{display:none!important}.fl{display:flex;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:480px}th,td{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{color:var(--mu)}.n{text-align:right}
+td.pos{color:var(--ok)}td.neg{color:var(--er)}
+.note{font-size:13px;color:var(--mu);margin:-4px 0 8px}
+#dlg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+#dlg .card{width:100%;max-width:380px;margin:0}
+#note{position:fixed;left:14px;right:14px;bottom:20px;z-index:60;margin:0;color:var(--er)}
+@media print{.tabs,.noprint,button{display:none!important}}
+.sh{border-top:5px solid var(--sh)}.shh{font-size:18px;font-weight:800;letter-spacing:.08em;color:var(--sh);margin-bottom:2px}
+#spremi{background:var(--sh);color:var(--shx)}
+.big:disabled{opacity:.45;cursor:not-allowed}
+.gr{border-top:5px solid var(--gr)}.grh{font-size:18px;font-weight:800;letter-spacing:.08em;color:var(--gr);margin-bottom:2px}
+.gt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.gt button{padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font-weight:600}
+.gt button.on{background:var(--gr);color:var(--grx);border-color:var(--gr)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.tile{min-height:110px;border:0;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:.04em;padding:12px;line-height:1.2;box-shadow:0 2px 0 rgba(0,0,0,.12)}
+.t-sh{background:var(--sh);color:var(--shx)}.t-go{background:var(--pu);color:#fff}.t-go2{background:var(--rd);color:var(--rdx)}.t-sl{background:var(--yl);color:#1a1500}.t-iz{background:var(--gr);color:var(--grx)}
+.t-iz2{background:var(--sh);color:var(--shx)}.t-gr2{background:var(--gr);color:var(--grx)}.t-st{background:var(--pu);color:#fff}.t-ps{background:var(--gy);color:#fff}.t-zh{background:#0d9488;color:#fff}.t-po{background:#db2777;color:#fff}.t-ob{background:#ea580c;color:#fff}
+.rdy{border-top:5px solid var(--yl)}#goc{border-top:5px solid var(--pu)}#szc{border-top:5px solid var(--yl)}
+.offpg{display:none!important}
+#hm{padding-bottom:64px}
+#upb{position:fixed;right:calc(14px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));width:46px;height:46px;border-radius:50%;border:0;background:var(--sh);color:var(--shx);font-size:22px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.25);z-index:40;padding:0}
+.upute h3{margin:18px 0 6px;font-size:16px}.upute h3:first-of-type{margin-top:6px}.upute ul,.upute ol{margin:4px 0 4px 20px;padding:0}.upute li{margin:4px 0;line-height:1.45}.upute ul ul{margin-top:4px}
+.ux{display:inline-block;position:relative;min-width:26px;padding:2px 4px;text-align:center;border:1px solid var(--bd);border-radius:6px;font-weight:700;font-size:13px;margin-right:2px}
+.cal{margin-top:4px}.calh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.calh button{padding:6px 14px;font-size:18px}
+.calg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.calg .wd{text-align:center;font-size:12px;color:var(--mu);font-weight:600}
+.calg button{padding:9px 0;border:1px solid var(--bd);border-radius:9px;background:var(--card);color:var(--tx);font-weight:600;font-size:15px;position:relative;min-width:0}
+.calg button.wk{color:var(--mu)}.calg button.fut{opacity:.55}.calg button.hol{text-decoration:underline}
+.calg button.miss{background:rgba(220,38,38,.16);border-color:var(--er);color:var(--er)}
+.calg button.has::after{content:"";position:absolute;left:50%;bottom:3px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--ok)}
+.calg button.sld{border:2px solid var(--yl)}.calg button.sld::after,.calg button.god::after{display:none}
+.calg button.god{border:2px solid var(--pu)}.calg button.god::before{content:"G";position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:34px;font-weight:900;color:var(--pu);opacity:1;line-height:1;pointer-events:none;z-index:0}
+.calg button.sld::before{content:"S";position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:34px;font-weight:900;color:var(--yl);opacity:1;line-height:1;pointer-events:none;z-index:0}
+.calg button{isolation:isolate}.calg button b{position:relative;z-index:1;font-weight:700}
+.calg button.tod{border-width:2px;border-color:var(--sh)}.calg button.sel{background:var(--sh);border-color:var(--sh);color:var(--shx);opacity:1}
+.calk{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--mu);margin-top:6px}.calk i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.logo{display:block;height:46px;width:auto;margin:6px 0 10px}
+</style></head><body><main>
+<img class="logo" src="/logo.png" alt="Logo tvrtke">
+<!--LOGIN--><section id="login" class="card hide" style="margin-top:40px">
+ <h1>Evidencija radnog vremena</h1><div class="mu">Prijavite se svojim korisničkim imenom.</div>
+ <label for="lu">Korisničko ime</label><input id="lu" autocomplete="username" autocapitalize="none">
+ <label for="lp">Lozinka</label><input id="lp" type="password" autocomplete="current-password">
+ <button class="big" id="lb">Prijava</button><div class="msg" id="lm" style="color:var(--er)"></div>
+</section><!--/LOGIN-->
+<div id="app" class="hide">
+ <div class="fl" id="hdr" style="justify-content:space-between;align-items:flex-start"><div><h1>Evidencija radnog vremena</h1><div class="mu" id="who"></div></div><span class="fl"><button class="sm" id="pw">Lozinka</button><button class="sm" id="out">Odjava</button></span></div>
+ <div class="fl hide" id="nav" style="justify-content:space-between;align-items:center;margin-bottom:10px"><h1 id="navt" style="margin:0"></h1><button class="sm" id="home" aria-label="Početna stranica" title="Početna" style="padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button></div>
+ <div class="card" id="fond" style="margin-top:10px"></div>
+ <div id="odl"></div>
+ <div class="card hide" id="obv" style="border-color:var(--ac)"></div>
+ <div id="por"></div>
+ <div id="snw"></div>
+ <div class="tabs" id="tabs"></div>
+ <section id="v-unos">
+  <div id="hm" class="pg">
+   <div class="tiles">
+    <button class="tile t-sh" data-pg="sh">ŠIHTERICA</button><button class="tile t-go" data-pg="go">GODIŠNJI</button>
+    <button class="tile t-sl" data-pg="sl">SLOBODNI DAN</button><button class="tile t-iz" data-pg="iz">IZVJEŠTAJI</button>
+   </div>
+  </div>
+  <div id="p-sh" class="pg hide">
+  <div class="card sh">
+   <div class="shh">ŠIHTERICA</div>
+   <label for="datum">Datum: <b id="cals" style="color:var(--tx)"></b></label><input type="date" id="datum" class="hide"><div id="cal" class="cal"></div>
+   <label for="vrsta">Vrsta upisa</label><select id="vrsta"></select><div class="mu" id="vn"></div>
+   <div id="grw"><label for="grs">Gradilište</label><select id="grs"></select><button type="button" class="sm" id="srb" style="margin-top:8px">Zahtjev za novo gradilište</button><div id="srs"></div></div>
+   <label for="sati" id="sl">Odrađeni sati</label><input type="number" id="sati" inputmode="decimal" min="0" max="24" step="0.5" value="0">
+   <div id="wrk"><label for="obrok">Topli obrok (obavezno)</label><select id="obrok"></select><div class="mu" id="obn" style="margin-top:6px"></div>
+   <label for="teren">Terenski dodatak (neobavezno)</label><select id="teren"><option value="0">Ne</option><option value="1">Da</option></select></div>
+   <button class="big" id="spremi">Spremi unos</button><button class="sm hide" id="otkazi" style="width:100%;margin-top:8px">Odustani od izmjene</button><div class="msg" id="msg"></div>
+   <button class="sm" id="mojib" style="width:100%;margin-top:10px">Moji unosi u mjesecu</button>
+   <div id="mojiw" class="hide" style="margin-top:10px"><div class="mu" id="mojit" style="margin-bottom:4px"></div><div id="moji"></div></div>
+  </div>
+  <div class="card"><label for="zmj">Mjesec</label><input type="month" id="zmj"><div class="mu" id="zst" style="margin-top:8px"></div><div class="msg hide" id="zmd" style="color:var(--er);margin:8px 0"></div>
+   <button class="big" id="zavrsi">ZAVRŠI UNOS</button><button class="sm" id="pir" style="width:100%;margin-top:10px">Pregledaj izvještaj</button><div id="pirp" class="hide wrap" style="margin-top:10px"></div><button class="sm hide" id="zod" style="width:100%;margin-top:10px">Odustani od zahtjeva za ponovno otvaranje</button><button class="sm hide" id="zah" style="width:100%;margin-top:10px">Zatraži ponovno otvaranje mjeseca</button></div>
+  </div>
+  <div id="p-go" class="pg hide">
+  <div class="card hide" id="goc"><b>Godišnji odmor</b>
+   <div class="fl" style="gap:24px;margin-top:8px"><div><div class="mu">Ukupni godišnji odmor <span id="goy"></span></div><b id="gou" style="font-size:18px"></b></div><div><div class="mu">Iskorišteni godišnji odmor</div><b id="goi" style="font-size:18px"></b></div></div>
+   <div class="mu" id="gop" style="margin-top:4px"></div>
+   <div style="margin-top:12px"><b>Zahtjev za godišnji odmor</b>
+    <label for="god">Datum (od)</label><input type="date" id="god">
+    <label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="checkbox" id="gov" style="width:auto"> Više dana (od datuma do datuma)</label>
+    <div id="gok" class="hide"><label for="gdo">Do datuma</label><input type="date" id="gdo"></div>
+    <label for="gor">Razlog (neobavezno)</label><input id="gor" maxlength="200">
+    <button class="sm pri" id="gob" style="margin-top:10px">Pošalji zahtjev</button></div>
+   <div id="gos" style="margin-top:8px"></div></div>
+  </div>
+  <div id="p-sl" class="pg hide">
+  <div class="card rdy" id="slc"></div>
+  <div class="card hide" id="szc"><b>Zahtjev za Slobodan dan</b>
+   <div class="mu">Nemate 8 sati u polju Sati za slobodan dan. Zatražite odobrenje administratora.</div>
+   <div id="szf"><label for="szd">Datum slobodnog dana</label><input type="date" id="szd"><label for="szr">Razlog (neobavezno)</label><input id="szr" maxlength="200"><button class="sm pri" id="szb" style="margin-top:10px">Pošalji zahtjev</button></div>
+   <div id="szs" style="margin-top:8px"></div></div>
+  </div>
+  <div id="p-up" class="pg hide"><div class="card upute">
+   <p class="mu">Upute za radnike · ažurirano 23.10.2026.</p>
+   <h3>Prijava</h3>
+   <ul><li>Otvorite adresu aplikacije koju ste dobili e-mailom i upišite korisničko ime i lozinku.</li>
+   <li>Nakon prve prijave promijenite lozinku: na početnoj stranici gumb <b>Lozinka</b>.</li>
+   <li>Aplikaciju dodajte na početni zaslon mobitela: Chrome → izbornik ⋮ → <i>Dodaj na početni zaslon</i>; iPhone (Safari) → <i>Dijeli</i> → <i>Dodaj na početni zaslon</i>.</li>
+   <li>Ako zaboravite lozinku, javite se administratoru – on vam može poslati nove podatke za prijavu.</li></ul>
+   <h3>Početna stranica</h3>
+   <ul><li><b>Fond sati</b> – koliko sati treba odraditi u mjesecu (radni dani × 8 h) i koliko ste upisali.</li>
+   <li><b>Sati za slobodan dan</b> – vaše trenutno stanje (vidi dio Slobodni dan).</li>
+   <li><b>Obavijesti</b> – odluke administratora o vašim zahtjevima. Vide se do kraja dana na koji se odnose; administrator vidi da ste ih pročitali čim otvorite početnu stranicu.</li>
+   <li><b>Novo gradilište</b> – kad administrator doda novo gradilište, obavijest se prikaže pri prvom sljedećem otvaranju aplikacije.</li>
+   <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada.</li>
+   <li>Četiri gumba vode na stranice <b>ŠIHTERICA</b>, <b>GODIŠNJI</b>, <b>SLOBODNI DAN</b> i <b>IZVJEŠTAJI</b>. Gumb s kućicom gore desno vraća vas na početnu.</li></ul>
+   <h3>ŠIHTERICA – dnevni unos</h3>
+   <ol><li>U kalendaru odaberite dan.
+     <ul><li><span class="ux" style="background:rgba(220,38,38,.16);border-color:var(--er);color:var(--er)">15</span> crveno – radni dan bez unosa (obavezno ga je upisati),</li>
+     <li><span class="ux">16<i style="position:absolute;bottom:2px;left:50%;margin-left:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--ok)"></i></span> zelena točka – dan ima unos,</li>
+     <li><span class="ux" style="border:2px solid var(--yl)">S</span> žuto S – slobodan dan, <span class="ux" style="border:2px solid var(--pu);color:var(--pu)">G</span> ljubičasto G – godišnji odmor, podcrtano – državni praznik.</li></ul></li>
+   <li>Odaberite <b>Vrstu upisa</b>: Redovan rad, Bolovanje, Godišnji odmor, Slobodan dan, Praznik ili Rad na praznik.
+     <ul><li>Bolovanje, godišnji odmor i praznik upisuju se automatski s 8 h, slobodan dan s 0 h.</li>
+     <li>Praznik i Rad na praznik mogu se odabrati samo na dan državnog praznika.</li>
+     <li>Godišnji odmor može se odabrati samo za dane koje je administrator odobrio.</li>
+     <li>Rad se ne može upisati za buduće dane.</li></ul></li>
+   <li>Odaberite <b>gradilište</b> s popisa. Ako ga nema na popisu, kliknite <b>Zahtjev za novo gradilište</b>, upišite opisni naziv (npr. „Kuća Horvat, Ulica 5, Split“) i pošaljite. Kad ga administrator doda, na početnoj stranici pojavit će se obavijest i gradilište će biti na popisu. Od zahtjeva možete odustati dok čeka odgovor.</li>
+   <li>Upišite <b>odrađene sate</b>.</li>
+   <li><b>Topli obrok</b> je obavezan za redovan rad i rad na praznik (samo jednom na dan – ako ste isti dan radili na dva gradilišta, drugi put se ne traži).</li>
+   <li>Po potrebi označite <b>terenski dodatak</b> i kliknite <b>Spremi</b>.</li></ol>
+   <ul><li><b>Moji unosi</b> – popis svih unosa u mjesecu. Olovka ✎ otvara unos za izmjenu, ✕ ga briše.</li>
+   <li><b>Pregledaj izvještaj</b> – tablica sati po danima za odabrani mjesec.</li>
+   <li><b>ZAVRŠI UNOS</b> – kad su upisani svi radni dani u mjesecu, završite mjesec. Ako neki dan nedostaje, aplikacija ga navodi. Nakon završetka unosi se više ne mogu mijenjati.</li>
+   <li>Ako trebate ispraviti završeni mjesec, pošaljite <b>zahtjev za ponovno otvaranje</b>; dok administrator ne odgovori, možete od njega i odustati.</li></ul>
+   <h3>GODIŠNJI</h3>
+   <ul><li>Vidite ukupni broj dana godišnjeg odmora, iskorištene i preostale dane.</li>
+   <li>Zahtjev: odaberite datum (ili označite <i>Više dana</i> i upišite datum do), po želji razlog, i kliknite <b>Pošalji zahtjev</b>. Računaju se samo radni dani.</li>
+   <li>Kad administrator odobri, na te dane u šihterici odaberite vrstu <b>Godišnji odmor</b>.</li>
+   <li>Dok zahtjev čeka odgovor, možete kliknuti <b>Odustani od zahtjeva</b>.</li></ul>
+   <h3>SLOBODNI DAN</h3>
+   <ul><li>Svaki dan s 9 ili više sati rada donosi 1 sat za slobodan dan. Stanje kreće od nule svakog 1. u mjesecu; administrator može upisati prijenos iz prošlog mjeseca.</li>
+   <li>S 8 ili više sati sami u šihterici odaberete vrstu <b>Slobodan dan</b> – oduzima se 8 sati.</li>
+   <li>S manje od 8 sati pošaljite <b>Zahtjev za slobodan dan</b>. Ako ga administrator prihvati, za taj datum možete odabrati Slobodan dan (stanje sati tada može biti i negativno). Od zahtjeva možete odustati dok čeka odgovor.</li></ul>
+   <h3>IZVJEŠTAJI</h3>
+   <ul><li>Odaberite razdoblje (mjesec ili cijela godina) i karticu: Radni sati, Slobodni dani, Bolovanje ili Godišnji odmor.</li>
+   <li><b>Spremi kao PDF</b> sprema izvještaj za odabrano razdoblje na vaš uređaj (Android: Preuzimanja; iPhone: Dijeli → Spremi u Datoteke).</li></ul>
+   <h3>Odjava i pomoć</h3>
+   <ul><li>Na početnoj stranici gumb <b>Odjava</b>. Na tuđem uređaju se uvijek odjavite.</li>
+   <li>Za sve probleme s prijavom ili unosima javite se administratoru.</li></ul>
+  </div></div>
+  <div id="p-iz" class="pg hide">
+  <div class="card gr" id="izc"><div class="grh">IZVJEŠTAJI</div>
+   <div class="mu">Pregled vaših prošlih mjeseci.</div>
+   <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label for="izp">Razdoblje</label><select id="izp"><option value="m">Mjesec</option><option value="y">Cijela godina</option></select></div><div><label for="izm">Mjesec</label><input type="month" id="izm"></div></div>
+   <div class="gt" id="izt"><button data-t="h" class="on">Radni sati</button><button data-t="s">Slobodni dani</button><button data-t="b">Bolovanje</button><button data-t="g">Godišnji odmor</button></div>
+   <div id="izo" class="wrap"></div>
+   <button class="big" id="izpdf" style="margin-top:12px">Spremi kao PDF</button><div class="mu" style="margin-top:4px">PDF sadrži radne sate, slobodne dane, bolovanje i godišnji odmor za odabrano razdoblje.</div></div>
+  </div>
+ </section>
+ <section id="v-adm" class="hide">
+  <div id="srw" class="hide"><h2 id="srh">Zahtjevi za novo gradilište</h2><div class="card" id="sr"></div></div>
+  <div id="sqw" class="hide"><h2 id="sqh">Zahtjevi za slobodan dan</h2><div class="card" id="sq"></div></div>
+  <div id="gqw" class="hide"><h2 id="gqh">Zahtjevi za godišnji odmor</h2><div class="card" id="gq"></div></div>
+  <div id="rqw" class="hide"><h2 id="rqh">Zahtjevi za otvaranje mjeseca</h2><div class="card" id="rq"></div></div>
+  <div id="ahm" class="pg"><div class="tiles">
+   <button class="tile t-iz2" data-pg="aiz">IZVJEŠTAJI</button><button class="tile t-sl" data-pg="asl">SLOBODNI DANI</button>
+   <button class="tile t-go2" data-pg="ago">GODIŠNJI ODMOR</button><button class="tile t-gr2" data-pg="agr">GRADILIŠTA</button>
+   <button class="tile t-po" data-pg="apo">OBAVIJESTI RADNICIMA</button><button class="tile t-zh" data-pg="azh">ODOBRENI ZAHTJEVI</button><button class="tile t-st" data-pg="ast">STATISTIKA</button><button class="tile t-ob" data-pg="aob">TOPLI OBROK</button>
+   <button class="tile t-ps" data-pg="aps">POSTAVKE</button>
+  </div></div>
+  <div id="af" class="pg hide">
+  <div class="card"><label for="rm">Mjesec</label><input type="month" id="rm">
+   <div class="grid3"><div><label for="fw">Radnik</label><select id="fw"></select><select id="fwm" aria-label="Koje radnike prikazati" style="margin-top:6px"><option value="a">Prikaži aktivne radnike</option><option value="s">Prikaži sve radnike (i izbrisane)</option></select></div><div><label for="fs">Gradilište</label><select id="fs"></select></div><div><label for="fv">Vrsta upisa</label><select id="fv"></select></div></div>
+   <div class="fl noprint" style="margin-top:12px;flex-wrap:wrap"><button class="sm pri" id="xl">Excel</button><button class="sm" id="c1">CSV sažetak</button><button class="sm" id="c3">CSV po danima</button><button class="sm" id="c4">CSV po gradilištima</button><button class="sm" id="c5">CSV slobodni dani</button><button class="sm" id="c2">CSV svi unosi</button><button class="sm" id="pr">Ispiši</button><button class="sm" id="em">Pošalji e-mailom</button></div><div class="msg" id="am"></div>
+   <div class="mu">Filteri vrijede za tablice ispod i za sve izvoze.</div></div>
+  </div>
+  <div id="p-aiz" class="pg hide">
+  <h2>Izvještaj po radniku</h2><div class="note" id="nn"></div><div class="card wrap" id="izv"></div>
+  <h2>Radnici bez unosa</h2><div class="note">Radni dani (bez vikenda i blagdana) do jučer, za koje radnik nema nijedan unos. Radnici koji su završili mjesec nisu na popisu.</div><div class="card" id="mis"></div>
+  <h2>Ukupno sati po danu</h2><div class="note">Zbroj svih sati radnika na taj datum, i s različitih gradilišta.</div><div class="card wrap" id="dan"></div>
+  <h2>Svi unosi u mjesecu</h2><div class="card wrap" id="svi"></div>
+  </div>
+  <div id="p-asl" class="pg hide">
+  <h2>Slobodni dani</h2><div class="card wrap" id="slb"></div>
+  <h2>Sati za slobodan dan i odobrenja</h2><div class="note">Trenutni mjesec. Prikazani su radnici s 5 ili više sati za slobodan dan i radnici s odobrenim zahtjevom.</div><div class="card wrap" id="slu"></div>
+  </div>
+  <div id="p-ago" class="pg hide">
+  <h2 id="gah">Godišnji odmor</h2><div class="card" id="goa">
+   <div id="gaq"></div>
+   <div class="mu" style="margin:10px 0 4px">Ukupni godišnji odmor i početno iskorišteno stanje upisuje administrator za odabranu godinu (kao u polju Mjesec gore). Dalje se iskorišteni dani zbrajaju automatski.</div>
+   <div class="wrap" id="gat"></div>
+   <div style="margin-top:14px"><b>Odobri godišnji odmor za više radnika</b>
+    <div id="gag" style="margin-top:6px"></div>
+    <label for="ga1">Datum (od)</label><input type="date" id="ga1">
+    <label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="checkbox" id="gam" style="width:auto"> Više dana (od datuma do datuma)</label>
+    <div id="gak" class="hide"><label for="ga2">Do datuma</label><input type="date" id="ga2"></div>
+    <label for="gan">Napomena (neobavezno)</label><input id="gan" maxlength="200">
+    <button class="sm pri" id="gab" style="margin-top:10px">Odobri odabranim radnicima</button><div class="msg" id="gam2"></div></div></div>
+  </div>
+  <div id="p-agr" class="pg hide">
+  <h2>Po gradilištima</h2><div class="card wrap" id="sit"></div>
+  <h2>Sati po gradilištima i mjesecima</h2><div class="card" id="shc">
+   <label for="shp">Razdoblje</label><select id="shp"><option value="y">Odabrana godina</option><option value="all">Ukupno (sve godine)</option></select>
+   <label for="shs">Gradilište</label><select id="shs"></select>
+   <div class="fl noprint" style="margin-top:10px;flex-wrap:wrap"><button class="sm pri" id="shx">Excel</button><button class="sm" id="shc2">CSV</button></div>
+   <div id="shh" style="margin-top:10px"></div></div>
+  </div>
+  <div id="p-ast" class="pg hide">
+  <h2>Statistika</h2><div class="card" id="stc"><label for="stm">Razdoblje</label><select id="stm"><option value="m">Odabrani mjesec</option><option value="y">Cijela godina</option></select>
+   <div class="mu" id="stn" style="margin-top:6px"></div><div id="st" style="margin-top:8px"></div></div>
+  </div>
+  <div id="p-aob" class="pg hide"><div class="card">
+   <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label for="om">Mjesec</label><input type="month" id="om"></div><div><label for="or">Restoran</label><select id="or"></select></div></div>
+   <label for="ow">Radnik</label><select id="ow"></select><select id="owm" aria-label="Koje radnike prikazati" style="margin-top:6px"><option value="a">Prikaži aktivne radnike</option><option value="s">Prikaži sve radnike (i izbrisane)</option></select>
+   <div class="mu" style="margin-top:6px">Prazan mjesec prikazuje sve mjesece. Radnik koji nije odabrao topli obrok (bez obroka) nije na popisu.</div></div>
+   <h2>Po restoranima</h2><div class="card wrap" id="obr"></div>
+   <h2>Po radnicima: koje dane i u kojem restoranu</h2><div class="card wrap" id="obw"></div>
+   <h2>Svi obroci</h2><div class="card wrap" id="obs"></div>
+  </div>
+  <div id="p-azh" class="pg hide"><div class="card">
+   <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label for="zy">Godina</label><select id="zy"></select></div><div><label for="zt">Vrsta</label><select id="zt"><option value="">Sve vrste</option><option value="sl">Slobodan dan</option><option value="go">Godišnji odmor</option><option value="mj">Ponovno otvaranje mjeseca</option><option value="gr">Novo gradilište</option></select></div></div>
+   <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label for="zs">Status</label><select id="zs"><option value="">Svi</option><option value="approved">Prihvaćeno</option><option value="rejected">Odbijeno</option><option value="open">Na čekanju</option></select></div><div><label for="zw">Radnik</label><select id="zw"></select></div></div>
+   <div class="mu" id="zn" style="margin-top:6px"></div></div>
+   <div class="card" id="zl"></div>
+  </div>
+  <div id="p-apo" class="pg hide"><div class="card">
+   <label for="pt">Tekst poruke</label><textarea id="pt" rows="5" maxlength="2000" style="width:100%;box-sizing:border-box;font:inherit;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)" placeholder="Npr. Sutra je sastanak u 7 h na gradilištu…"></textarea>
+   <div style="margin-top:10px"><b>Primatelji</b></div>
+   <label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="radio" name="pk" value="all" checked style="width:auto"> Svi radnici</label>
+   <label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="radio" name="pk" value="sel" style="width:auto"> Odabrani radnici (jedan ili više)</label>
+   <div id="pgw" class="hide" style="margin:6px 0 0 24px"><div id="pg"></div></div>
+   <button class="big" id="ps" style="margin-top:12px">Pošalji poruku</button><div class="msg" id="pm"></div>
+   <div class="mu" style="margin-top:6px">Poruka se radniku prikazuje na početnoj stranici dok ne potvrdi da ju je pročitao.</div></div>
+   <h2>Poslane poruke</h2><div id="pl"></div>
+  </div>
+  <div id="p-aps" class="pg hide">
+  <h2>Gradilišta (popis za radnike)</h2><div class="card"><div class="fl"><input id="ns" placeholder="Naziv gradilišta"><button class="sm" id="as">Dodaj</button></div><div id="ls"></div></div>
+  <h2>Opcije toplog obroka</h2><div class="card"><div class="fl"><input id="nm" placeholder="NAZIV OPCIJE (NPR. RESTORAN 4)" autocapitalize="characters" style="text-transform:uppercase"><button class="sm" id="am2">Dodaj</button></div><div id="lm2"></div></div>
+  <h2>Korisnici</h2><div class="card"><div id="lu2"></div><details id="lu3w" class="hide" style="margin-top:12px"><summary style="cursor:pointer;font-weight:600" id="lu3s"></summary><div class="mu" style="margin:6px 0">Izbrisani korisnici se ne mogu prijaviti, ali se još nude u filterima uz izbor „svi radnici (i izbrisani)“. Trajno obrisan korisnik više se ne nudi ni u jednom filteru; njegovi uneseni podaci ostaju u evidenciji i izvještajima.</div><div id="lu3"></div></details>
+   <label for="un">Ime i prezime</label><input id="un"><label for="uu">Korisničko ime</label><input id="uu" autocapitalize="none"><label for="up">Lozinka (min. 6 znakova)</label><input id="up">
+   <label for="ur">Uloga</label><select id="ur"><option value="user">Korisnik</option><option value="admin">Administrator</option></select>
+   <label for="ue">E-mail (za slanje login podataka; administratorima i za izvještaje)</label><input id="ue" type="email" autocapitalize="none"><button class="big" id="ua">Dodaj korisnika</button><div class="msg" id="um"></div></div>
+  <h2>E-mail i adresa aplikacije</h2><div class="card">
+   <div class="mu">Potrebno za gumb „Pošalji login podatke“ i mjesečni izvještaj e-mailom. Podaci su kod vašeg pružatelja e-pošte (npr. Microsoft 365: smtp.office365.com, port 587; Gmail: smtp.gmail.com, port 587 uz lozinku za aplikacije).</div>
+   <label for="sa">Adresa aplikacije (link u e-mailu)</label><input id="sa" type="url" placeholder="https://sati.vasadomena.hr" autocapitalize="none"><div class="mu" id="sad"></div>
+   <div class="grid3" style="grid-template-columns:2fr 1fr;gap:8px"><div><label for="sh">SMTP server</label><input id="sh" autocapitalize="none" placeholder="smtp.office365.com"></div><div><label for="sp">Port</label><input id="sp" type="number" inputmode="numeric" value="587"></div></div>
+   <label style="display:flex;align-items:center;gap:8px;color:var(--tx);margin-top:8px"><input type="checkbox" id="ss" style="width:auto"> SSL od početka (port 465)</label>
+   <label for="su">Korisničko ime (e-mail adresa)</label><input id="su" autocapitalize="none">
+   <label for="sw">Lozinka</label><input id="sw" type="password" autocomplete="new-password">
+   <label for="sf">Pošiljatelj (ako je drugačiji)</label><input id="sf" autocapitalize="none" placeholder="Evidencija sati <sati@vasadomena.hr>">
+   <div class="fl" style="margin-top:12px;flex-wrap:wrap"><button class="sm pri" id="sv">Spremi</button><button class="sm" id="st2">Pošalji probni e-mail meni</button></div><div class="msg" id="sm"></div></div>
+  </div>
+ </section>
+</div></main>
+<div id="dlg" class="hide"><div class="card"><div id="dtx" style="font-weight:600"></div><input id="din" class="hide" style="margin-top:10px"><div class="fl" style="margin-top:14px"><button class="sm" id="dno" style="flex:1">Odustani</button><button class="big" id="dyes" style="flex:1;margin-top:0">U redu</button></div></div></div>
+<div id="note" class="card hide"></div>
+<button id="upb" class="hide" aria-label="Upute za korištenje" title="Upute za korištenje">?</button>
+<script src="/core.js"></script>
+<script>
+const $=i=>document.getElementById(i),E=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML};
+let poruke=[],sitereq=[],snShow=[];let me,entries=[],closed=[],reqs=[],slreq=[],gorq=[],obav=[],go=null,godatumi=[],prij={},users=[],rep=null,tab='unos',editId=null;
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+/*API*/async function api(m,u,b){const r=await fetch('/api/'+u,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
+ const j=await r.json().catch(()=>({}));if(r.status===401&&u!=='login'){showLogin();throw new Error('Prijavite se.')}if(!r.ok)throw new Error(j.e||'Greška');return j}/*/API*/
+const say=(id,t,ok)=>{const e=$(id);e.style.color=ok?'var(--ok)':'var(--er)';e.textContent=t;setTimeout(()=>{if(e.textContent===t)e.textContent=''},5000)};
+let nt=0;const toast=t=>{const n=$('note');n.textContent=t;n.classList.remove('hide');clearTimeout(nt);nt=setTimeout(()=>n.classList.add('hide'),5000)};
+function dlgOpen(t,inp,v){return new Promise(res=>{$('dtx').textContent=t;const i=$('din');i.value=v||'';i.classList.toggle('hide',!inp);$('dlg').classList.remove('hide');if(inp)i.focus();
+ const done=v=>{$('dlg').classList.add('hide');res(v)};$('dyes').onclick=()=>done(inp?i.value:true);$('dno').onclick=()=>done(inp?null:false)})}
+const cf=t=>dlgOpen(t,0),pr=(t,v)=>dlgOpen(t,1,v);
+const showLogin=()=>{$('login').classList.remove('hide');$('app').classList.add('hide');$('upb').classList.add('hide');snShow=[]};
+async function load(){
+ try{me=await api('GET','me');const d=await api('GET','data');entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];if(me.role==='admin')users=await api('GET','users')}catch(e){return}
+ $('login').classList.add('hide');$('app').classList.remove('hide');draw();
+}
+const mine=()=>entries.filter(e=>e.uid===me.id);
+const mealTaken=(d,x)=>mine().some(e=>e.date===d&&e.meal&&e.id!==x);
+function opts(sel,list,first,last,extra){const v=sel.value,l=list.slice();if(extra&&!l.includes(extra))l.push(extra);
+ sel.innerHTML=(first||'')+l.map(o=>'<option>'+E(o)+'</option>').join('')+(last||'');if([...sel.options].some(o=>o.value===v))sel.value=v}
+const sn=r=>r.status==='open'?'':r.seen?'viđeno '+new Date(r.seen).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'nije viđeno';
+const chBtn=(r,k)=>{if(k==='gr')return '';const ev=k==='sl'?r.date:k==='go'?r.dates[0]:'';if(ev&&today()>ev)return '<span class="mu">odluka se više ne može mijenjati (datum je prošao)</span>';return '<button class="sm" data-ch="'+k+'|'+E(r.id)+'|'+(r.status==='approved'?'0':'1')+'">Promijeni u '+(r.status==='approved'?'odbijeno':'prihvaćeno')+'</button>'};
+const stTxt=r=>r.status==='approved'?'<b style="color:var(--ok)">prihvaćeno</b>':r.status==='rejected'?'<b style="color:var(--er)">odbijeno</b>':'<b>na čekanju</b>';
+const who=r=>r.status==='open'?'':(r.status==='approved'?'odobrio: ':'odbio: ')+(r.decidedBy?E((users.find(u=>u.id===r.decidedBy)||{}).name||'?'):'–')+(r.decided?' · '+new Date(r.decided).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'');
+const DI=(r,t,k,extra)=>'<div class="dr"><div class="dt"><b>'+E(r.name)+'</b> · '+t+extra+'</div><div class="ds">'+stTxt(r)+'<span class="mu">'+who(r)+'</span><span class="mu">'+sn(r)+'</span>'+chBtn(r,k)+'</div></div>';
+const DR=(l,k,t)=>'<div class="mu" style="margin-top:10px">Riješeno (prikazuje se do dana na koji se odnosi):</div>'+l.map(r=>DI(r,t(r),k,r.changed?' <span class="mu">(odluka izmijenjena)</span>':'')).join('');
+const NERAD=Core.NERAD,rd=n=>Math.round(n*100)/100,dm=d=>d.slice(8,10)+'.'+d.slice(5,7)+'.';
+function draw(){
+ $('who').textContent=me.name+(me.role==='admin'?' · administrator':'');
+ tab=me.role==='admin'?'adm':'unos';$('tabs').innerHTML='';
+ $('v-unos').classList.toggle('hide',tab!=='unos');$('v-adm').classList.toggle('hide',tab!=='adm');
+ {const ex=editId&&$('grs').value&&!me.sites.includes($('grs').value)?$('grs').value:'';opts($('grs'),ex?me.sites.concat([ex]):me.sites,'<option value="">– odaberite gradilište –</option>','')}
+ opts($('obrok'),me.meals,'<option value="">– odaberite topli obrok –</option>','');updMeal();fillVrste();
+ const zm=$('zmj').value,cl=closed.includes(me.id+'|'+zm);
+ const l=mine().filter(e=>e.date.slice(0,7)===zm).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:b.ts-a.ts);
+ $('moji').innerHTML=l.length?l.map((e,i)=>'<div class="row"><div><b>'+E(e.site||e.vrsta)+'</b><div class="mu">'+E(e.date)+' · '+E(e.hours)+' h · '+E(e.vrsta)+' · '+(e.meal?E(e.meal):'bez toplog obroka')+(e.teren?' · terenski dodatak':'')+'</div></div>'+(cl?'':'<span><button class="x e" data-e="'+i+'" aria-label="Uredi">✎</button><button class="x" data-d="'+i+'" aria-label="Obriši">✕</button></span>')+'</div>').join(''):'<span class="mu">Nema unosa u ovom mjesecu.</span>';
+ $('moji')._l=l;$('mojit').textContent='Unosi za '+zm.slice(5)+'.'+zm.slice(0,4)+'. (mjesec se mijenja u polju Mjesec ispod)';
+ const rq=reqs.filter(r=>r.month===zm).sort((a,b)=>b.ts-a.ts)[0];let t=cl?'Mjesec je završen ✓ – izmjene nisu moguće.':'Mjesec je otvoren.';
+ if(cl&&rq&&rq.status==='open')t+=' Zahtjev za ponovno otvaranje poslan je administratoru.';
+ else if(cl&&rq&&rq.status==='rejected')t+=' Zahtjev je odbijen'+(rq.note?': '+rq.note:'.');
+ else if(!cl&&rq&&rq.status==='approved')t+=' Administrator je ponovno otvorio mjesec.';
+ {const F=Core.fond(zm),up=rd(mine().filter(e=>e.date.slice(0,7)===zm).reduce((a,e)=>a+e.hours,0)),f1=n=>String(n).replace('.',',');
+  $('fond').classList.toggle('hide',me.role==='admin');
+  $('fond').innerHTML='<b>Fond sati za '+zm.slice(5)+'.'+zm.slice(0,4)+'.: '+f1(F.sati)+' h</b><div class="mu">'+F.dani+' radnih dana (pon–pet, praznici na radni dan uključeni) × '+F.dnevno+' h. Upisano: '+f1(up)+' h.</div><div style="margin-top:6px"><b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Prijenos iz prošlog mjeseca (upisuje administrator): '+f1(prij[me.id+'|'+zm]||0)+' h. Počinje od nule svakog 1. u mjesecu. Za Slobodan dan potrebno je barem 8 h; dan s 9 h rada ili više donosi 1 h.</div></div>'}
+{const mm=slreq.filter(r=>r.uid===me.id).sort((a,b)=>b.ts-a.ts),low=bankFor(zm)<8,ap=mm.filter(r=>r.status==='approved'&&!r.entryId),op=mm.filter(r=>r.status==='open'),rj=mm.filter(r=>r.status==='rejected').slice(0,1),dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.';
+  $('szc').classList.toggle('hide',me.role==='admin'||!(low||ap.length||op.length||rj.length));
+  $('szf').classList.toggle('hide',!low);if(!$('szd').value)$('szd').value=today();
+  $('szs').innerHTML=ap.map(r=>'<div style="color:var(--ok)"><b>Zahtjev za slobodan dan prihvaćen</b> ('+dd(r.date)+') – možete odabrati Slobodan dan za taj datum.</div>').join('')+op.map(r=>'<div class="mu" style="margin:6px 0">Zahtjev za '+dd(r.date)+' čeka odgovor administratora. <button class="sm" data-wd="slreq|'+E(r.id)+'">Odustani od zahtjeva</button></div>').join('')+rj.map(r=>'<div style="color:var(--er)">Zahtjev za '+dd(r.date)+' je odbijen'+(r.note?': '+E(r.note):'.')+'</div>').join('')}
+{const dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.',sp=r=>r.dates.length===1?dd(r.dates[0]):dd(r.dates[0])+' – '+dd(r.dates[r.dates.length-1])+' ('+r.dates.length+' dana)',mm=gorq.filter(r=>r.uid===me.id).sort((a,b)=>b.ts-a.ts);
+  $('goc').classList.toggle('hide',me.role==='admin'||!go);
+  if(go){$('goy').textContent='u '+go.year+'.';$('gou').textContent=f1(go.ukupno)+' dana';$('goi').textContent=f1(go.iskoristeno)+' dana';$('gop').textContent='Preostalo: '+f1(go.preostalo)+' dana';if(!$('god').value)$('god').value=today()}
+  $('gos').innerHTML=mm.filter(r=>r.status==='open').map(r=>'<div class="mu" style="margin:6px 0">Zahtjev za '+sp(r)+' čeka odgovor administratora. <button class="sm" data-wd="gorq|'+E(r.id)+'">Odustani od zahtjeva</button></div>').join('')+mm.filter(r=>r.status==='approved'&&r.dates.some(x=>godatumi.includes(x))).slice(0,3).map(r=>'<div style="color:var(--ok)">Odobreno: '+sp(r)+'</div>').join('')+mm.filter(r=>r.status==='rejected').slice(0,1).map(r=>'<div style="color:var(--er)">Zahtjev za '+sp(r)+' je odbijen'+(r.note?': '+E(r.note):'.')+'</div>').join('');
+  $('obv').classList.toggle('hide',!obav.length||me.role==='admin');
+  $('obv').innerHTML=obav.map(o=>'<div style="margin-bottom:6px"><b>Obavijest:</b> '+E(o.text)+'</div>').join('')+'<button class="sm pri" id="obok">U redu</button>'}
+ $('snw').innerHTML=me.role==='admin'?'':snShow.map(x=>'<div class="card" style="border-left:5px solid var(--gr)"><b>Administrator je dodao novo gradilište „'+E(x)+'“.</b><div class="mu">Sada ga možete odabrati u ŠIHTERICI.</div></div>').join('');
+ if(me.role!=='admin'){const dd=x=>new Date(x).toLocaleDateString('hr-HR');$('srs').innerHTML=sitereq.filter(r=>r.status==='open').map(r=>'<div class="mu" style="margin:6px 0">Zahtjev za gradilište „'+E(r.text)+'“ ('+dd(r.ts)+') čeka administratora. <button class="sm" data-wd="sitereq|'+E(r.id)+'">Odustani od zahtjeva</button></div>').join('')}
+ $('por').innerHTML=me.role==='admin'?'':poruke.map(x=>'<div class="card" style="border-left:5px solid #db2777"><div class="mu">Poruka administratora · '+E(x.fromName)+' · '+new Date(x.ts).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</div><div style="white-space:pre-wrap;margin:6px 0 10px;font-size:16px">'+E(x.text)+'</div><button class="sm pri" data-prd="'+E(x.id)+'">Pročitao/la sam</button></div>').join('');
+{const dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.',t0=today(),L=[];
+ slreq.filter(r=>r.uid===me.id&&r.status!=='open').forEach(r=>{if(r.date>=t0)L.push({k:'sl',r,end:r.date,t:'Zahtjev za slobodan dan ('+dd(r.date)+')'})});
+ gorq.filter(r=>r.uid===me.id&&r.status!=='open'&&r.source!=='admin').forEach(r=>{const e=r.dates[r.dates.length-1];if(e>=t0)L.push({k:'go',r,end:e,t:'Zahtjev za godišnji odmor ('+(r.dates.length===1?dd(r.dates[0]):dd(r.dates[0])+' – '+dd(e)+', '+r.dates.length+' dana')+')'})});
+ reqs.filter(r=>r.uid===me.id&&r.status!=='open'&&today()===new Date(r.decided).toLocaleDateString('sv')).forEach(r=>L.push({k:'mj',r,end:today(),t:'Zahtjev za ponovno otvaranje mjeseca '+r.month}));
+ L.sort((a,b)=>a.end<b.end?-1:1);
+ $('odl').innerHTML=me.role==='admin'||!L.length?'':L.map(x=>{const ok=x.r.status==='approved',c=ok?'ok':'er';return '<div class="card" style="border-left:5px solid var(--'+c+')">'+(x.r.changed?'<div style="font-weight:700;margin-bottom:4px">Administrator je izmijenio odluku.</div>':'')+'<b>'+E(x.t)+': <span style="color:var(--'+c+')">'+(ok?'PRIHVAĆEN':'ODBIJEN')+'</span></b>'+(x.r.note?'<div class="mu">Napomena: '+E(x.r.note)+'</div>':'')+'<div class="mu" style="margin-top:6px">Administrator je obaviješten da ste pročitali ovu poruku.</div></div>'}).join('')}
+ $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
+ if(me.role==='admin'&&tab==='adm')drawAdm();
+ $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
+ drawCal();applyPage();
+}
+let page='hm';const TIT={up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke'};
+function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
+ if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
+ if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
+ const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps']:['sh','go','sl','iz','up'];
+ $('upb').classList.toggle('hide',adm||page!=='hm');
+ $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
+ if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
+ if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
+ if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
+ $('nav').classList.toggle('hide',page===home);$('navt').textContent=TIT[page]||'';
+ $('hdr').classList.toggle('hide',page!==home);
+ if(!adm){$('fond').classList.toggle('hide',page!=='hm');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
+function setPage(p){page=p;try{if(p==='hm'||p==='ahm'){if(location.hash)history.pushState(null,'',location.pathname+location.search)}else location.hash=p}catch(e){}draw();window.scrollTo(0,0)}
+document.querySelectorAll('.tile').forEach(b=>b.onclick=()=>setPage(b.dataset.pg));
+$('home').onclick=()=>setPage('hm');$('upb').onclick=()=>setPage('up');
+window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);page=TIT[p]?p:'hm';if(me)draw()});
+const isHol=d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Core.holidays(+d.slice(0,4)).has(d);
+const slOk=d=>slreq.some(r=>r.uid===me.id&&r.status==='approved'&&r.date===d&&(!r.entryId||r.entryId===editId));
+const bankFor=m=>Core.bank(mine(),m,prij[me.id+'|'+m]||0);
+function fillVrste(keep){const h=isHol($('datum').value),cur=keep||$('vrsta').value,ok=me.vrste.filter(v=>((($('datum').value||today())<=today())||NERAD.includes(v)||v===keep)&&(h||!Core.PRAZNIK_VRSTE.includes(v)||v===keep)&&(v!=='Godišnji odmor'||v===keep||godatumi.includes($('datum').value))&&(v!=='Slobodan dan'||v===keep||slOk($('datum').value)||bankFor(($('datum').value||today()).slice(0,7))>=8));
+ opts($('vrsta'),ok,'','');$('vrsta').value=ok.includes(cur)?cur:ok[0];$('vn').textContent=h?'Taj je datum državni praznik u RH.':'Praznik i Rad na praznik moguće je odabrati samo na dan državnog praznika.';updVrsta()}
+function updVrsta(){const n=NERAD.includes($('vrsta').value),s=$('sati');$('grw').classList.toggle('hide',n);$('wrk').classList.toggle('hide',n);
+ if(n){s.value=$('vrsta').value==='Slobodan dan'?0:8;s.disabled=true}else{if(s.disabled)s.value='0';s.disabled=false}
+ $('sl').textContent=n?'Sati (određeni automatski)':'Odrađeni sati'}
+function updMeal(){const t=mealTaken($('datum').value,editId),s=$('obrok');
+ if(t){s.value='';s.disabled=true}else{if(s.disabled)s.value='';s.disabled=false}
+ $('obn').textContent=t?'Topli obrok za ovaj datum već je upisan – ovdje nije potreban.':''}
+function resetForm(){editId=null;fillVrste('Redovan rad');$('spremi').textContent='Spremi unos';$('otkazi').classList.add('hide');$('sati').value='0';$('teren').value='0';$('obrok').disabled=false;updMeal()}
+$('datum').onchange=()=>{updMeal();fillVrste();drawCal()};
+let calM='';const MJ=['siječanj','veljača','ožujak','travanj','svibanj','lipanj','srpanj','kolovoz','rujan','listopad','studeni','prosinac'];
+function drawCal(){if(!me||me.role==='admin')return;const sel=$('datum').value||today(),t=today();if(!calM)calM=sel.slice(0,7);
+ const y=+calM.slice(0,4),m=+calM.slice(5,7),n=new Date(y,m,0).getDate(),off=(new Date(y,m-1,1).getDay()+6)%7,have=new Set(mine().map(e=>e.date)),sld=new Set(mine().filter(e=>e.vrsta==='Slobodan dan').map(e=>e.date)),god=new Set(mine().filter(e=>e.vrsta==='Godišnji odmor').map(e=>e.date)),req=new Set(Core.weekdays(calM)),hol=Core.holidays(y);
+ let miss=0,c='';for(let i=0;i<off;i++)c+='<span></span>';
+ for(let d=1;d<=n;d++){const ds=calM+'-'+String(d).padStart(2,'0'),wd=(off+d-1)%7,ms=req.has(ds)&&!have.has(ds)&&ds<=t;if(ms)miss++;
+  const cl=[wd>4?'wk':'',ds>t?'fut':'',hol.has(ds)?'hol':'',ms?'miss':'',have.has(ds)?'has':'',sld.has(ds)?'sld':'',god.has(ds)?'god':'',ds===t?'tod':'',ds===sel?'sel':''].filter(Boolean).join(' ');
+  c+='<button type="button" class="'+cl+'" data-cd="'+ds+'" aria-label="'+d+'. '+MJ[m-1]+(ms?' – nedostaje unos':sld.has(ds)?' – slobodan dan':god.has(ds)?' – godišnji odmor':have.has(ds)?' – ima unos':'')+'"><b>'+d+'</b></button>'}
+ $('cal').innerHTML='<div class="calh"><button type="button" class="sm" data-cm="-1" aria-label="Prethodni mjesec">‹</button><b>'+MJ[m-1]+' '+y+'.</b><button type="button" class="sm" data-cm="1" aria-label="Sljedeći mjesec">›</button></div><div class="calg">'+['Pon','Uto','Sri','Čet','Pet','Sub','Ned'].map(x=>'<span class="wd">'+x+'</span>').join('')+c+'</div>'+
+  '<div class="calk"><span><i style="background:rgba(220,38,38,.35);border:1px solid var(--er)"></i>nema unosa (obavezan)'+(miss?': <b style="color:var(--er)">'+miss+' dana</b>':'')+'</span><span><i style="background:var(--ok);border-radius:50%"></i>ima unos</span><span><i style="border:2px solid var(--yl);color:var(--yl);font-style:normal;font-weight:900;font-size:9px;line-height:7px;text-align:center">S</i>slobodan dan</span><span><i style="border:2px solid var(--pu);color:var(--pu);font-style:normal;font-weight:900;font-size:9px;line-height:7px;text-align:center">G</i>godišnji odmor</span><span><u>podcrtano</u> praznik</span></div>';
+ $('cals').textContent=sel.slice(8,10)+'.'+sel.slice(5,7)+'.'+sel.slice(0,4)+'.'}
+$('cal').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.cm){const d=new Date(+calM.slice(0,4),+calM.slice(5,7)-1+(+b.dataset.cm),1);calM=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');drawCal();return}
+ if(b.dataset.cd){$('datum').value=b.dataset.cd;$('datum').onchange()}};$('vrsta').onchange=updVrsta;$('zmj').onchange=draw;
+$('srb').onclick=async()=>{const t=await pr('Zahtjev za novo gradilište – upišite opisni naziv (npr. „Kuća Horvat, Ulica 5, Split“). Administrator će ga dodati na popis.');if(t===null)return;if(!t.trim())return toast('Upišite naziv gradilišta.');
+ try{await api('POST','sitereq',{text:t});toast('Zahtjev je poslan administratoru.');await load()}catch(e){toast(e.message)}};
+
+$('spremi').onclick=async()=>{
+ const n=NERAD.includes($('vrsta').value),body={date:$('datum').value,vrsta:$('vrsta').value,site:n?'':$('grs').value,hours:String($('sati').value).replace(',','.'),meal:n?'':$('obrok').value,teren:n?0:+$('teren').value};
+ if(!n&&!(parseFloat(body.hours)>0)){say('msg','Unesite broj radnih sati (veći od 0).');$('sati').focus();return}
+ if(!n&&!body.meal&&!mealTaken(body.date,editId)){say('msg','Odaberite topli obrok – obavezan je za svaki radni dan.');$('obrok').focus();return}
+ try{await api(editId?'PUT':'POST','entries'+(editId?'/'+editId:''),body);const was=editId;resetForm();say('msg',was?'Izmjena spremljena ✓':'Spremljeno ✓',1);await load()}catch(e){say('msg',e.message)}};
+$('otkazi').onclick=()=>{resetForm();$('grs').value='';draw()};
+$('moji').onclick=async ev=>{
+ const b=ev.target.closest('button');if(!b)return;const l=$('moji')._l;
+ if(b.dataset.e!==undefined){const e=l[+b.dataset.e];editId=e.id;$('cal').scrollIntoView({behavior:'smooth',block:'center'});$('datum').value=e.date;calM=e.date.slice(0,7);drawCal();fillVrste(e.vrsta||'Redovan rad');
+  if(e.site&&!me.sites.includes(e.site)){opts($('grs'),me.sites.concat([e.site]),'<option value="">– odaberite gradilište –</option>','')}$('grs').value=e.site||''
+  $('sati').value=e.hours;opts($('obrok'),me.meals,'<option value="">– odaberite topli obrok –</option>','',e.meal);$('obrok').disabled=false;$('obrok').value=e.meal;
+  $('teren').value=String(e.teren||0);updMeal();$('spremi').textContent='Spremi izmjenu';$('otkazi').classList.remove('hide');$('cal').scrollIntoView({block:'center'});say('msg','Uređujete unos – promijenite i spremite.',1)}
+ else if(b.dataset.d!==undefined&&await cf('Obrisati ovaj unos?')){try{await api('DELETE','entries/'+l[+b.dataset.d].id);await load()}catch(e){toast(e.message)}}};
+$('mojib').onclick=()=>{const w=$('mojiw');w.classList.toggle('hide');$('mojib').textContent=w.classList.contains('hide')?'Moji unosi u mjesecu':'Sakrij unose'};
+$('pir').onclick=()=>{const p=$('pirp');p.classList.toggle('hide');if(!p.classList.contains('hide'))drawIzv()};
+function hoursTable(m){const by={};mine().filter(e=>e.date.startsWith(m)).forEach(e=>{const d=by[e.date]=by[e.date]||{h:0,v:[],s:[]};d.h+=e.hours;if(!d.v.includes(e.vrsta))d.v.push(e.vrsta);if(e.site&&!d.s.includes(e.site))d.s.push(e.site)});
+ const wd=Core.weekdays(m),days=[...new Set(wd.concat(Object.keys(by)))].sort(),tot=Object.values(by).reduce((a,x)=>a+x.h,0),F=Core.fond(m),dn=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.',wn=['ned','pon','uto','sri','čet','pet','sub'];
+ return '<table style="min-width:0"><tr><th>Datum</th><th>Vrsta / gradilište</th><th class="n">Sati</th></tr>'+days.map(d=>{const x=by[d],w=wn[new Date(d+'T12:00:00').getDay()];
+  return '<tr><td>'+dn(d)+' <span class="mu">'+w+'</span></td>'+(x?'<td style="white-space:normal">'+E(x.v.join(', '))+(x.s.length?'<div class="mu">'+E(x.s.join(', '))+'</div>':'')+'</td><td class="n"><b>'+f1(rd(x.h))+'</b></td>':'<td style="color:var(--er)">Nema unosa</td><td class="n">–</td>')+'</tr>'}).join('')+
+  '<tr><th>Ukupno</th><th class="mu">Fond '+f1(F.sati)+' h · razlika '+(tot-F.sati>0?'+':'')+f1(rd(tot-F.sati))+' h</th><th class="n">'+f1(rd(tot))+'</th></tr></table>'}
+let izTab='h';
+const wnm=['ned','pon','uto','sri','čet','pet','sub'],dfull=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.';
+function datesTable(list,empty){return list.length?'<table style="min-width:0"><tr><th>Datum</th><th>Dan</th></tr>'+list.map(d=>'<tr><td><b>'+dfull(d)+'</b></td><td>'+wnm[new Date(d+'T12:00:00').getDay()]+'</td></tr>').join('')+'<tr><th>Ukupno dana</th><th>'+list.length+'</th></tr></table>':'<span class="mu">'+empty+'</span>'}
+function izHtml(T){const mode=$('izp').value,m=$('izm').value;if(!m)return '';const per=mode==='y'?m.slice(0,4):m,lab=mode==='y'?per+'.':m.slice(5)+'.'+m.slice(0,4)+'.';
+ const inP=mine().filter(e=>e.date.startsWith(per)),vl=v=>[...new Set(inP.filter(e=>e.vrsta===v).map(e=>e.date))].sort();let out='';
+ if(T==='h'){
+  if(mode==='m')out='<b>Radni sati – '+lab+'</b>'+hoursTable(m);
+  else{const cy=String(new Date().getFullYear()),n=per<cy?12:per===cy?new Date().getMonth()+1:0;let th=0,tf=0;
+   const rows=Array.from({length:n},(_,i)=>{const mm=per+'-'+String(i+1).padStart(2,'0'),hh=rd(mine().filter(e=>e.date.startsWith(mm)).reduce((a,e)=>a+e.hours,0)),f=Core.fond(mm).sati;th+=hh;tf+=f;return '<tr><td>'+mm.slice(5)+'.'+per+'.</td><td class="n"><b>'+f1(hh)+'</b></td><td class="n">'+f1(f)+'</td><td class="n '+(hh-f>0?'pos':hh-f<0?'neg':'')+'">'+(hh-f>0?'+':'')+f1(rd(hh-f))+'</td></tr>'}).join('');
+   out='<b>Radni sati po mjesecima – '+lab+'</b><table style="min-width:0"><tr><th>Mjesec</th><th class="n">Sati</th><th class="n">Fond</th><th class="n">Razlika</th></tr>'+rows+'<tr><th>Ukupno</th><th class="n">'+f1(rd(th))+'</th><th class="n">'+f1(tf)+'</th><th class="n">'+(th-tf>0?'+':'')+f1(rd(th-tf))+'</th></tr></table>'}}
+ else if(T==='s')out='<b>Slobodni dani – '+lab+'</b>'+(mode==='m'?'<div class="mu" style="margin:4px 0">Sati za slobodan dan u tom mjesecu: <b>'+f1(bankFor(m))+' h</b> (prijenos '+f1(prij[me.id+'|'+m]||0)+' h)</div>':'')+datesTable(vl('Slobodan dan'),'Nema slobodnih dana u ovom razdoblju.');
+ else if(T==='b')out='<b>Bolovanje – '+lab+'</b>'+datesTable(vl('Bolovanje'),'Nema bolovanja u ovom razdoblju.');
+ else{out='<b>Iskorišteni godišnji odmor – '+lab+'</b>'+(go&&per.slice(0,4)===String(go.year)&&mode==='y'?'<div class="mu" style="margin:4px 0">Ukupno '+f1(go.ukupno)+' dana · iskorišteno '+f1(go.iskoristeno)+' (uklj. početno stanje '+f1(go.pocetno)+') · preostalo '+f1(go.preostalo)+'</div>':'')+datesTable(vl('Godišnji odmor'),'Nema korištenog godišnjeg odmora u ovom razdoblju.')}
+ return out}
+function drawIzvj(){if(!me||me.role==='admin')return;if(!$('izm').value)return;[...$('izt').children].forEach(b=>b.classList.toggle('on',b.dataset.t===izTab));$('izm').disabled=false;$('izo').innerHTML=izHtml(izTab)}
+/* Spremi kao PDF: isti sadržaj kao na zaslonu (sve četiri kartice) pretvara se u PDF datoteku na uređaju */
+function cellText(el){let s='';el.childNodes.forEach(n=>{if(n.nodeType===3)s+=n.textContent;else if(n.nodeType===1){const t=cellText(n);if(n.tagName==='DIV'&&t)s+=(s?' – ':'')+t;else s+=(n.tagName==='SPAN'&&s&&t?' ':'')+t}});return s.replace(/\s+/g,' ').trim()}
+function htmlBlocks(html){const box=document.createElement('div');box.innerHTML=html;const out=[];
+ const walk=el=>{[...el.children].forEach(n=>{if(n.tagName==='TABLE'){out.push({table:[...n.rows].map((r,i)=>{const th=[...r.cells].every(c=>c.tagName==='TH');return{head:th&&i===0,foot:th&&i>0,cells:[...r.cells].map(c=>({t:cellText(c),right:c.classList.contains('n'),bold:c.tagName==='TH'||!!c.querySelector('b')}))}})})}
+  else if(n.tagName==='B')out.push({h:cellText(n)});else if(n.tagName==='DIV'&&n.children.length&&!n.classList.contains('mu'))walk(n);else{const t=cellText(n);if(t)out.push({p:t})}})};walk(box);return out}
+function saveFile(name,data,mime){const b=new Blob([data],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000)}
+$('izpdf').onclick=()=>{const mode=$('izp').value,m=$('izm').value;if(!m)return toast('Odaberite mjesec.');
+ const lab=mode==='y'?m.slice(0,4)+'.':m.slice(5)+'.'+m.slice(0,4)+'.',blocks=[];['h','s','b','g'].forEach(t=>blocks.push(...htmlBlocks(izHtml(t))));
+ const d=Core.pdf({title:'Izvještaj – '+me.name,info:['Razdoblje: '+(mode==='y'?'cijela godina ':'')+lab,'Izrađeno: '+new Date().toLocaleString('hr-HR')],footer:'Evidencija radnog vremena – '+me.name,blocks});
+ const nm='izvjestaj-'+me.name.toLowerCase().replace(/[čć]/g,'c').replace(/đ/g,'d').replace(/š/g,'s').replace(/ž/g,'z').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+(mode==='y'?m.slice(0,4):m)+'.pdf';
+ try{saveFile(nm,d,'application/pdf');toast('PDF je spremljen: '+nm)}catch(e){toast('Spremanje nije uspjelo: '+e.message)}};
+$('izt').onclick=e=>{const b=e.target.closest('button');if(!b)return;izTab=b.dataset.t;drawIzvj()};
+$('izp').onchange=()=>{drawIzvj()};$('izm').onchange=()=>{drawIzvj()};
+function drawIzv(){const m=$('zmj').value;if(m)$('pirp').innerHTML=hoursTable(m)}
+$('zavrsi').onclick=async()=>{const m=$('zmj').value;if(!m||!await cf('Završiti unos za mjesec '+m+'? Nakon toga nećete moći mijenjati unose.'))return;
+ try{await api('POST','close',{month:m});await load()}catch(e){toast(e.message)}};
+$('gov').onchange=()=>$('gok').classList.toggle('hide',!$('gov').checked);
+$('gob').onclick=async()=>{try{const r=await api('POST','gorq',{from:$('god').value,to:$('gov').checked?$('gdo').value:'',reason:$('gor').value});$('gor').value='';toast('Zahtjev je poslan ('+r.dana+' radnih dana).');await load()}catch(e){toast(e.message)}};
+$('por').onclick=async e=>{const b=e.target.closest('[data-prd]');if(!b)return;b.disabled=true;try{await api('POST','poruke/'+b.dataset.prd+'/read');toast('Potvrđeno. Administrator vidi da ste pročitali poruku.');await load()}catch(x){b.disabled=false;toast(x.message)}};
+$('obv').onclick=async e=>{if(e.target.id!=='obok')return;try{await api('POST','obav/read');await load()}catch(x){toast(x.message)}};
+$('szb').onclick=async()=>{try{await api('POST','slreq',{date:$('szd').value,reason:$('szr').value});$('szr').value='';toast('Zahtjev je poslan administratoru.');await load()}catch(e){toast(e.message)}};
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-wd]');if(!b)return;const[k,id]=b.dataset.wd.split('|');
+ try{if(!await cf('Odustati od poslanog zahtjeva?'))return;await api('DELETE',k+'/'+id);toast('Zahtjev je povučen.');await load()}catch(x){toast(x.message)}});
+$('zod').onclick=async()=>{const m=$('zmj').value,r=reqs.find(x=>x.uid===me.id&&x.month===m&&x.status==='open');if(!r)return;try{if(!await cf('Odustati od zahtjeva za ponovno otvaranje mjeseca?'))return;await api('DELETE','requests/'+r.id);toast('Zahtjev je povučen.');await load()}catch(x){toast(x.message)}};
+$('zah').onclick=async()=>{const m=$('zmj').value,r=await pr('Razlog zahtjeva (neobavezno):');if(r===null)return;
+ try{await api('POST','requests',{month:m,reason:r});toast('Zahtjev je poslan administratoru.');await load()}catch(e){toast(e.message)}};
+/*LOGIN*/$('lb').onclick=async()=>{try{await api('POST','login',{username:$('lu').value,password:$('lp').value});$('lp').value='';await load()}catch(e){say('lm',e.message)}};
+$('lp').onkeydown=e=>{if(e.key==='Enter')$('lb').click()};/*/LOGIN*/
+$('out').onclick=async()=>{await api('POST','logout').catch(()=>{});showLogin()};
+$('pw').onclick=async()=>{const o=await pr('Stara lozinka:');if(o===null)return;const n=await pr('Nova lozinka (min. 6 znakova):');if(!n)return;
+ try{await api('POST','password',{old:o,new:n});toast('Lozinka je promijenjena.')}catch(e){toast(e.message)}};
+
+/* ---- administrator ---- */
+const sum=(l,k)=>rd(l.reduce((a,r)=>a+(+r[k]||0),0));
+const qf=()=>'month='+$('rm').value+'&uid='+encodeURIComponent($('fw').value)+'&site='+encodeURIComponent($('fs').value)+'&vrsta='+encodeURIComponent($('fv').value);
+function fill(sel,items,first){const v=sel.value;sel.innerHTML='<option value="">'+first+'</option>'+items.map(i=>'<option value="'+E(i[0])+'">'+E(i[1])+'</option>').join('');if(items.some(i=>i[0]===v))sel.value=v}
+const sg=n=>(n>0?'+':'')+String(n).replace('.',',');
+const f1=n=>String(n).replace('.',',');
+async function drawStats(){const m=$('rm').value;if(!m)return;const per=$('stm').value==='y'?m.slice(0,4):m;
+ try{const s=await api('GET','stats?period='+per);
+  $('stn').textContent=(s.isYear?'Godina '+per+'.':'Mjesec '+m.slice(5)+'.'+m.slice(0,4)+'.')+' – fond sati u razdoblju: '+f1(s.fond)+' h.';
+  const medal=['🥇','🥈','🥉'];
+  $('st').innerHTML=s.lists.map(l=>{const top=l.rows[0];
+   if(!top)return '<div class="row"><div><b>'+E(l.title)+'</b><div class="mu">Nema podataka.</div></div></div>';
+   const leaders=l.rows.filter(r=>r.rank===1);
+   return '<details style="margin-bottom:8px"><summary style="cursor:pointer"><b>'+E(l.title)+'</b><div class="mu">'+medal[0]+' '+leaders.map(r=>E(r.name)).join(', ')+' – '+f1(top.value)+' '+l.unit+'</div></summary>'+
+    '<table style="margin-top:6px;min-width:0"><tr><th class="n">#</th><th>Ime</th><th class="n">'+E(l.unit)+'</th></tr>'+l.rows.map(r=>'<tr><td class="n">'+(medal[r.rank-1]||r.rank+'.')+'</td><td>'+E(r.name)+'</td><td class="n">'+f1(r.value)+'</td></tr>').join('')+'</table></details>'}).join('')
+ }catch(e){$('st').innerHTML='<span class="mu">'+E(e.message)+'</span>'}}
+$('stm').onchange=drawStats;
+const shq=()=>'period='+($('shp').value==='all'?'all':$('rm').value.slice(0,4))+'&site='+encodeURIComponent($('shs').value);
+async function drawSh(){if(!$('rm').value)return;const keep=$('shs').value,all=[...new Set(me.sites.concat(entries.map(e=>e.site).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'hr'));
+ fill($('shs'),all.map(s=>[s,s]),'Sva gradilišta');$('shs').value=all.includes(keep)?keep:'';
+ try{const d=await api('GET','sitehours?'+shq()),ml=m=>m.slice(5)+'.'+m.slice(2,4)+'.';
+  $('shh').innerHTML=d.sites.length?d.sites.map(s=>'<h2 style="margin-top:14px">'+E(s.site)+'</h2><div class="wrap"><table><tr><th>Radnik</th>'+d.months.map(m=>'<th class="n">'+ml(m)+'</th>').join('')+'<th class="n">Ukupno</th></tr>'+
+    s.rows.map(x=>'<tr><td>'+E(x.name)+'</td>'+d.months.map(m=>'<td class="n">'+(x.byMonth[m]?f1(x.byMonth[m]):'')+'</td>').join('')+'<td class="n"><b>'+f1(x.total)+'</b></td></tr>').join('')+
+    '<tr><th>Ukupno</th>'+d.months.map(m=>'<th class="n">'+(s.totals.byMonth[m]?f1(s.totals.byMonth[m]):'')+'</th>').join('')+'<th class="n">'+f1(s.totals.total)+'</th></tr></table></div>').join(''):'<span class="mu">Nema sati na gradilištima u ovom razdoblju.</span>'
+ }catch(e){$('shh').innerHTML='<span class="mu">'+E(e.message)+'</span>'}}
+$('shp').onchange=drawSh;$('shs').onchange=drawSh;
+$('shx').onclick=()=>{location.href='/api/sitehours.xlsx?'+shq()};$('shc2').onclick=()=>{location.href='/api/sitehours.csv?'+shq()};
+function drawSlRep(){
+ const m=today().slice(0,7),dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.';
+ const L=users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled).map(u=>{const b=Core.bank(entries.filter(e=>e.uid===u.id),m,prij[u.id+'|'+m]||0),rs=slreq.filter(r=>r.uid===u.id&&((r.status==='approved'&&(r.date.slice(0,7)>=m))||r.status==='open')).sort((a,c)=>a.date<c.date?-1:1);return{u,b,rs}}).filter(x=>x.b>=5||x.rs.some(r=>r.status==='approved')).sort((a,b)=>b.b-a.b||a.u.name.localeCompare(b.u.name,'hr'));
+ $('slu').innerHTML=L.length?'<table><tr><th>Radnik</th><th class="n">Sati za slobodan dan</th><th>Status</th></tr>'+L.map(x=>'<tr><td>'+E(x.u.name)+'</td><td class="n"><b>'+f1(x.b)+'</b></td><td>'+(x.rs.length?x.rs.map(r=>(r.status==='approved'?'<b style="color:var(--ok)">Odobreno</b>':'Na čekanju')+' '+dd(r.date)+(r.entryId?' (iskorišteno)':'')).join('<br>'):'<span class="mu">–</span>')+'</td></tr>').join('')+'</table>':'<span class="mu">Nijedan radnik nema 5 ili više sati za slobodan dan ni odobren slobodan dan.</span>'}
+function drawPo(){const ws=users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled),sel=[...document.querySelectorAll('#pg input:checked')].map(i=>i.value),ft=x=>new Date(x).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+ $('pg').innerHTML=ws.map(u=>'<label style="display:flex;align-items:center;gap:8px;color:var(--tx);margin:4px 0"><input type="checkbox" style="width:auto" value="'+E(u.id)+'"'+(sel.includes(u.id)?' checked':'')+'> '+E(u.name)+'</label>').join('')||'<span class="mu">Nema aktivnih radnika.</span>';
+ $('pl').innerHTML=poruke.length?poruke.map(p=>{const n=p.to.length,r=p.to.filter(id=>p.reads[id]).length;return '<div class="card"><div class="mu">'+ft(p.ts)+' · poslao/la '+E(p.fromName)+' · '+(p.all?'svim radnicima':n===1?E(p.toNames[p.to[0]]):n+' radnika')+'</div><div style="white-space:pre-wrap;margin:6px 0">'+E(p.text)+'</div>'+
+  '<details'+(n===1?' open':'')+'><summary style="cursor:pointer"><b style="color:'+(r===n?'var(--ok)':'var(--tx)')+'">Pročitalo: '+r+' / '+n+'</b></summary>'+p.to.slice().sort((a,b)=>(p.reads[a]?1:0)-(p.reads[b]?1:0)||String(p.toNames[a]).localeCompare(p.toNames[b],'hr')).map(id=>'<div class="row"><span>'+E(p.toNames[id])+'</span>'+(p.reads[id]?'<span style="color:var(--ok)">pročitano '+ft(p.reads[id])+'</span>':'<span style="color:var(--er)">nije pročitano</span>')+'</div>').join('')+'</details>'+
+  '<button class="sm" data-pdel="'+E(p.id)+'" style="margin-top:8px">Obriši poruku</button></div>'}).join(''):'<div class="card mu">Još nema poslanih poruka.</div>'}
+document.querySelectorAll('input[name=pk]').forEach(r=>r.onchange=()=>$('pgw').classList.toggle('hide',document.querySelector('input[name=pk]:checked').value!=='sel'));
+$('ps').onclick=async()=>{const all=document.querySelector('input[name=pk]:checked').value==='all',uids=[...document.querySelectorAll('#pg input:checked')].map(i=>i.value);
+ if(!$('pt').value.trim())return say('pm','Upišite tekst poruke.');if(!all&&!uids.length)return say('pm','Odaberite barem jednog radnika.');
+ if(!await cf('Poslati poruku '+(all?'svim radnicima':uids.length===1?'radniku '+(users.find(u=>u.id===uids[0])||{}).name:uids.length+' radnika')+'?'))return;
+ try{const r=await api('POST','poruke',{text:$('pt').value,all,uids});$('pt').value='';document.querySelectorAll('#pg input').forEach(i=>i.checked=false);say('pm','Poruka je poslana ('+r.n+' radnika) ✓',1);await load()}catch(e){say('pm',e.message)}};
+$('sr').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const r=sitereq.find(x=>x.id===(b.dataset.sra||b.dataset.srn));if(!r)return;
+ try{if(b.dataset.sra){const nm=await pr('Naziv gradilišta kako će se prikazivati radnicima:',r.text);if(nm===null)return;if(!nm.trim())return toast('Upišite naziv.');await api('POST','sitereq/'+r.id+'/decide',{approve:true,name:nm});toast('Gradilište „'+nm.trim()+'“ je dodano. Radnici će dobiti obavijest.')}
+  else{const n=await pr('Razlog odbijanja (neobavezno):');if(n===null)return;await api('POST','sitereq/'+r.id+'/decide',{approve:false,note:n})}await load()}catch(x){toast(x.message)}};
+$('pl').onclick=async e=>{const b=e.target.closest('[data-pdel]');if(!b)return;if(!await cf('Obrisati poruku? Radnici koji je još nisu pročitali više je neće vidjeti.'))return;try{await api('DELETE','poruke/'+b.dataset.pdel);await load()}catch(x){toast(x.message)}};
+function drawZh(){
+ const dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.',sp=r=>r.dates.length===1?dd(r.dates[0]):dd(r.dates[0])+' – '+dd(r.dates[r.dates.length-1])+' ('+r.dates.length+' dana)';
+ const all=slreq.map(r=>({r,k:'sl',y:r.date.slice(0,4),t:'Slobodan dan',p:dd(r.date)+(r.status==='approved'&&r.entryId?' (iskorišteno)':'')})).concat(
+  gorq.map(r=>({r,k:'go',y:r.dates[0].slice(0,4),t:'Godišnji odmor',p:sp(r)+(r.source==='admin'?' (odobrio administrator bez zahtjeva)':'')})),
+  reqs.map(r=>({r,k:'mj',y:r.month.slice(0,4),t:'Ponovno otvaranje mjeseca',p:r.month.slice(5)+'.'+r.month.slice(0,4)+'.'})),
+  sitereq.map(r=>({r,k:'gr',y:new Date(r.ts).getFullYear()+'',t:'Novo gradilište',p:'„'+r.text+'“'+(r.site?' → dodano kao „'+r.site+'“':'')})));
+ {const ys=[...new Set(all.map(x=>x.y).concat([today().slice(0,4)]))].sort().reverse(),k=$('zy').value;$('zy').innerHTML=ys.map(y=>'<option>'+y+'</option>').join('');$('zy').value=ys.includes(k)?k:today().slice(0,4)}
+ {const kw=$('zw').value,ws=users.filter(u=>u.role==='user'&&($('fwm').value==='s'||!u.deleted));fill($('zw'),ws.map(u=>[u.id,u.name+(u.deleted?' (izbrisan)':'')]),'Svi radnici');$('zw').value=ws.some(u=>u.id===kw)?kw:''}
+ const y=$('zy').value,t=$('zt').value,s=$('zs').value,w=$('zw').value;
+ const l=all.filter(x=>x.y===y&&(!t||x.k===t)&&(!s||x.r.status===s)&&(!w||x.r.uid===w)).sort((a,b)=>(b.r.decided||b.r.ts)-(a.r.decided||a.r.ts));
+ const cnt=st=>l.filter(x=>x.r.status===st).length;
+ $('zn').textContent=l.length?'Ukupno '+l.length+': prihvaćeno '+cnt('approved')+', odbijeno '+cnt('rejected')+', na čekanju '+cnt('open')+'.':'';
+ $('zl').innerHTML=l.length?l.map(x=>{const r=x.r;return '<div class="dr"><div class="dt"><span class="mu">'+x.t+'</span><br><b>'+E(r.name)+'</b> · '+E(x.p)+(r.changed?' <span class="mu">(odluka izmijenjena)</span>':'')+(r.reason&&r.source!=='admin'?'<div class="mu">Razlog: '+E(r.reason)+'</div>':'')+(r.source==='admin'&&r.reason?'<div class="mu">Napomena: '+E(r.reason)+'</div>':'')+(r.note?'<div class="mu">Napomena administratora: '+E(r.note)+'</div>':'')+'<div class="mu">Poslano: '+new Date(r.ts).toLocaleDateString('hr-HR')+'</div></div><div class="ds">'+stTxt(r)+(r.status==='open'?'<span class="mu">odluka se donosi na početnoj stranici</span>':'<span class="mu">'+who(r)+'</span>'+(x.k==='gr'?'':'<span class="mu">'+sn(r)+'</span>')+chBtn(r,x.k))+'</div></div>'}).join(''):'<span class="mu">Nema zahtjeva za odabrane filtere.</span>'}
+['zy','zt','zs','zw'].forEach(i=>$(i).onchange=drawZh);
+function drawOb(){
+ if(!$('om')._i){$('om')._i=1;$('om').value=$('rm').value}
+ const ws=users.filter(u=>u.role==='user'&&($('owm').value==='s'||!u.deleted)).map(u=>({...u,name:u.name+(u.deleted?' (izbrisan)':u.disabled?' (onemogućen)':'')})),ks=[...new Set(me.meals.concat(entries.map(e=>e.meal).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'hr'));
+ {const kw=$('ow').value,kr=$('or').value;fill($('ow'),ws.map(u=>[u.id,u.name]),'Svi radnici');fill($('or'),ks.map(s=>[s,s]),'Svi restorani');$('ow').value=ws.some(u=>u.id===kw)?kw:'';$('or').value=ks.includes(kr)?kr:''}
+ const m=$('om').value,w=$('ow').value,r=$('or').value,all=!m,fd=d=>d.slice(8,10)+'.'+d.slice(5,7)+'.'+(all?d.slice(0,4)+'.':'');
+ const l=entries.filter(e=>e.meal&&(!m||e.date.slice(0,7)===m)&&(!w||e.uid===w)&&(!r||e.meal===r)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.name.localeCompare(b.name,'hr'));
+ const none='<span class="mu">Nema toplih obroka za odabrane filtere.</span>';
+ const byR={};l.forEach(e=>{(byR[e.meal]=byR[e.meal]||{n:0,w:new Set}).n++;byR[e.meal].w.add(e.uid)});
+ $('obr').innerHTML=l.length?'<table><tr><th>Restoran</th><th class="n">Obroka</th><th class="n">Radnika</th></tr>'+Object.keys(byR).sort((a,b)=>a.localeCompare(b,'hr')).map(k=>'<tr><td>'+E(k)+'</td><td class="n"><b>'+byR[k].n+'</b></td><td class="n">'+byR[k].w.size+'</td></tr>').join('')+'<tr><th>Ukupno</th><th class="n">'+l.length+'</th><th></th></tr></table>':none;
+ const g={};l.forEach(e=>{const k=e.uid+'|'+e.meal;(g[k]=g[k]||{name:e.name,meal:e.meal,d:[]}).d.push(e.date)});
+ $('obw').innerHTML=l.length?'<table><tr><th>Radnik</th><th>Restoran</th><th class="n">Obroka</th><th>Dani</th></tr>'+Object.values(g).sort((a,b)=>a.name.localeCompare(b.name,'hr')||a.meal.localeCompare(b.meal,'hr')).map(x=>'<tr><td>'+E(x.name)+'</td><td>'+E(x.meal)+'</td><td class="n"><b>'+x.d.length+'</b></td><td style="white-space:normal">'+E(x.d.map(fd).join(', '))+'</td></tr>').join('')+'</table>':none;
+ $('obs').innerHTML=l.length?'<table><tr><th>Datum</th><th>Radnik</th><th>Restoran</th><th>Gradilište</th></tr>'+l.map(e=>'<tr><td>'+E(e.date.slice(8,10)+'.'+e.date.slice(5,7)+'.'+e.date.slice(0,4)+'.')+'</td><td>'+E(e.name)+'</td><td>'+E(e.meal)+'</td><td>'+E(e.site||'')+'</td></tr>').join('')+'</table>':none}
+['om','ow','or'].forEach(i=>$(i).onchange=drawOb);
+try{const v=localStorage.getItem('evid-wm');if(v==='s'){$('fwm').value='s';$('owm').value='s'}}catch(e){}
+$('fwm').onchange=()=>{$('owm').value=$('fwm').value;try{localStorage.setItem('evid-wm',$('fwm').value)}catch(e){}drawAdm()};
+$('owm').onchange=()=>{$('fwm').value=$('owm').value;try{localStorage.setItem('evid-wm',$('owm').value)}catch(e){}drawAdm()};
+async function drawGo(){const y=$('rm').value.slice(0,4);if(!y)return;
+ const dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.',sp=r=>r.dates.length===1?dd(r.dates[0]):dd(r.dates[0])+' – '+dd(r.dates[r.dates.length-1])+' ('+r.dates.length+' dana)';
+ const pend=gorq.filter(r=>r.status==='open').sort((a,b)=>a.ts-b.ts),done=gorq.filter(r=>r.status!=='open'&&r.source!=='admin'&&r.dates[r.dates.length-1]>=today()).sort((a,b)=>b.decided-a.decided);$('gah').textContent='Godišnji odmor'+(pend.length?' – zahtjevi ('+pend.length+')':'');
+ $('gaq').innerHTML=(pend.length?pend.map(r=>'<div class="row"><div><b>'+E(r.name)+'</b> · '+sp(r)+(r.reason?'<div class="mu">'+E(r.reason)+'</div>':'')+'</div><span><button class="sm pri" data-gok="'+E(r.id)+'">Odobri</button><button class="sm" data-gno="'+E(r.id)+'">Odbij</button></span></div>').join(''):'<div class="mu">Nema zahtjeva na čekanju.</div>')+(done.length?DR(done,'go',sp):'');
+ $('gq').innerHTML=$('gaq').innerHTML;
+$('gqw').classList.toggle('hide',!pend.length&&!done.length);$('gqh').textContent='Zahtjevi za godišnji odmor ('+pend.length+')';
+ try{const l=await api('GET','godisnji?year='+y);
+  $('gat').innerHTML='<table><tr><th>Radnik ('+y+'.)</th><th class="n">Ukupno</th><th class="n">Početno iskorišteno</th><th class="n">Iskorišteno</th><th class="n">Preostalo</th></tr>'+l.map(r=>'<tr data-gr="'+E(r.uid)+'"><td>'+E(r.name)+'</td><td class="n"><input class="gi" type="number" min="0" max="366" step="0.5" style="width:70px" data-f="u" value="'+r.ukupno+'"></td><td class="n"><input class="gi" type="number" min="0" max="366" step="0.5" style="width:70px" data-f="p" value="'+r.pocetno+'"></td><td class="n">'+f1(r.iskoristeno)+'</td><td class="n '+(r.preostalo<0?'neg':'')+'">'+f1(r.preostalo)+'</td></tr>').join('')+'</table>';
+  const sel=[...document.querySelectorAll('#gag input:checked')].map(i=>i.value);
+  $('gag').innerHTML=l.filter(r=>!(users.find(u=>u.id===r.uid)||{}).disabled).map(r=>'<label style="display:flex;align-items:center;gap:8px;color:var(--tx);margin:4px 0"><input type="checkbox" style="width:auto" value="'+E(r.uid)+'"'+(sel.includes(r.uid)?' checked':'')+'> '+E(r.name)+'</label>').join('')
+ }catch(e){$('gat').innerHTML='<span class="mu">'+E(e.message)+'</span>'}}
+$('gat').onchange=async e=>{const tr=e.target.closest('tr[data-gr]');if(!tr)return;const g=k=>tr.querySelector('[data-f='+k+']').value||0;
+ try{await api('PUT','godisnji',{uid:tr.dataset.gr,year:$('rm').value.slice(0,4),ukupno:g('u'),pocetno:g('p')});toast('Spremljeno.');drawGo()}catch(x){toast(x.message)}};
+$('gq').onclick=$('gaq').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+ try{if(b.dataset.gok)await api('POST','gorq/'+b.dataset.gok+'/decide',{approve:true});
+  else if(b.dataset.gno){const n=await pr('Razlog odbijanja (neobavezno):');if(n===null)return;await api('POST','gorq/'+b.dataset.gno+'/decide',{approve:false,note:n})}
+  else return;await load()}catch(x){toast(x.message)}};
+$('gam').onchange=()=>$('gak').classList.toggle('hide',!$('gam').checked);
+$('gab').onclick=async()=>{const u=[...document.querySelectorAll('#gag input:checked')].map(i=>i.value);
+ try{const r=await api('POST','gorq/grupa',{uids:u,from:$('ga1').value,to:$('gam').checked?$('ga2').value:'',note:$('gan').value});say('gam2','Odobreno za '+r.radnika+' radnika ('+r.dana+' radnih dana). Radnici su obaviješteni ✓',1);$('gan').value='';document.querySelectorAll('#gag input').forEach(i=>i.checked=false)}catch(e){say('gam2',e.message)}};
+async function drawAdm(){
+ const m=$('rm').value;if(!m)return;
+ const allSites=[...new Set(me.sites.concat(entries.map(e=>e.site).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'hr'));
+ {const kw=$('fw').value,l=users.filter(u=>u.role==='user'&&($('fwm').value==='s'||!u.deleted));fill($('fw'),l.map(u=>[u.id,u.name+(u.deleted?' (izbrisan)':u.disabled?' (onemogućen)':'')]),'Svi radnici');$('fw').value=l.some(u=>u.id===kw)?kw:''};fill($('fs'),allSites.map(s=>[s,s]),'Sva gradilišta');fill($('fv'),me.vrste.map(v=>[v,v]),'Sve vrste');
+ const pend=reqs.filter(r=>r.status==='open').sort((a,b)=>a.ts-b.ts),done=reqs.filter(r=>r.status!=='open'&&new Date(r.decided).toLocaleDateString('sv')===today()).sort((a,b)=>b.decided-a.decided);
+ {const sp=slreq.filter(r=>r.status==='open').sort((a,b)=>a.ts-b.ts),sd=slreq.filter(r=>r.status!=='open'&&r.date>=today()).sort((a,b)=>b.decided-a.decided),dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.';
+  $('sqw').classList.toggle('hide',!sp.length&&!sd.length);$('sqh').textContent='Zahtjevi za slobodan dan'+(sp.length?' ('+sp.length+')':'');
+  $('sq').innerHTML=(sp.length?sp.map(r=>'<div class="row"><div><b>'+E(r.name)+'</b> · '+dd(r.date)+(r.reason?'<div class="mu">'+E(r.reason)+'</div>':'')+'</div><span><button class="sm pri" data-sok="'+E(r.id)+'">Prihvati</button><button class="sm" data-sno="'+E(r.id)+'">Odbij</button></span></div>').join(''):'<div class="mu">Nema zahtjeva na čekanju.</div>')+(sd.length?DR(sd,'sl',r=>dd(r.date)):'')}
+ $('rqw').classList.toggle('hide',!pend.length&&!done.length);$('rqh').textContent='Zahtjevi za otvaranje mjeseca'+(pend.length?' ('+pend.length+')':'');
+ $('rq').innerHTML=(pend.length?pend.map(r=>'<div class="row"><div><b>'+E(r.name)+'</b> · '+E(r.month)+(r.reason?'<div class="mu">'+E(r.reason)+'</div>':'')+'</div><span><button class="sm pri" data-ok="'+E(r.id)+'">Odobri</button><button class="sm" data-no="'+E(r.id)+'">Odbij</button></span></div>').join(''):'<div class="mu">Nema zahtjeva na čekanju.</div>')+
+  (done.length?DR(done,'mj',r=>E(r.month)):'');
+ {const op=sitereq.filter(r=>r.status==='open').sort((a,b)=>a.ts-b.ts);$('srw').classList.toggle('hide',!op.length);$('srh').textContent='Zahtjevi za novo gradilište ('+op.length+')';
+  $('sr').innerHTML=op.map(r=>'<div class="dr"><div class="dt"><b>'+E(r.name)+'</b> · '+new Date(r.ts).toLocaleDateString('hr-HR')+'<div>„'+E(r.text)+'“</div></div><div class="ds"><button class="sm pri" data-sra="'+E(r.id)+'">Dodaj gradilište</button><button class="sm" data-srn="'+E(r.id)+'">Odbij</button></div></div>').join('')}
+ drawStats();drawSh();drawGo();drawOb();drawSlRep();drawZh();drawPo();
+ try{rep=await api('GET','report?'+qf())}catch(e){return}
+ const c=rep.cols,tot={h:0,ot:0,pr2:0,t:0,n:0,rz:0,b:0,p:0,m:{},v:{}},N=rep.norma;
+ $('nn').textContent=(N.applies?'Fond sati: '+N.dani+' radnih dana (pon–pet, praznici uključeni) × '+String(N.dnevna).replace('.',',')+' h = '+String(N.sati).replace('.',',')+' h. Razlika = upisani sati − fond (+ višak, − manjak).':'Fond i razlika prikazuju se samo bez filtera po gradilištu i vrsti.')+' Prekovremeni = sati rada iznad 9 h dnevno (pon–čet), iznad 8 h (petak) te svi sati rada subotom i nedjeljom, a svi sati Rada na praznik uvijek su prekovremeni. Ako radnik za završen ili prošli mjesec nema ispunjen fond sati, manjak se prenosi iz prekovremenih sati u redovan rad (stupac Preneseno u redovan rad) i oduzima od prekovremenih.';
+ $('izv').innerHTML=rep.list.length?'<table><tr><th>Radnik</th><th class="n">Dani</th><th class="n">Sati ukupno</th><th class="n">Prekovremeni</th><th class="n">Preneseno u redovan rad</th>'+rep.vrste.map(v=>'<th class="n">'+E(v)+'</th>').join('')+(N.applies?'<th class="n">Fond sati</th><th class="n">Razlika</th>':'')+'<th class="n">Prijenos iz prošlog mjeseca</th><th class="n">Sati za slobodan dan</th><th class="n">Terenski</th>'+c.map(x=>'<th class="n">'+E(x)+'</th>').join('')+'<th>Status</th></tr>'+
+  rep.list.map(r=>{tot.h+=r.h;tot.ot+=r.ot||0;tot.pr2+=r.pren||0;tot.t+=r.t;tot.n+=r.norma||0;tot.rz+=r.razlika||0;tot.b+=r.bank||0;tot.p+=r.prijenos||0;rep.vrste.forEach(v=>tot.v[v]=(tot.v[v]||0)+(r.v[v]||0));c.forEach(x=>tot.m[x]=(tot.m[x]||0)+(r.m[x]||0));
+   return '<tr><td>'+E(r.name)+'</td><td class="n">'+r.days+'</td><td class="n">'+r.h+'</td><td class="n">'+(r.ot?'<b>'+r.ot+'</b>':0)+'</td><td class="n">'+(r.pren?'<b>'+r.pren+'</b>':'–')+'</td>'+rep.vrste.map(v=>'<td class="n">'+(r.v[v]||0)+'</td>').join('')+(N.applies?'<td class="n">'+r.norma+'</td><td class="n '+(r.razlika>0?'pos':r.razlika<0?'neg':'')+'"><b>'+sg(r.razlika)+'</b></td>':'')+'<td class="n"><input class="pr" type="number" inputmode="decimal" step="0.5" style="width:70px" value="'+r.prijenos+'" data-pr="'+E(r.uid)+'" aria-label="Prijenos za '+E(r.name)+'"></td><td class="n">'+r.bank+'</td><td class="n">'+r.t+'</td>'+c.map(x=>'<td class="n">'+(r.m[x]||0)+'</td>').join('')+'<td>'+(r.closed?'Završeno ✓ <button class="sm noprint" data-r="'+E(r.uid)+'">Otvori</button>':'Otvoreno')+'</td></tr>'}).join('')+
+  '<tr><th>Ukupno</th><th></th><th class="n">'+rd(tot.h)+'</th><th class="n">'+rd(tot.ot)+'</th><th class="n">'+rd(tot.pr2)+'</th>'+rep.vrste.map(v=>'<th class="n">'+rd(tot.v[v]||0)+'</th>').join('')+(N.applies?'<th class="n">'+rd(tot.n)+'</th><th class="n">'+sg(rd(tot.rz))+'</th>':'')+'<th class="n">'+rd(tot.p)+'</th><th class="n">'+rd(tot.b)+'</th><th class="n">'+tot.t+'</th>'+c.map(x=>'<th class="n">'+tot.m[x]+'</th>').join('')+'<th></th></tr></table>':'<span class="mu">Nema podataka za ovaj mjesec.</span>';
+ const f2=$('fs').value||$('fv').value;
+ $('mis').innerHTML=f2?'<span class="mu">Provjera se ne primjenjuje uz filter po gradilištu ili vrsti.</span>':rep.missing.length?rep.missing.map(r=>'<div class="row"><div><b>'+E(r.name)+'</b> <span class="mu">· '+r.dates.length+' dana</span><div class="mu" style="white-space:normal">'+E(r.dates.slice(0,12).map(dm).join(', ')+(r.dates.length>12?' … (+'+(r.dates.length-12)+')':''))+'</div></div></div>').join(''):'<span class="mu">Svi radnici imaju unos za sve prošle radne dane.</span>';
+ $('dan').innerHTML=rep.daily.length?'<table><tr><th>Datum</th><th>Radnik</th><th>Vrsta</th><th>Gradilišta</th><th class="n">Ukupno sati</th><th class="n">Prekovremeni</th></tr>'+rep.daily.map(r=>'<tr><td>'+E(r.date)+'</td><td>'+E(r.name)+'</td><td>'+E(r.vrste.join(', '))+'</td><td>'+E(r.sites.join(', '))+'</td><td class="n"><b>'+r.h+'</b></td><td class="n">'+(r.ot||0)+'</td></tr>').join('')+'<tr><th>Ukupno u mjesecu</th><th></th><th></th><th></th><th class="n">'+sum(rep.daily,'h')+'</th><th class="n">'+sum(rep.daily,'ot')+'</th></tr></table>':'<span class="mu">Nema unosa.</span>';
+ $('slb').innerHTML=rep.slobodni.length?'<table><tr><th>Datum</th><th>Radnik</th><th>Uz odobren zahtjev</th></tr>'+rep.slobodni.map(e=>'<tr><td>'+E(e.date.slice(8,10)+'.'+e.date.slice(5,7)+'.'+e.date.slice(0,4)+'.')+'</td><td>'+E(e.name)+'</td><td>'+(e.odobren?'Da':'Ne')+'</td></tr>').join('')+'<tr><th>Ukupno</th><th class="n">'+rep.slobodni.length+'</th><th></th></tr></table>':'<span class="mu">Nema slobodnih dana u ovom mjesecu.</span>';
+ $('sit').innerHTML=rep.sites.length?'<table><tr><th>Gradilište</th><th class="n">Sati</th><th class="n">Prekovremeni</th><th class="n">Radnika</th><th>Radnici</th></tr>'+rep.sites.map(r=>'<tr><td>'+E(r.site)+'</td><td class="n"><b>'+r.h+'</b></td><td class="n">'+(r.ot||0)+'</td><td class="n">'+r.radnika+'</td><td>'+E(r.radnici.map(w=>w.name+' '+w.h+' h'+(w.ot?' (prekovremeno '+w.ot+' h)':'')).join('; '))+'</td></tr>').join('')+'<tr><th>Ukupno</th><th class="n">'+sum(rep.sites,'h')+'</th><th class="n">'+sum(rep.sites,'ot')+'</th><th></th><th></th></tr></table>':'<span class="mu">Nema unosa s gradilištem.</span>';
+ $('svi').innerHTML=rep.rows.length?'<table><tr><th>Datum</th><th>Radnik</th><th>Vrsta</th><th>Gradilište</th><th class="n">Sati</th><th class="n">Prekovremeni</th><th>Obrok</th><th class="n">Terenski</th></tr>'+rep.rows.map(e=>'<tr><td>'+E(e.date)+'</td><td>'+E(e.name)+'</td><td>'+E(e.vrsta)+'</td><td>'+E(e.site)+'</td><td class="n">'+e.hours+'</td><td class="n">'+(e.ot||0)+'</td><td>'+E(e.meal)+'</td><td class="n">'+(e.teren||0)+'</td></tr>').join('')+'<tr><th>Ukupno u mjesecu</th><th></th><th></th><th></th><th class="n">'+sum(rep.rows,'hours')+'</th><th class="n">'+sum(rep.rows,'ot')+'</th><th></th><th class="n">'+sum(rep.rows,'teren')+'</th></tr></table>':'<span class="mu">Nema unosa.</span>';
+ const ed=(el,list)=>{$(el).innerHTML=list.length?list.map((s,k)=>'<div class="row"><span>'+E(s)+'</span><button class="x" data-k="'+k+'" aria-label="Ukloni">✕</button></div>').join(''):'<div class="mu" style="margin-top:8px">Popis je prazan.</div>'};
+ ed('ls',me.sites);ed('lm2',me.meals);
+ $('lu2').innerHTML=users.filter(u=>!u.deleted).map(u=>u.id===window.uEdit?'<div class="dr" style="background:var(--bg);padding:10px;border-radius:10px"><b>Izmjena korisnika</b><label for="xe1">Ime i prezime</label><input id="xe1" value="'+E(u.name)+'"><label for="xe2">Korisničko ime</label><input id="xe2" autocapitalize="none" value="'+E(u.username)+'"><label for="xe3">Uloga</label><select id="xe3"'+(u.id===me.id?' disabled':'')+'><option value="user"'+(u.role==='user'?' selected':'')+'>Korisnik</option><option value="admin"'+(u.role==='admin'?' selected':'')+'>Administrator</option></select>'+(u.id===me.id?'<div class="mu">Vlastitu ulogu ne možete mijenjati.</div>':'')+'<label for="xe4">E-mail</label><input id="xe4" type="email" autocapitalize="none" value="'+E(u.email||'')+'"><label for="xe5">Nova lozinka (ostavite prazno ako se ne mijenja)</label><input id="xe5" type="password" autocomplete="new-password"><div class="fl" style="margin-top:10px"><button class="sm pri" data-xs="'+E(u.id)+'">Spremi</button><button class="sm" data-xc="1">Odustani</button></div></div>':'<div class="dr"><div class="dt"><b>'+E(u.name)+'</b>'+(u.disabled?' <b style="color:var(--er)">· prijava onemogućena</b>':'')+'<div class="mu">'+E(u.username)+' · '+(u.role==='admin'?'administrator':'korisnik')+' · '+(u.email?E(u.email):'<span style="color:var(--er)">nema e-maila</span>')+(u.loginSent?' · login poslan '+new Date(u.loginSent).toLocaleDateString('hr-HR'):'')+'</div></div><div class="ds"><button class="sm" data-ed="'+E(u.id)+'">Izmijeni</button><button class="sm pri" data-sl="'+E(u.id)+'">Pošalji login podatke</button>'+(u.id===me.id?'':'<button class="sm" data-dis="'+E(u.id)+'|'+(u.disabled?'0':'1')+'">'+(u.disabled?'Omogući prijavu':'Onemogući prijavu')+'</button><button class="sm" data-del="'+E(u.id)+'" aria-label="Izbriši radnika">Izbriši</button>')+'</div></div>').join('');
+ {const dl=users.filter(u=>u.deleted);$('lu3w').classList.toggle('hide',!dl.length);$('lu3s').textContent='Izbrisani korisnici ('+dl.length+')';
+  $('lu3').innerHTML=dl.map(u=>'<div class="dr"><div class="dt"><b>'+E(u.name)+'</b><div class="mu">'+(u.role==='admin'?'administrator':'korisnik')+' · izbrisan '+new Date(u.deleted).toLocaleDateString('hr-HR')+'</div></div><div class="ds"><button class="sm" data-pg2="'+E(u.id)+'" style="color:var(--er);border-color:var(--er)">Trajno obriši</button></div></div>').join('')}
+}
+$('rm').value=today().slice(0,7);$('zmj').value=today().slice(0,7);$('datum').value=today();
+['rm','fw','fs','fv'].forEach(i=>$(i).onchange=drawAdm);
+$('izv').onchange=async e=>{const i=e.target.closest('[data-pr]');if(!i)return;try{await api('PUT','prijenos',{uid:i.dataset.pr,month:$('rm').value,value:i.value===''?0:i.value});toast('Prijenos je spremljen.');await load()}catch(x){toast(x.message)}};
+$('izv').onclick=async e=>{const b=e.target.closest('[data-r]');if(!b||!await cf('Ponovno otvoriti mjesec za ovog radnika?'))return;
+ try{await api('POST','reopen',{uid:b.dataset.r,month:$('rm').value});await load()}catch(x){toast(x.message)}};
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-ch]');if(!b)return;const[k,id,ap]=b.dataset.ch.split('|'),route={sl:'slreq',go:'gorq',mj:'requests'}[k];
+ try{let note='';if(ap==='0'){const n=await pr('Razlog odbijanja (neobavezno):');if(n===null)return;note=n}else if(!await cf('Promijeniti odluku u prihvaćeno? Radnik će dobiti novu obavijest.'))return;
+  await api('POST',route+'/'+id+'/change',{approve:ap==='1',note});toast('Odluka je izmijenjena, radnik je obaviješten.');await load()}catch(x){toast(x.message)}});
+$('sq').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+ try{if(b.dataset.sok)await api('POST','slreq/'+b.dataset.sok+'/decide',{approve:true});
+  else if(b.dataset.sno){const n=await pr('Razlog odbijanja (neobavezno):');if(n===null)return;await api('POST','slreq/'+b.dataset.sno+'/decide',{approve:false,note:n})}
+  else return;await load()}catch(x){toast(x.message)}};
+$('rq').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+ try{if(b.dataset.ok){if(!await cf('Odobriti zahtjev? Mjesec će se ponovno otvoriti radniku.'))return;await api('POST','requests/'+b.dataset.ok+'/decide',{approve:true})}
+  else if(b.dataset.no){const n=await pr('Razlog odbijanja (neobavezno):');if(n===null)return;await api('POST','requests/'+b.dataset.no+'/decide',{approve:false,note:n})}
+  else return;await load()}catch(x){toast(x.message)}};
+const cfg=async(s,m,n)=>{try{await api('PUT','config',{sites:s,meals:m});me=await api('GET','me');draw()}catch(e){toast(e.message)}};
+$('as').onclick=()=>{const v=$('ns').value.trim();if(v){$('ns').value='';cfg(me.sites.concat([v]),me.meals)}};
+$('nm').oninput=()=>{const i=$('nm'),a=i.selectionStart,b=i.selectionEnd,u=i.value.toLocaleUpperCase('hr-HR');if(u!==i.value){i.value=u;try{i.setSelectionRange(a,b)}catch(e){}}};
+$('am2').onclick=()=>{const v=$('nm').value.trim().toLocaleUpperCase('hr-HR');if(v){$('nm').value='';cfg(me.sites,me.meals.concat([v]))}};
+$('ls').onclick=e=>{const b=e.target.closest('[data-k]');if(b)cfg(me.sites.filter((_,i)=>i!==+b.dataset.k),me.meals)};
+$('lm2').onclick=e=>{const b=e.target.closest('[data-k]');if(b)cfg(me.sites,me.meals.filter((_,i)=>i!==+b.dataset.k))};
+/*EXPORT*/async function doExport(kind){location.href='/api/report.'+(kind==='xlsx'?'xlsx':'csv')+'?'+qf()+(kind==='xlsx'?'':'&kind='+kind)}/*/EXPORT*/
+$('xl').onclick=()=>doExport('xlsx');$('c1').onclick=()=>doExport('sum');$('c3').onclick=()=>doExport('day');$('c4').onclick=()=>doExport('site');$('c5').onclick=()=>doExport('sl');$('c2').onclick=()=>doExport('det');
+$('pr').onclick=()=>print();
+$('em').onclick=async()=>{try{say('am',(await api('POST','report/send',{month:$('rm').value})).msg,1)}catch(e){say('am',e.message)}};
+$('ua').onclick=async()=>{try{await api('POST','users',{name:$('un').value,username:$('uu').value,password:$('up').value,role:$('ur').value,email:$('ue').value});
+ ['un','uu','up','ue'].forEach(i=>$(i).value='');say('um','Korisnik dodan ✓',1);await load()}catch(e){say('um',e.message)}};
+async function drawSmtp(){try{const s=await api('GET','smtp');$('sa').value=s.appUrl;$('sad').textContent=s.appUrl?'':'Ako ostane prazno, koristi se adresa s koje ste sada otvorili aplikaciju: '+s.detected;
+ $('sh').value=s.host;$('sp').value=s.port;$('ss').checked=s.secure;$('su').value=s.user;$('sf').value=s.from;$('sw').value='';$('sw').placeholder=s.passSet?'(spremljena – upišite samo za promjenu)':'';
+ if(s.env)say('sm','Trenutno se koriste SMTP podaci iz pokreni.bat (varijable okruženja).',1)}catch(e){}}
+$('sv').onclick=async()=>{try{await api('PUT','smtp',{appUrl:$('sa').value,host:$('sh').value,port:$('sp').value,secure:$('ss').checked,user:$('su').value,pass:$('sw').value,from:$('sf').value});say('sm','Spremljeno ✓',1);drawSmtp()}catch(e){say('sm',e.message)}};
+$('st2').onclick=async()=>{say('sm','Šaljem…',1);try{const r=await api('POST','smtp/test');say('sm','Probni e-mail poslan na '+r.to+' ✓',1)}catch(e){say('sm',e.message)}};
+$('lu3').onclick=async e=>{const b=e.target.closest('[data-pg2]');if(!b)return;const U=users.find(x=>x.id===b.dataset.pg2);
+ try{if(!await cf('Trajno obrisati korisnika '+U.name+'? Više se neće nuditi ni u jednom filteru i ne može se vratiti. Njegovi dosad uneseni podaci ostaju u evidenciji i izvještajima.'))return;await api('POST','users/'+U.id+'/purge');toast(U.name+' je trajno obrisan.');await load()}catch(x){toast(x.message)}};
+$('lu2').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
+ try{if(b.dataset.ed){window.uEdit=b.dataset.ed;drawAdm();setTimeout(()=>{const f=$('xe1');if(f){f.focus();f.scrollIntoView({block:'center'})}},50);return}
+  if(b.dataset.xc){window.uEdit=null;drawAdm();return}
+  if(b.dataset.xs){const body={name:$('xe1').value,username:$('xe2').value,email:$('xe4').value};if(!$('xe3').disabled)body.role=$('xe3').value;if($('xe5').value)body.password=$('xe5').value;await api('PUT','users/'+b.dataset.xs,body);window.uEdit=null;toast('Podaci korisnika su spremljeni.');await load();return}
+  const U=users.find(x=>x.id===(b.dataset.sl||b.dataset.em));
+  if(b.dataset.em){const n=await pr('E-mail adresa za '+U.name+':',U.email||'');if(n===null)return;await api('PUT','users/'+U.id,{email:n.trim()});toast('E-mail je spremljen.');await load();return}
+  if(b.dataset.sl){let em=U.email;if(!em){em=await pr(U.name+' nema upisan e-mail. Upišite e-mail adresu:');if(!em)return;await api('PUT','users/'+U.id,{email:em.trim()})}
+   if(!await cf('Poslati login podatke na '+em.trim()+'? Generirat će se nova lozinka, a dosadašnja lozinka korisnika '+U.name+' prestaje vrijediti.'))return;
+   const r=await api('POST','users/'+U.id+'/sendlogin');toast(r.demo?'Demo: e-mail se ne šalje. Poruka bi otišla na '+r.to+'.':'Login podaci poslani na '+r.to+'.');await load();return}
+  if(b.dataset.pw){const n=await pr('Nova lozinka (min. 6 znakova):');if(n){await api('PUT','users/'+b.dataset.pw,{password:n});toast('Lozinka je promijenjena.')}}
+  else if(b.dataset.dis){const[id,d]=b.dataset.dis.split('|');if(d==='1'&&!await cf('Onemogućiti prijavu? Radnik se neće moći prijaviti ni unositi podatke, a svi dosadašnji podaci ostaju.'))return;await api('PUT','users/'+id,{disabled:d==='1'});toast(d==='1'?'Prijava je onemogućena.':'Prijava je omogućena.');await load()}
+  else if(b.dataset.del&&await cf('Izbrisati korisnika iz aplikacije? Više se neće moći prijaviti ni unositi podatke. Svi dosad uneseni podaci ostaju u evidenciji i izvještajima.')){await api('DELETE','users/'+b.dataset.del);await load()}}catch(x){toast(x.message)}};
+/*BOOT*/load().then(()=>{if(!me)showLogin()});/*/BOOT*/
+</script></body></html>

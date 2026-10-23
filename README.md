@@ -1,0 +1,88 @@
+# Evidencija radnog vremena – instalacija na Windows serveru
+
+## 1. Instalacija (jednokratno)
+1. Instalirajte **Node.js LTS** (https://nodejs.org), verzija 18 ili novija.
+2. Kopirajte cijelu mapu `evidencija` na server (npr. `C:\evidencija`).
+3. Dvaput kliknite **pokreni.bat**. U prozoru će pisati korisničko ime i lozinku prvog administratora, npr. `Prvi administrator: admin / 4f2a9c1b7e`. **Zapišite ih.**
+4. U pregledniku otvorite `http://IP-ADRESA-SERVERA:3000`, prijavite se i promijenite lozinku (gumb „Lozinka“).
+
+Za vlastito korisničko ime/lozinku prvog administratora (samo kod prvog pokretanja, dok ne postoji `data\db.json`):
+`set ADMIN_USER=ivan` i `set ADMIN_PASS=nekaLozinka` prije `node server.js`.
+
+## 2. Rad s radnicima
+- Prijavite se kao administrator → **Izvještaji** → odjeljak **Korisnici**: dodajte svakog radnika (ime i prezime, korisničko ime, lozinka) i administratore (uloga „Administrator“ + e-mail).
+- Isti odjeljak: popis **gradilišta** i **opcija toplog obroka**.
+- Radnici otvore adresu servera na mobitelu i prijave se. Na iPhoneu: Dijeli → *Dodaj na početni zaslon*.
+
+## 3. Stalni rad (da se pokrene sam)
+Najlakše: **NSSM** (https://nssm.cc) – `nssm install EvidencijaSati`, putanja `C:\Program Files\nodejs\node.exe`, argument `server.js`, mapa `C:\evidencija`. Ili `npm i -g pm2` pa `pm2 start server.js` i `pm2-startup`.
+Otvorite port 3000 u Windows vatrozidu (ili stavite IIS/Caddy ispred aplikacije).
+
+## 4. HTTPS (preporučeno, obavezno ako se pristupa preko interneta)
+Lozinke putuju mrežom, zato koristite HTTPS: IIS s *URL Rewrite + ARR* kao reverse proxy na `http://localhost:3000`, ili Caddy (automatski certifikat za vašu domenu).
+
+## 5. E-mail (login podaci i mjesečni izvještaj)
+1. Na serveru u mapi aplikacije jednom pokrenite `npm install nodemailer` (ostaje i nakon nadogradnji).
+2. Administrator → POSTAVKE → **E-mail i adresa aplikacije**: upišite adresu aplikacije (npr. `https://sati.vasadomena.hr`) i SMTP podatke svog pružatelja e-pošte (Microsoft 365: `smtp.office365.com`, port 587; Gmail: `smtp.gmail.com`, port 587 uz lozinku za aplikacije). Spremite i kliknite **Pošalji probni e-mail meni** (vaš korisnik mora imati upisan e-mail).
+3. SMTP se može zadati i varijablama okruženja u `pokreni.bat`; postavke iz aplikacije imaju prednost.
+4. **Pošalji login podatke** (uz svakog korisnika u Postavkama): na korisnikov e-mail šalje adresu aplikacije, korisničko ime i **novu** lozinku (postojeće lozinke su šifrirane i ne mogu se poslati). Dosadašnja lozinka korisnika prestaje vrijediti tek kad je e-mail uspješno poslan. Gumb **E-mail** mijenja korisnikovu adresu.
+5. Zadnjeg dana u mjesecu poslije 23:00 server sam šalje izvještaj administratorima koji imaju upisan e-mail (Excel datoteka s listovima: sažetak s normom i razlikom, sati po danima, po gradilištima, svi unosi i radnici bez unosa).
+
+## 6. Sigurnosna kopija
+Svi podaci su u jednoj datoteci: `data\db.json`. Kopirajte je redovito (npr. Task Scheduler jednom dnevno).
+
+## 6. Novosti u izvještajima
+- **Excel (.xlsx)** i CSV izvoz (sažetak, po danima, po gradilištima, svi unosi, bez unosa).
+- **Filteri** po radniku, gradilištu i vrsti upisa vrijede za prikaz i za sve izvoze.
+- **Fond sati**: broj dana od ponedjeljka do petka u mjesecu (praznici na radni dan se računaju) × 8 h. Radnik ga vidi na vrhu sučelja. Razlika u izvještaju = upisani sati − fond. Uz filter po gradilištu ili vrsti fond i razlika se ne prikazuju.
+- **Sati za slobodan dan** (po mjesecu, počinju od nule svakog 1.): prijenos iz prošlog mjeseca (upisuje administrator u tablici izvještaja, može biti negativan) + 1 h za svaki dan s ukupno 9 h ili više rada (bez Praznika, Bolovanja, Godišnjeg i Slobodnog dana) − 8 h za svaki Slobodan dan. Slobodan dan može se odabrati s barem 8 h; upis ima 0 sati. Brisanje ili smanjenje sati koje bi stanje spustilo ispod nule nije moguće.
+- **Radnici bez unosa**: popis radnih dana prije današnjeg bez unosa; radnici sa završenim mjesecom ne ulaze u popis.
+- **Zahtjev za ponovno otvaranje mjeseca**: radnik sa završenim mjesecom pošalje zahtjev s razlogom, administrator ga odobri (mjesec se otvara) ili odbije.
+- **Zahtjev za slobodan dan**: radnik koji ima manje od 8 h u polju Sati za slobodan dan šalje zahtjev (datum + razlog). Administrator ga prihvaća ili odbija (odjeljak „Zahtjevi za slobodan dan“ u izvještajima). Nakon prihvaćanja radnik vidi poruku i može odabrati Slobodan dan za taj datum; iskorištenjem se oduzima 8 h i stanje može postati negativno. Brisanjem tog unosa odobrenje se ponovno oslobađa.
+- **Izvještaj „Slobodni dani“**: popis kada je koji radnik koristio Slobodan dan u odabranom mjesecu (prikaz, CSV i list u Excelu), uz oznaku je li iskorišten uz odobren zahtjev.
+- **Statistika** (administrator → Izvještaji): rang liste za odabrani mjesec ili cijelu godinu: najviše sati, redovni rad, višak i manjak prema fondu, dani s radom, najviše sati u danu, dani s 9+ sati, bolovanje, godišnji odmor, slobodni dani, rad na praznik, terenski dodatak, topli obroci (ukupno i po opciji), stanje sati za slobodan dan, dani bez unosa, najviše sati radnika na gradilištu te gradilišta po satima i broju radnika. Prvo mjesto ima medalju, a klikom na naslov otvara se cijela lista.
+- **Sati po gradilištima i mjesecima** (administrator → Izvještaji): za svako gradilište tablica radnika × mjeseci s ukupnim satima po radniku i po mjesecu te ukupno. Razdoblje: odabrana godina ili ukupno (sve godine); izvoz u Excel (list po gradilištu) i CSV.
+- **Godišnji odmor**: administrator za svakog radnika i godinu upisuje ukupni godišnji odmor i početno iskorišteno stanje (Izvještaji → Godišnji odmor). Iskorišteno = početno + broj dana s upisom Godišnji odmor (aplikacija zbraja sama). Radnik šalje zahtjev (jedan dan ili od-do, računaju se samo radni dani bez praznika); administrator ga odobrava ili odbija. Opcija Godišnji odmor otključava se samo za odobrene dane. Administrator može odobriti godišnji i više radnika odjednom bez zahtjeva; radnici dobivaju obavijest na vrhu sučelja koju potvrde gumbom „U redu“.
+- **Topli obrok je obavezan** za Redovan rad i Rad na praznik: polje je prazno ("– odaberite topli obrok –") i bez odabira jedne od opcija koje je unio administrator unos se ne može spremiti. Ako je za taj datum topli obrok već upisan (npr. drugo gradilište istog dana), drugi unos ga ne traži.
+- **Budući datumi**: radni sati (Redovan rad, Rad na praznik) mogu se upisati najkasnije za današnji datum. Za budući datum nude se samo vrste bez sati (Bolovanje, Godišnji odmor uz odobrenje, Slobodan dan uz uvjete). Polje sati je zadano 0 i mora biti veće od 0 za radne sate.
+- **Početni ekran radnika**: prikazuje samo fond sati, sate za slobodan dan i obavijesti administratora, a ispod su četiri prečaca u 2×2 rasporedu: ŠIHTERICA (plava), GODIŠNJI (ljubičasta), SLOBODNI DAN (žuta) i IZVJEŠTAJI (zelena). Svaki otvara svoju stranicu (ŠIHTERICA sadrži i Završi unos), a u gornjem desnom kutu je tipka s kućicom za povratak na početnu.
+- **Početni ekran administratora**: zahtjevi na čekanju (slobodni dan, godišnji odmor, ponovno otvaranje mjeseca) i prečaci: IZVJEŠTAJI (plava), SLOBODNI DANI (žuta), GODIŠNJI ODMOR (crvena), GRADILIŠTA (zelena), STATISTIKA (ljubičasta) i POSTAVKE (siva: gradilišta, topli obrok, korisnici). Svaka stranica ima kućicu za povratak; filter Mjesec/Radnik/Gradilište/Vrsta i izvozi vide se na svim stranicama osim Postavki.
+- **Topli obrok (administrator)**: gumb TOPLI OBROK (narančast) otvara izvještaj koje je dane tko koristio koji restoran. Filteri: mjesec (prazno = svi mjeseci), radnik i restoran. Prikazuje zbroj po restoranima, popis po radnicima (restoran, broj obroka, dani) i popis svih obroka.
+- **Logo**: datoteka `public/logo.png` prikazuje se na vrhu svake stranice (i prijave). Za zamjenu logotipa dovoljno je zamijeniti tu datoteku.
+- **Odluke o zahtjevima (radnik)**: prihvaćen ili odbijen zahtjev za slobodan dan i godišnji odmor ostaje na početnoj stranici radnika do kraja zadnjeg dana na koji se zahtjev odnosi. Nema gumba za potvrdu: čim se radnikova početna stranica otvori, odluka se bilježi kao viđena, a ispod poruke piše da je administrator obaviješten o čitanju, a administrator to vidi uz zahtjev ("viđeno" s datumom i vremenom ili "nije viđeno").
+- **Izmjena odluke (administrator)**: uz svaki riješeni zahtjev (slobodan dan, godišnji odmor, ponovno otvaranje mjeseca) gumb "Promijeni u odbijeno/prihvaćeno". Radnik dobiva novu obavijest "Administrator je izmijenio odluku" (kartica na početnoj stranici i obavijest), a status viđenja kreće ispočetka. Ne može se odbiti već iskorišten slobodan dan ni godišnji odmor koji je radnik već upisao. Odluka se ne može mijenjati ni kad je datum događaja prošao (slobodan dan: dan poslije tog datuma; godišnji odmor: dan poslije prvog dana odmora).
+- **Slobodni dani (administrator)**: na dnu stranice SLOBODNI DANI tablica za trenutni mjesec (bez filtera): radnik, sati za slobodan dan i status (odobreno s datumom, iskorišteno ili na čekanju). Prikazani su radnici s 5 ili više sati i radnici s odobrenim zahtjevom.
+- **Prekovremeni rad**: svi sati vrste Rad na praznik te sati redovnog rada iznad 9 h dnevno od ponedjeljka do četvrtka, iznad 8 h petkom te svi sati rada subotom i nedjeljom. Zbroj je po radniku i danu (svi unosi tog dana), a višak se pripisuje gradilištima kasnijih unosa. Rad na praznik ne troši dnevni prag redovnog rada. Administrator ga vidi u stupcu Prekovremeni u izvještaju po radniku, po danima, po gradilištima i u popisu svih unosa, u Excel/CSV izvozima te u Statistici (rang liste: najviše prekovremenih sati radnika i gradilišta). Bolovanje, godišnji odmor, slobodan dan i plaćeni praznik (vrsta Praznik) ne ulaze u prekovremene sate. **Prijenos u redovan rad**: ako radnik za završen ili prošli mjesec nema ispunjen fond sati (sati bez prekovremenih < fond), manjak se prenosi iz prekovremenih sati u redovan rad; preneseni sati vide se u stupcu Preneseno u redovan rad (izvještaj po radniku i izvozi) i oduzimaju se od prekovremenih (razmjerno po unosima, pa i po gradilištima). Tekući mjesec koji radnik nije završio ne prenosi se.
+- **Odustajanje od zahtjeva (radnik)**: dok zahtjev čeka odgovor administratora (slobodan dan, godišnji odmor, ponovno otvaranje mjeseca), radnik ga može povući gumbom "Odustani od zahtjeva" uz potvrdu. Zahtjev se briše, a već riješeni zahtjevi ne mogu se povući.
+- **Onemogućavanje i brisanje korisnika (administrator)**: u Postavkama uz svakog korisnika gumbi "Onemogući prijavu" / "Omogući prijavu" i "Izbriši". Onemogućen korisnik se ne može prijaviti (ni postojeća prijava ne radi dalje), a podaci ostaju. Brisanje je logičko: korisnik nestaje s popisa i ne može se prijaviti, ali se ime i svi dosadašnji unosi, zahtjevi i odobrenja zadržavaju u izvještajima i statistici (u filteru Radnik vodi se kao "izbrisan"), a novi podaci se ne dodaju. Njegovi zahtjevi koji su čekali odgovor se brišu. Izbrisano korisničko ime može se ponovno koristiti. **Trajno brisanje**: u Postavkama → Korisnici → *Izbrisani korisnici* gumb "Trajno obriši"; trajno obrisan korisnik više se ne nudi ni u jednom filteru (ni uz "svi radnici"), briše mu se e-mail i lozinka, a ime i svi uneseni podaci ostaju u evidenciji, izvještajima i statistici.
+- **Filter radnika (administrator)**: ispod padajućeg izbornika Radnik (u izvještajima i kod toplog obroka) bira se prikaz "aktivni radnici" ili "svi radnici (i izbrisani)"; izbor se pamti u pregledniku. Onemogućeni radnici su među aktivnima, uz oznaku.
+- **Gradilišta (radnik)**: radnik bira gradilište samo s administratorova popisa (vlastiti unos naziva više nije moguć; stari ručno upisani unosi ostaju i mogu se uređivati). U ŠIHTERICI gumb **Zahtjev za novo gradilište** šalje opisni naziv administratoru, koji ga na početnoj stranici dodaje (uz mogućnost uređivanja naziva) ili odbija. Svako novo gradilište (iz zahtjeva ili dodano u Postavkama) radnicima se prikazuje kao obavijest pri prvom sljedećem otvaranju aplikacije, a poslije više ne.
+- **Opcije toplog obroka**: nove opcije koje administrator doda u Postavkama spremaju se velikim tiskanim slovima.
+- **Izmjena korisnika (administrator)**: gumb "Izmijeni" uz svakog korisnika u Postavkama otvara obrazac za ime i prezime, korisničko ime, ulogu, e-mail i (po želji) novu lozinku. Korisničko ime mora biti jedinstveno; vlastitu ulogu administrator ne može mijenjati. Unosi i izvještaji ostaju vezani uz korisnika i nakon promjene imena.
+- **ODOBRENI ZAHTJEVI (administrator)**: zasebna stranica (tirkizni gumb) s popisom svih zahtjeva i odobrenja – slobodni dani, godišnji odmor (i odobrenja bez zahtjeva) i ponovno otvaranje mjeseca – s filterima godina, vrsta, status i radnik. Uz svaku odluku piše koji ju je administrator donio i kada, je li je radnik vidio, te gumb za promjenu odluke.
+- **Početne stranice**: riješeni zahtjevi i obavijesti o odobrenjima prikazuju se do kraja dana na koji se odnose (za godišnji odmor do zadnjeg dana), a dan poslije nestaju s početne stranice administratora i radnika. Odluka o ponovnom otvaranju mjeseca prikazuje se na dan odluke. Sve ostaje vidljivo na stranici ODOBRENI ZAHTJEVI.
+- **Kalendar u ŠIHTERICI (radnik)**: datum se bira u kalendaru. Radni dani (pon–pet, uključujući praznike) do danas bez ijednog unosa označeni su crveno, dani s unosom imaju zelenu točku, slobodan dan ima žuti okvir i žuto slovo S preko broja, godišnji odmor ljubičasti okvir i ljubičasto slovo G, praznici su podcrtani, a ispod kalendara piše koliko dana nedostaje.
+- **Spremi kao PDF (radnik)**: na stranici IZVJEŠTAJI gumb sprema PDF datoteku na uređaj (radni sati, slobodni dani, bolovanje i godišnji odmor za odabrani mjesec ili godinu). PDF se izrađuje u pregledniku, bez dodatnih programa.
+- **Upute za korištenje (radnik)**: okrugli gumb **?** u donjem desnom kutu radnikove početne stranice otvara upute (prijava, početna stranica, ŠIHTERICA, GODIŠNJI, SLOBODNI DAN, IZVJEŠTAJI). Upute su u `public/index.html` (odjeljak `p-up`) i ažuriraju se uz svaku nadogradnju; na vrhu piše datum zadnjeg ažuriranja.
+- **OBAVIJESTI RADNICIMA (administrator)**: ružičasti gumb na početnoj. Tekstualna poruka jednom radniku, odabranima ili svim aktivnim radnicima. Radnik je vidi na početnoj stranici dok ne klikne "Pročitao/la sam"; administrator uz svaku poslanu poruku vidi "Pročitalo: x / y" i za svakog radnika vrijeme čitanja ili "nije pročitano". Poruka se može obrisati.
+- **IZVJEŠTAJI (radnik)**: zelena kartica s pregledom prošlih razdoblja (mjesec ili cijela godina): radni sati (po datumima, a za godinu po mjesecima s fondom i razlikom), slobodni dani s datumima, bolovanje s datumima i iskorišteni godišnji odmor s datumima.
+
+## Cloudflare Tunnel
+Ako aplikaciju objavljujete preko Cloudflare Tunnela (cloudflared na istom računalu, javni naziv → `http://localhost:3000`), ne treba otvarati portove ni koristiti Caddy. Aplikacija tada za zaštitu od pogađanja lozinke koristi adresu klijenta iz zaglavlja `CF-Connecting-IP`, ali samo kad zahtjev dolazi s localhosta.
+
+## Nadogradnja na novu verziju (podaci se uvijek zadržavaju)
+Svi podaci su u mapi `data` (datoteka `db.json`). Nova verzija aplikacije nikad ne dolazi s mapom `data` i nikad je ne briše.
+1. Preuzmite novi `evidencija.zip` (npr. u Downloads).
+2. PowerShell kao administrator:
+   `powershell -ExecutionPolicy Bypass -File C:\evidencija\nadogradnja.ps1 -Zip "C:\Users\Administrator\Downloads\evidencija.zip"`
+3. Skripta zaustavi aplikaciju, spremi kopiju cijele stare verzije s podacima u `C:\evidencija-backup\DATUM`, kopira nove datoteke (bez mape `data`) i ponovno pokrene aplikaciju.
+
+Kod pokretanja aplikacija sama:
+- spremi kopiju podataka u `data\backup` (čuva zadnjih 30 kopija pri pokretanju),
+- ako nova verzija treba drugačiji oblik podataka, prvo spremi kopiju `db-prije-vN-...json`, pa postojeće podatke nadogradi (ništa se ne briše),
+- ako netko pokrene stariju verziju na novijim podacima, aplikacija odbija raditi i ne dira podatke.
+
+Vraćanje na prethodnu verziju: zaustavite zadatak, kopirajte sadržaj iz `C:\evidencija-backup\DATUM` natrag u `C:\evidencija` i pokrenite zadatak.
+
+## Zaboravljena lozinka administratora
+Zaustavite aplikaciju (`Stop-ScheduledTask EvidencijaSati`), pa u `C:\evidencija`: `node reset-admin.js admin NovaLozinka123`, zatim `Start-ScheduledTask EvidencijaSati`. Podaci ostaju, a prije promjene se sprema kopija.

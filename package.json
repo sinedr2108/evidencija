@@ -1,0 +1,9 @@
+{
+  "name": "evidencija-sati",
+  "version": "1.0.0",
+  "description": "Evidencija radnog vremena radnika na gradilištima",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "optionalDependencies": { "nodemailer": "^6.9.0" }
+}
