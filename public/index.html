@@ -124,7 +124,8 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <ul><li>Otvorite adresu aplikacije koju ste dobili e-mailom i upišite korisničko ime i lozinku.</li>
    <li>Nakon prve prijave promijenite lozinku: na početnoj stranici gumb <b>Lozinka</b>.</li>
    <li>Aplikaciju dodajte na početni zaslon mobitela: Chrome → izbornik ⋮ → <i>Dodaj na početni zaslon</i>; iPhone (Safari) → <i>Dijeli</i> → <i>Dodaj na početni zaslon</i>.</li>
-   <li>Ako zaboravite lozinku, javite se administratoru – on vam može poslati nove podatke za prijavu.</li></ul>
+   <li>Ako zaboravite lozinku, javite se administratoru – on vam može poslati nove podatke za prijavu.</li>
+   <li>Aplikacija se <b>sama osvježava</b> (svakih desetak sekundi): odluke, poruke i obavijesti administratora pojavit će se bez odjave i ponovne prijave. Dok upisujete tekst, osvježavanje čeka da završite.</li></ul>
    <h3>Početna stranica</h3>
    <ul><li><b>Fond sati</b> – koliko sati treba odraditi u mjesecu (radni dani × 8 h) i koliko ste upisali.</li>
    <li><b>Sati za slobodan dan</b> – vaše trenutno stanje (vidi dio Slobodni dan).</li>
@@ -287,7 +288,7 @@ function dlgOpen(t,inp,v){return new Promise(res=>{$('dtx').textContent=t;const 
 const cf=t=>dlgOpen(t,0),pr=(t,v)=>dlgOpen(t,1,v);
 const showLogin=()=>{$('login').classList.remove('hide');$('app').classList.add('hide');$('upb').classList.add('hide');snShow=[]};
 async function load(){
- try{me=await api('GET','me');const d=await api('GET','data');entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];if(me.role==='admin')users=await api('GET','users')}catch(e){return}
+ try{me=await api('GET','me');const d=await api('GET','data');entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin')users=await api('GET','users')}catch(e){return}
  $('login').classList.add('hide');$('app').classList.remove('hide');draw();
 }
 const mine=()=>entries.filter(e=>e.uid===me.id);
@@ -630,5 +631,13 @@ $('lu2').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.pw){const n=await pr('Nova lozinka (min. 6 znakova):');if(n){await api('PUT','users/'+b.dataset.pw,{password:n});toast('Lozinka je promijenjena.')}}
   else if(b.dataset.dis){const[id,d]=b.dataset.dis.split('|');if(d==='1'&&!await cf('Onemogućiti prijavu? Radnik se neće moći prijaviti ni unositi podatke, a svi dosadašnji podaci ostaju.'))return;await api('PUT','users/'+id,{disabled:d==='1'});toast(d==='1'?'Prijava je onemogućena.':'Prijava je omogućena.');await load()}
   else if(b.dataset.del&&await cf('Izbrisati korisnika iz aplikacije? Više se neće moći prijaviti ni unositi podatke. Svi dosad uneseni podaci ostaju u evidenciji i izvještajima.')){await api('DELETE','users/'+b.dataset.del);await load()}}catch(x){toast(x.message)}};
+/* Automatsko osvježavanje: svakih 10 s (i pri povratku u aplikaciju) provjeri je li itko promijenio podatke; ako jest, učitaj ih ponovno.
+   Ne osvježava dok korisnik upisuje u polje ili je otvoren dijalog – tada se osvježi čim završi. */
+let liveRev=null,liveBusy=0;
+async function liveCheck(){if(!me||liveBusy||document.hidden||$('app').classList.contains('hide'))return;
+ const a=document.activeElement,typing=a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT'&&/^(text|number|password|email|search|tel)$/.test(a.type));
+ if(typing||!$('dlg').classList.contains('hide'))return;
+ liveBusy=1;try{const r=await api('GET','rev');if(r.rev!==liveRev)await load()}catch(e){}finally{liveBusy=0}}
+setInterval(liveCheck,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)liveCheck()});window.addEventListener('focus',liveCheck);
 /*BOOT*/load().then(()=>{if(!me)showLogin()});/*/BOOT*/
 </script></body></html>

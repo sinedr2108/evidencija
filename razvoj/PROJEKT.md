@@ -17,6 +17,7 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 - Javno preko **Cloudflare Tunnela** (cloudflared kao usluga → `http://localhost:3000`), bez otvorenih portova. Mreža: T-Com Fritzbox (optika) → UniFi Dream Machine SE.
 - E-mail: tvrtkina domena `tid-intel.hr`, pošiljatelj `sihterica@tid-intel.hr`; SMTP se upisuje u aplikaciji (Postavke). Slanje na vanjske adrese (npr. Gmail) radi (potvrđeno 23.10.2026.).
 - Nadogradnja: `powershell -ExecutionPolicy Bypass -File C:\evidencija\nadogradnja.ps1 -Zip "...\evidencija.zip"`.
+- **Nadogradnje radi Claude** (od 23.10.2026.): kod je u GitHub repozitoriju `sinedr2108/evidencija` (javni, mapa `data` nikad ne ide gore). Na serveru radi `claude remote-control` u `C:\evidencija` (prozor PowerShell Admin mora ostati otvoren). Postupak: izmjena → push na `main` → na serveru `git clone` u TEMP, `git archive` zip bez `razvoj` → `nadogradnja.ps1 -Zip`. Denis potvrđuje upisom „da, nadogradi” u razgovoru. Upute: `upute/priprema-servera.md`. Server je 23.10.2026. nadograđen s verzije podataka 2 na 5.
 
 ## Pravila poslovanja (najvažnija)
 - Vrste upisa: Redovan rad, Bolovanje, Godišnji odmor, Slobodan dan, Praznik, Rad na praznik. Bolovanje/godišnji/praznik = 8 h, slobodan dan = 0 h. Praznik i Rad na praznik samo na državni praznik RH (uklj. Uskrs/Tijelovo). Rad se ne upisuje za budućnost.
@@ -35,6 +36,7 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 - Kalendar u ŠIHTERICI: crveno = radni dan bez unosa, zelena točka = ima unos, žuto S = slobodan dan, ljubičasto G = godišnji, podcrtano = praznik.
 - IZVJEŠTAJI radnika: mjesec/godina, kartice, **Spremi kao PDF**.
 - Administrator – početna: zahtjevi na čekanju + gumbi IZVJEŠTAJI, SLOBODNI DANI, GODIŠNJI ODMOR (crvena), GRADILIŠTA, OBAVIJESTI RADNICIMA, ODOBRENI ZAHTJEVI, STATISTIKA, TOPLI OBROK, POSTAVKE. Svaka podstranica ima kućicu za povratak; logo na vrhu.
+- **Automatsko osvježavanje** (od 23.10.2026.): preglednik svakih 10 s pita `/api/rev` (broj izmjene, samo u memoriji servera, raste pri svakom `save()`) i ponovno učitava podatke kad se promijeni; ne osvježava dok se upisuje tekst ili je otvoren dijalog.
 - Filter radnika: aktivni / svi (i izbrisani). Nove opcije toplog obroka velikim slovima.
 
 ## Dogovoreni način rada

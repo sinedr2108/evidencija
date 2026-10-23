@@ -5,7 +5,9 @@ const clientIp=req=>{const a=req.socket.remoteAddress||'';return /^(::1|127\.0\.
 const PORT=+process.env.PORT||3000,DIR=path.join(__dirname,'data'),DB=path.join(DIR,'db.json');
 fs.mkdirSync(DIR,{recursive:true});
 const db=fs.existsSync(DB)?JSON.parse(fs.readFileSync(DB,'utf8')):{users:[],entries:[],closed:[],sites:[],meals:['Vlastiti trošak','Restoran 1','Restoran 2','Restoran 3','Ostali restorani'],secret:crypto.randomBytes(32).toString('hex')};
-const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+'.tmp',DB)};
+/* rev: broj izmjene podataka (samo u memoriji); preglednici ga povremeno provjeravaju i osvježe prikaz kad se promijeni */
+let rev=Date.now();
+const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+'.tmp',DB);rev++};
 /* ===== Podaci se nasljeđuju iz svake prethodne verzije =====
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
@@ -97,7 +99,8 @@ R('GET','/api/data',1,c=>{const a=c.u.role==='admin';
     gorq:db.gorq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
     sitereq:db.sitereq.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
     poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,fromName:core.nameOf(p.from)})),
-    go:a?null:core.goStats(c.u.id,new Date().getFullYear()),godatumi:a?[]:[...core.goDates(c.u.id)]})});
+    go:a?null:core.goStats(c.u.id,new Date().getFullYear()),godatumi:a?[]:[...core.goDates(c.u.id)],rev})});
+R('GET','/api/rev',1,c=>c.send(200,{rev}));
 function linkSl(e){db.slreq.forEach(q=>{if(q.entryId===e.id)q.entryId=null});if(e.vrsta!=='Slobodan dan')return;
   const m=e.date.slice(0,7),mine=db.entries.filter(x=>x.uid===e.uid&&x!==e);
   if(core.bank(mine,m,core.pr(e.uid,m))<8){const ap=core.approval(e.uid,e.date,null);if(ap)ap.entryId=e.id}}

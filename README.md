@@ -32,6 +32,7 @@ Lozinke putuju mrežom, zato koristite HTTPS: IIS s *URL Rewrite + ARR* kao reve
 Svi podaci su u jednoj datoteci: `data\db.json`. Kopirajte je redovito (npr. Task Scheduler jednom dnevno).
 
 ## 6. Novosti u izvještajima
+- **Automatsko osvježavanje** (23.10.2026.): svaka izmjena podataka (unos, zahtjev, odluka, poruka, korisnik, postavke) u roku od oko 10 s vidljiva je svim prijavljenim korisnicima i administratorima, bez odjave. Preglednik svakih 10 s (i pri povratku u aplikaciju) pita `/api/rev` je li se išta promijenilo i tek tada ponovno učitava podatke. Dok korisnik upisuje tekst ili je otvoren dijalog, osvježavanje se odgađa. Broj izmjene drži se samo u memoriji – podaci (`db.json`) se ne mijenjaju, verzija podataka ostaje 5.
 - **Excel (.xlsx)** i CSV izvoz (sažetak, po danima, po gradilištima, svi unosi, bez unosa).
 - **Filteri** po radniku, gradilištu i vrsti upisa vrijede za prikaz i za sve izvoze.
 - **Fond sati**: broj dana od ponedjeljka do petka u mjesecu (praznici na radni dan se računaju) × 8 h. Radnik ga vidi na vrhu sučelja. Razlika u izvještaju = upisani sati − fond. Uz filter po gradilištu ili vrsti fond i razlika se ne prikazuju.
