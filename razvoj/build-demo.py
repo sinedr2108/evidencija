@@ -163,6 +163,8 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='DELETE users'){adm();if(s[1]===U.id)fail('Ne možete obrisati sami sebe.');const x=db.users.find(z=>z.id===s[1]);if(!x||x.deleted)fail('Nije pronađeno.');x.deleted=Date.now();x.disabled=true;x.username='~'+x.id;x.email='';for(const k of ['slreq','gorq','requests'])db[k]=db[k].filter(r=>!(r.uid===x.id&&r.status==='open'));db.obav=db.obav.filter(o=>o.uid!==x.id)}
  else if(key==='POST password'){fail('U demu se lozinka ne mijenja.')}
  else if(key==='GET rev'){out={rev:liveRev}}
+ else if(key==='GET inbox'){out=core().inbox(U.id)}
+ else if(key==='DELETE inbox'){if(!core().inboxHide(U.id,s[1],s[2]))fail('Stavka nije pronađena.');out={ok:1}}
  else if(key==='GET report'){adm();if(!mon(Q.month))fail('Neispravan mjesec.');out=C.report(Q.month,flt(Q),todayStr())}
  else if(key==='POST report/send'){adm();if(!mon(b.month))fail('Neispravan mjesec.');const to=db.users.filter(z=>z.role==='admin'&&z.email).map(z=>z.email);out={msg:'Demo: e-mail se ovdje ne šalje. Na pravom serveru ide s Excel privitkom na: '+(to.join(', ')||'(nema upisanih adresa)')}}
  else fail('Nepoznata radnja.');

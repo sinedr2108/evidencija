@@ -68,7 +68,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
  <button class="big" id="lb">Prijava</button><div class="msg" id="lm" style="color:var(--er)"></div>
 </section><!--/LOGIN-->
 <div id="app" class="hide">
- <div class="fl" id="hdr" style="justify-content:space-between;align-items:flex-start"><div><h1>Evidencija radnog vremena</h1><div class="mu" id="who"></div></div><span class="fl"><button class="sm" id="pw">Lozinka</button><button class="sm" id="out">Odjava</button></span></div>
+ <div class="fl" id="hdr" style="justify-content:space-between;align-items:flex-start"><div><h1>Evidencija radnog vremena</h1><div class="mu" id="who"></div></div><span class="fl"><button class="sm hide" id="ptb" aria-label="Poruke i zahtjevi" title="Poruke i zahtjevi" style="position:relative;padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span id="ptn" class="hide" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--er);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center"></span></button><button class="sm" id="pw">Lozinka</button><button class="sm" id="out">Odjava</button></span></div>
  <div class="fl hide" id="nav" style="justify-content:space-between;align-items:center;margin-bottom:10px"><h1 id="navt" style="margin:0"></h1><button class="sm" id="home" aria-label="Početna stranica" title="Početna" style="padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button></div>
  <div class="card" id="fond" style="margin-top:10px"></div>
  <div id="odl"></div>
@@ -118,6 +118,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <div id="szf"><label for="szd">Datum slobodnog dana</label><input type="date" id="szd"><label for="szr">Razlog (neobavezno)</label><input id="szr" maxlength="200"><button class="sm pri" id="szb" style="margin-top:10px">Pošalji zahtjev</button></div>
    <div id="szs" style="margin-top:8px"></div></div>
   </div>
+  <div id="p-pt" class="pg hide"><div class="mu" style="margin-bottom:8px">Poruke i obavijesti koje ste primili te zahtjevi koje ste poslali, najnovije na vrhu. Na kraju mjeseca automatski ostaje samo 5 najnovijih.</div><div id="ptl"></div></div>
   <div id="p-up" class="pg hide"><div class="card upute">
    <p class="mu">Upute za radnike · ažurirano 23.10.2026.</p>
    <h3>Prijava</h3>
@@ -132,6 +133,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li><b>Obavijesti</b> – odluke administratora o vašim zahtjevima. Vide se do kraja dana na koji se odnose; administrator vidi da ste ih pročitali čim otvorite početnu stranicu.</li>
    <li><b>Novo gradilište</b> – kad administrator doda novo gradilište, obavijest se prikaže pri prvom sljedećem otvaranju aplikacije.</li>
    <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada.</li>
+   <li><b>Gumb s pismom</b> (gore, uz Lozinka i Odjava) – sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište) s njihovim statusom, najnovije na vrhu. Crveni broj na gumbu je broj nepročitanih poruka. Svaku stavku možete obrisati gumbom ✕ (briše se samo iz vaše pošte). Na kraju mjeseca automatski ostaje samo 5 najnovijih.</li>
    <li>Četiri gumba vode na stranice <b>ŠIHTERICA</b>, <b>GODIŠNJI</b>, <b>SLOBODNI DAN</b> i <b>IZVJEŠTAJI</b>. Gumb s kućicom gore desno vraća vas na početnu.</li></ul>
    <h3>ŠIHTERICA – dnevni unos</h3>
    <ol><li>U kalendaru odaberite dan.
@@ -282,7 +284,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
 <script src="/core.js"></script>
 <script>
 const $=i=>document.getElementById(i),E=s=>{const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML};
-let poruke=[],sitereq=[],snShow=[];let me,entries=[],closed=[],reqs=[],slreq=[],gorq=[],obav=[],go=null,godatumi=[],prij={},users=[],rep=null,tab='unos',editId=null;
+let poruke=[],sitereq=[],snShow=[],inbox={items:[],unread:0};let me,entries=[],closed=[],reqs=[],slreq=[],gorq=[],obav=[],go=null,godatumi=[],prij={},users=[],rep=null,tab='unos',editId=null;
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 /*API*/async function api(m,u,b){const r=await fetch('/api/'+u,{method:m,headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});
  const j=await r.json().catch(()=>({}));if(r.status===401&&u!=='login'){showLogin();throw new Error('Prijavite se.')}if(!r.ok)throw new Error(j.e||'Greška');return j}/*/API*/
@@ -293,7 +295,7 @@ function dlgOpen(t,inp,v){return new Promise(res=>{$('dtx').textContent=t;const 
 const cf=t=>dlgOpen(t,0),pr=(t,v)=>dlgOpen(t,1,v);
 const showLogin=()=>{$('login').classList.remove('hide');$('app').classList.add('hide');$('upb').classList.add('hide');snShow=[]};
 async function load(){
- try{me=await api('GET','me');const d=await api('GET','data');entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin')users=await api('GET','users')}catch(e){return}
+ try{me=await api('GET','me');const d=await api('GET','data');entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin')users=await api('GET','users');else inbox=await api('GET','inbox')}catch(e){return}
  $('login').classList.add('hide');$('app').classList.remove('hide');draw();
 }
 const mine=()=>entries.filter(e=>e.uid===me.id);
@@ -346,13 +348,13 @@ function draw(){
  $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
  if(me.role==='admin'&&tab==='adm')drawAdm();
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
- drawCal();applyPage();
+ drawCal();drawPt();applyPage();
 }
-let page='hm';const TIT={up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke'};
+let page='hm';const TIT={pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
- const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps']:['sh','go','sl','iz','up'];
+ const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps']:['sh','go','sl','iz','up','pt'];
  $('upb').classList.toggle('hide',adm||page!=='hm');
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
@@ -363,6 +365,17 @@ function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm){$('fond').classList.toggle('hide',page!=='hm');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
 function setPage(p){page=p;try{if(p==='hm'||p==='ahm'){if(location.hash)history.pushState(null,'',location.pathname+location.search)}else location.hash=p}catch(e){}draw();window.scrollTo(0,0)}
 document.querySelectorAll('.tile').forEach(b=>b.onclick=()=>setPage(b.dataset.pg));
+/* Pošta radnika: gumb s pismom (broj = nepročitane poruke i obavijesti) */
+function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',adm);if(adm)return;
+ $('ptn').classList.toggle('hide',!inbox.unread);$('ptn').textContent=inbox.unread;
+ const ts=t=>new Date(t).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),C={po:'#db2777',ob:'var(--ac)',sl:'var(--yl)',go:'var(--pu)',mj:'var(--sh)',gr:'var(--gr)'};
+ $('ptl').innerHTML=inbox.items.length?inbox.items.map(x=>{const req=x.status!==undefined;
+  const s=!req?(x.read?'<span class="mu">pročitano</span>':'<b style="color:var(--er)">nepročitano</b>'):stTxt(x)+(x.changed?' <span class="mu">(odluka izmijenjena)</span>':'')+(x.decided?' <span class="mu">· '+ts(x.decided)+'</span>':'');
+  return '<div class="card" style="border-left:5px solid '+C[x.k]+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(x.t)+'</b><div class="mu">'+(req?'poslano ':'')+ts(x.ts)+(x.from?' · '+E(x.from):'')+'</div></div><span><button class="x" data-ptd="'+E(x.k+'|'+x.id)+'" aria-label="Obriši" title="Obriši">✕</button></span></div>'
+   +'<div style="white-space:pre-wrap;margin:6px 0">'+E(x.text)+'</div><div>'+s+'</div>'+(x.note?'<div class="mu">Napomena: '+E(x.note)+'</div>':'')+'</div>'}).join(''):'<div class="card mu">Nema poruka ni zahtjeva.</div>'}
+$('ptb').onclick=()=>setPage('pt');
+$('ptl').onclick=async e=>{const b=e.target.closest('[data-ptd]');if(!b)return;const[k,id]=b.dataset.ptd.split('|');
+ if(!await cf('Obrisati ovu stavku iz vaše pošte? Administratoru i u izvještajima ostaje zapisana.'))return;try{await api('DELETE','inbox/'+k+'/'+id);await load()}catch(x){toast(x.message)}};
 $('home').onclick=()=>setPage('hm');$('upb').onclick=()=>setPage('up');
 window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);page=TIT[p]?p:'hm';if(me)draw()});
 const isHol=d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Core.holidays(+d.slice(0,4)).has(d);

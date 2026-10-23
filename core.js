@@ -157,7 +157,7 @@
     db.requests = db.requests || [];
     db.prijenos = db.prijenos || {};
     db.slreq = db.slreq || [];
-    db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || [];
+    db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {};
     const dfmt = d => d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.';
     /* radni dani (pon-pet, bez praznika) od-do, najvise 92 dana; null = neispravan raspon */
     function rangeDates(from, to) {
@@ -179,6 +179,34 @@
     const approval = (uid, date, ex) => db.slreq.find(q => q.uid === uid && q.status === 'approved' && q.date === date && (!q.entryId || q.entryId === ex));
     const pr = (uid, m) => +db.prijenos[uid + '|' + m] || 0;
     const nameOf = id => (db.users.find(u => u.id === id) || {}).name || '?';
+    /* Pošta radnika: primljene poruke i obavijesti te poslani zahtjevi, najnovije prvo. Zapisi se nikad ne brišu, samo skrivaju za tog radnika
+       (db.inboxDel[uid]): ručno gumbom ✕ i automatski početkom mjeseca (inboxClean) – tada ostaje samo 5 najnovijih. */
+    const ymOf = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1); };
+    function inbox(uid) {
+      const del = new Set(db.inboxDel[uid] || []), L = [], st = q => ({ status: q.status, note: q.note || '', decided: q.decided || 0, changed: !!q.changed });
+      db.poruke.filter(p => p.to.includes(uid)).forEach(p => L.push({ k: 'po', id: p.id, ts: p.ts, t: 'Poruka administratora', text: p.text, from: nameOf(p.from), read: p.reads[uid] || 0 }));
+      db.obav.filter(o => o.uid === uid).forEach(o => L.push({ k: 'ob', id: o.id, ts: o.ts, t: 'Obavijest', text: o.text, read: o.read ? 1 : 0 }));
+      db.slreq.filter(q => q.uid === uid).forEach(q => L.push({ k: 'sl', id: q.id, ts: q.ts, t: 'Zahtjev za slobodan dan', text: dfmt(q.date) + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
+      db.gorq.filter(q => q.uid === uid && q.source !== 'admin').forEach(q => L.push({ k: 'go', id: q.id, ts: q.ts, t: 'Zahtjev za godišnji odmor', text: (q.dates.length === 1 ? dfmt(q.dates[0]) : dfmt(q.dates[0]) + ' – ' + dfmt(q.dates[q.dates.length - 1]) + ' (' + q.dates.length + ' dana)') + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
+      db.requests.filter(q => q.uid === uid).forEach(q => L.push({ k: 'mj', id: q.id, ts: q.ts, t: 'Zahtjev za ponovno otvaranje mjeseca', text: q.month.slice(5) + '.' + q.month.slice(0, 4) + '.' + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
+      db.sitereq.filter(q => q.uid === uid).forEach(q => L.push({ k: 'gr', id: q.id, ts: q.ts, t: 'Zahtjev za novo gradilište', text: q.text, ...st(q) }));
+      const items = L.filter(x => !del.has(x.k + '|' + x.id)).sort((a, b) => b.ts - a.ts);
+      return { items, unread: items.filter(x => (x.k === 'po' || x.k === 'ob') && !x.read).length };
+    }
+    /* Automatsko čišćenje pošte na kraju mjeseca: od stavki iz prijašnjih mjeseci ostaje samo 5 najnovijih (ukupno). Vraća broj skrivenih. */
+    function inboxClean(uid) {
+      const cur = ymOf(Date.now()), l = db.inboxDel[uid] = db.inboxDel[uid] || []; let n = 0;
+      inbox(uid).items.forEach((x, i) => { if (i >= 5 && ymOf(x.ts) < cur) { l.push(x.k + '|' + x.id); n++; } });
+      if (l.length > 1000) l.splice(0, l.length - 1000); return n;
+    }
+    /* Ručno brisanje iz pošte: skriva se samo radniku; nepročitana poruka/obavijest time se smatra pročitanom */
+    function inboxHide(uid, k, id) {
+      const it = inbox(uid).items.find(x => x.k === k && x.id === id); if (!it) return false;
+      if (k === 'po') { const p = db.poruke.find(x => x.id === id); if (p && !p.reads[uid]) p.reads[uid] = Date.now(); }
+      if (k === 'ob') { const o = db.obav.find(x => x.id === id); if (o) o.read = true; }
+      const l = db.inboxDel[uid] = db.inboxDel[uid] || []; l.push(k + '|' + id); if (l.length > 1000) l.splice(0, l.length - 1000);
+      return true;
+    }
     const fmtNum = n => String(r2(n)).replace('.', ',');
     /* Ako radnik za završen (ili prošli) mjesec nema ispunjen fond sati, manjak se prenosi iz prekovremenih sati u redovan rad.
        m.trans['uid|mjesec'] = broj prenesenih sati; prekovremeni sati unosa smanjuju se razmjerno. */
@@ -372,7 +400,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

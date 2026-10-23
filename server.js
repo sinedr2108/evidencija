@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=5;
+const DATA_VERSION=6;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -27,7 +27,8 @@ const MIGRATIONS={
     for(const o of d.obav||[])if(o.until===undefined){const m=[...String(o.text||'').matchAll(/(\d{2})\.(\d{2})\.(\d{4})\./g)].pop();o.until=m?m[3]+'-'+m[2]+'-'+m[1]:''}
   },
   4:d=>{ /* poruke administratora radnicima */ if(!Array.isArray(d.poruke))d.poruke=[]; },
-  5:d=>{ /* zahtjevi za novo gradilište i obavijesti o novim gradilištima */ if(!Array.isArray(d.sitereq))d.sitereq=[];if(!Array.isArray(d.siteNews))d.siteNews=[];const n=Date.now();(d.users||[]).forEach(u=>{if(!u.siteSeen)u.siteSeen=n}) }
+  5:d=>{ /* zahtjevi za novo gradilište i obavijesti o novim gradilištima */ if(!Array.isArray(d.sitereq))d.sitereq=[];if(!Array.isArray(d.siteNews))d.siteNews=[];const n=Date.now();(d.users||[]).forEach(u=>{if(!u.siteSeen)u.siteSeen=n}) },
+  6:d=>{ /* pošta radnika: što je radnik ručno obrisao iz svoje pošte (zapisi ostaju) */ if(!d.inboxDel||typeof d.inboxDel!=='object')d.inboxDel={};if(!d.inboxCleaned){const n=new Date();d.inboxCleaned=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')} }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -76,6 +77,8 @@ async function mail(month){
 }
 setInterval(()=>{const n=new Date(),t=new Date(+n+864e5),m=ym(n);
   if(t.getDate()===1&&n.getHours()>=23&&db.lastMail!==m){db.lastMail=m;save();mail(m).then(console.log,console.error)}},6e5);
+/* Automatsko čišćenje pošte radnika početkom svakog mjeseca (ostaje 5 najnovijih stavki; zapisi se ne brišu, samo skrivaju) */
+const inboxTick=()=>{const m=ym(new Date());if(db.inboxCleaned===m)return;db.users.filter(u=>u.role==='user').forEach(u=>core.inboxClean(u.id));db.inboxCleaned=m;save()};inboxTick();setInterval(inboxTick,6e5);
 
 /* ---- rute ---- */
 const routes=[],R=(m,p,a,f)=>routes.push([m,new RegExp('^'+p.replace(/:\w+/g,'([^/]+)')+'$'),a,f]);
@@ -185,6 +188,9 @@ R('POST','/api/poruke',2,c=>{const t=String(c.b.text||'').trim().slice(0,2000);i
 R('POST','/api/poruke/:id/read',1,c=>{const p=db.poruke.find(x=>x.id===c.p[0]&&x.to.includes(c.u.id));if(!p)return c.send(404,{e:'Poruka nije pronađena.'});
   if(!p.reads[c.u.id])p.reads[c.u.id]=Date.now();save();c.send(200,{ok:1})});
 R('DELETE','/api/poruke/:id',2,c=>{const i=db.poruke.findIndex(x=>x.id===c.p[0]);if(i<0)return c.send(404,{e:'Poruka nije pronađena.'});db.poruke.splice(i,1);save();c.send(200,{ok:1})});
+/* Pošta radnika (gumb s pismom) */
+R('GET','/api/inbox',1,c=>c.send(200,core.inbox(c.u.id)));
+R('DELETE','/api/inbox/:k/:id',1,c=>{if(!core.inboxHide(c.u.id,c.p[0],c.p[1]))return c.send(404,{e:'Stavka nije pronađena.'});save();c.send(200,{ok:1})});
 R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/close',1,c=>{if(noAdm(c))return;if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   const md=core.missingDays(c.u.id,c.b.month);if(md.length)return c.send(400,{e:'Unos se ne može završiti. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.'});
