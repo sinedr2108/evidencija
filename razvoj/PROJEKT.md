@@ -37,6 +37,7 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 - IZVJEŠTAJI radnika: mjesec/godina, kartice, **Spremi kao PDF**.
 - Administrator – početna: zahtjevi na čekanju + gumbi IZVJEŠTAJI, SLOBODNI DANI, GODIŠNJI ODMOR (crvena), GRADILIŠTA, OBAVIJESTI RADNICIMA, ODOBRENI ZAHTJEVI, STATISTIKA, TOPLI OBROK, POSTAVKE. Svaka podstranica ima kućicu za povratak; logo na vrhu.
 - **Automatsko osvježavanje** (od 23.10.2026.): preglednik svakih 10 s pita `/api/rev` (broj izmjene, samo u memoriji servera, raste pri svakom `save()`) i ponovno učitava podatke kad se promijeni; ne osvježava dok se upisuje tekst ili je otvoren dijalog.
+- Admin IZVJEŠTAJI: *Ukupno sati po danu* i *Svi unosi u mjesecu* skriveni, otvaraju se gumbima pod **Detaljni pregledi** s vlastitim filterima (od/do datuma, radnik, gradilište, vrsta, topli obrok).
 - Filter radnika: aktivni / svi (i izbrisani). Nove opcije toplog obroka velikim slovima.
 
 ## Dogovoreni način rada
