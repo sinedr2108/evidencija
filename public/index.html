@@ -37,6 +37,8 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
 .gt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.gt button{padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font-weight:600}
 .gt button.on{background:var(--gr);color:var(--grx);border-color:var(--gr)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.ms summary{padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ms[open] summary{border-color:var(--ac)}.ms>div{border:1px solid var(--bd);border-radius:10px;margin-top:4px;padding:4px 10px;max-height:260px;overflow:auto;background:var(--card)}.ms label{display:flex;gap:8px;align-items:center;color:var(--tx);margin:8px 0;font-size:15px}.ms input{width:auto}
+.a4grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.a4grid>.card{margin:0;padding:10px}.a4{display:block;aspect-ratio:210/297;background:#fff;border:1px solid var(--bd);border-radius:6px;overflow:hidden}.a4 img{width:100%;height:100%;object-fit:contain;display:block}
 .grp{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}.grp .tile{min-height:96px;font-size:19px}.t-ot{background:#ea580c;color:#fff}.t-al{background:var(--gy);color:#fff}
 .tile{min-height:110px;border:0;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:.04em;padding:12px;line-height:1.2;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 .t-sh{background:var(--sh);color:var(--shx)}.t-go{background:var(--pu);color:#fff}.t-go2{background:var(--rd);color:var(--rdx)}.t-sl{background:var(--yl);color:#1a1500}.t-iz{background:var(--gr);color:var(--grx)}
@@ -156,8 +158,9 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h3>OTPREMNICE – fotografiraj i pošalji</h3>
    <ol><li>Kliknite <b>FOTOGRAFIRAJ OTPREMNICU</b> – otvara se kamera mobitela. Fotografirajte otpremnicu ravno i čitljivo. Ako ima više stranica, fotografirajte svaku (najviše 10). Već snimljenu fotografiju možete odabrati gumbom <b>Odaberi iz galerije</b>.</li>
    <li>Pogrešnu fotografiju maknite gumbom ✕ na sličici.</li>
-   <li>Odaberite <b>gradilište</b> i <b>datum otpremnice</b>, po želji upišite napomenu i kliknite <b>POŠALJI OTPREMNICU</b>.</li>
-   <li>Ispod su vaše poslane otpremnice. Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li></ol>
+   <li>Odaberite <b>gradilište</b> i <b>datum otpremnice</b>, po želji upišite napomenu i kliknite <b>POŠALJI OTPREMNICU</b>. Ako ne znate na koje gradilište otpremnica ide, na kraju popisa odaberite <b>Odluka administratora</b>.</li>
+   <li>Ispod su vaše poslane otpremnice. Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li>
+   <li>Ako administrator zatraži <b>dodatno objašnjenje</b>, dobit ćete obavijest. Pitanje je ispod te otpremnice: upišite odgovor i kliknite <b>Pošalji odgovor</b>. Ako administrator promijeni gradilište, to piše uz otpremnicu.</li></ol>
    <h3>EVIDENCIJA RADNOG VREMENA</h3>
    <ul><li><b>Fond sati</b> – koliko sati treba odraditi u mjesecu (radni dani × 8 h) i koliko ste upisali.</li>
    <li><b>Sati za slobodan dan</b> – vaše trenutno stanje (vidi dio Slobodni dan).</li>
@@ -292,8 +295,10 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h2>Poslane poruke</h2><div id="pl"></div>
   </div>
   <div id="p-aot" class="pg hide"><div class="card">
-   <div class="grid3"><div><label for="aom">Mjesec (datum otpremnice)</label><input type="month" id="aom"></div><div><label for="aow">Radnik</label><select id="aow"></select></div><div><label for="aos">Gradilište</label><select id="aos"></select></div></div>
-   <div class="mu" id="aon" style="margin-top:6px"></div></div><div id="aol"></div></div>
+   <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label for="aod1">Datum otpremnice od</label><input type="date" id="aod1"></div><div><label for="aod2">do</label><input type="date" id="aod2"></div></div>
+   <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label>Gradilište</label><details class="ms"><summary id="aoss"></summary><div id="aosl"></div></details></div><div><label>Poslao</label><details class="ms"><summary id="aows"></summary><div id="aowl"></div></details></div></div>
+   <button class="sm" id="aox" style="margin-top:10px">Poništi filtere</button>
+   <div class="mu" id="aon" style="margin-top:6px"></div></div><div id="aol" class="a4grid"></div></div>
   <div id="p-aps" class="pg hide">
   <h2>Gradilišta (popis za radnike)</h2><div class="card"><div class="fl"><input id="ns" placeholder="Naziv gradilišta"><button class="sm" id="as">Dodaj</button></div><div id="ls"></div></div>
   <h2>Opcije toplog obroka</h2><div class="card"><div class="fl"><input id="nm" placeholder="NAZIV OPCIJE (NPR. RESTORAN 4)" autocapitalize="characters" style="text-transform:uppercase"><button class="sm" id="am2">Dodaj</button></div><div id="lm2"></div></div>
@@ -406,30 +411,62 @@ async function shrink(file){const src=URL.createObjectURL(file);try{const img=aw
  const s=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.round(img.naturalWidth*s);cv.height=Math.round(img.naturalHeight*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
  let q=.8,d=cv.toDataURL('image/jpeg',q);while(d.length>900000&&q>.3){q-=.1;d=cv.toDataURL('image/jpeg',q)}if(d.length>990000)throw new Error('Fotografija je prevelika.');return d}finally{URL.revokeObjectURL(src)}}
 const otTs=t=>new Date(t).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),otDm=d=>d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4)+'.';
-const otImgs=(o,dl)=>'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+o.files.map((f,i)=>'<span style="display:inline-flex;flex-direction:column;gap:4px;align-items:center"><a href="'+fotoSrc(f)+'" target="_blank" rel="noopener"><img src="'+fotoSrc(f)+'" alt="Fotografija '+(i+1)+'" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"></a>'+(dl?'<a class="sm" style="padding:4px 8px;text-decoration:none" href="'+fotoDl(f)+'" download>Preuzmi</a>':'')+'</span>').join('')+'</div>';
-const otCard=(o,adm)=>'<div class="card" style="border-left:5px solid #ea580c"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(o.site)+'</b> · '+otDm(o.date)+(adm?'<div><b>'+E(o.name)+'</b></div>':'')+'<div class="mu">poslano '+otTs(o.ts)+' · '+o.files.length+' fotogr.</div></div>'
- +((adm||new Date(o.ts).toLocaleDateString('sv')===today())?'<span><button class="x" data-otx="'+E(o.id)+'" aria-label="Obriši" title="Obriši">✕</button></span>':'')+'</div>'+(o.note?'<div style="margin-top:6px">'+E(o.note)+'</div>':'')+otImgs(o,adm)+'</div>';
+const otSiteTx=s=>s?E(s):'<span style="color:var(--er)">Odluka administratora</span>';
+/* radnik: popis poslanih otpremnica, izmjene gradilišta koje je napravio administrator i pitanja s poljem za odgovor */
+const otCard=o=>{const ch=o.files.map((f,i)=>o.adminSite[f]?'<div class="mu">Fotografija '+(i+1)+': administrator je odredio gradilište <b>'+E(o.adminSite[f])+'</b></div>':'').join('');
+ const pq=o.pitanja.map(q=>'<div style="margin-top:8px;padding:8px;border-radius:8px;background:var(--bg)"><div><b>Administrator pita</b> (fotografija '+(o.files.indexOf(q.f)+1)+', '+otTs(q.ts)+'):</div><div style="white-space:pre-wrap">'+E(q.text)+'</div>'
+  +(q.answer?'<div style="margin-top:4px"><b>Vaš odgovor:</b> <span style="white-space:pre-wrap">'+E(q.answer)+'</span></div>':'<input id="oa_'+E(q.id)+'" maxlength="1000" placeholder="Upišite odgovor" style="margin-top:6px"><button class="sm pri" data-oa="'+E(o.id+'|'+q.id)+'" style="margin-top:6px">Pošalji odgovor</button>')+'</div>').join('');
+ return '<div class="card" style="border-left:5px solid #ea580c"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+otSiteTx(o.site)+'</b> · '+otDm(o.date)+'<div class="mu">poslano '+otTs(o.ts)+' · '+o.files.length+' fotogr.</div></div>'
+ +(new Date(o.ts).toLocaleDateString('sv')===today()?'<span><button class="x" data-otx="'+E(o.id)+'" aria-label="Obriši" title="Obriši">✕</button></span>':'')+'</div>'+(o.note?'<div style="margin-top:6px">'+E(o.note)+'</div>':'')+ch
+ +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+o.files.map((f,i)=>'<a href="'+fotoSrc(f)+'" target="_blank" rel="noopener"><img src="'+fotoSrc(f)+'" alt="Fotografija '+(i+1)+'" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"></a>').join('')+'</div>'+pq+'</div>'};
+/* administrator: svaka fotografija zasebno u A4 okviru (portret), ispod pošiljatelj i datum slanja; višestruki filteri */
+let otSites=[],otFs=new Set(),otFw=new Set(),otEdit='';
+const otMs=(el,sum,vals,set,all)=>{for(const v of [...set])if(!vals.some(x=>x[0]===v))set.delete(v);
+ $(el).innerHTML=vals.map(([v,t])=>'<label><input type="checkbox" value="'+E(v)+'"'+(set.has(v)?' checked':'')+'> '+t+'</label>').join('')||'<div class="mu">Nema podataka.</div>';
+ $(sum).textContent=set.size?vals.filter(x=>set.has(x[0])).map(x=>x[0]?x[0]:'Odluka administratora').join(', '):all};
+const otItem=x=>{const o=x.o,f=x.f,qs=o.pitanja.filter(q=>q.f===f),k=o.id+'|'+f,ed=otEdit===k;
+ return '<div class="card"><a class="a4" href="'+fotoSrc(f)+'" target="_blank" rel="noopener" title="Otvori u punoj veličini"><img src="'+fotoSrc(f)+'" alt="Otpremnica" loading="lazy"></a>'
+ +'<div style="margin-top:8px"><b>'+E(o.name)+'</b> · poslano '+otTs(o.ts)+'</div>'
+ +'<div>Gradilište: <b>'+otSiteTx(x.site)+'</b>'+(o.adminSite[f]?' <span class="mu">(izmijenio administrator; radnik: '+(o.site?E(o.site):'Odluka administratora')+')</span>':'')+'</div>'
+ +'<div class="mu">Datum otpremnice '+otDm(o.date)+(o.files.length>1?' · fotografija '+(x.i+1)+'/'+o.files.length:'')+'</div>'+(o.note?'<div style="margin-top:4px">'+E(o.note)+'</div>':'')
+ +qs.map(q=>'<div style="margin-top:6px;padding:6px 8px;border-radius:8px;background:var(--bg);font-size:14px"><div><b>Pitanje</b> <span class="mu">'+otTs(q.ts)+'</span>: '+E(q.text)+'</div><div>'+(q.answer?'<b>Odgovor</b> <span class="mu">'+otTs(q.answerTs)+'</span>: '+E(q.answer):'<i class="mu">čeka odgovor radnika</i>')+'</div></div>').join('')
+ +(ed?'<div class="otedit" style="margin-top:8px"><select id="oes">'+otSites.map(s=>'<option'+(s===x.site?' selected':'')+'>'+E(s)+'</option>').join('')+'<option value="__new">+ Upiši novo gradilište…</option></select><input id="oen" class="hide" maxlength="100" placeholder="Naziv (vrijedi samo u Otpremnicama)" style="margin-top:6px"><div class="fl" style="margin-top:6px"><button class="sm pri" data-oes="'+E(k)+'">Spremi</button><button class="sm" data-oec="1">Odustani</button></div></div>':'')
+ +'<div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm" data-oe="'+E(k)+'">Promijeni gradilište</button><button class="sm" data-oq="'+E(k)+'">Zatraži objašnjenje</button><a class="sm" style="text-decoration:none" href="'+fotoDl(f)+'" download>Preuzmi</a><button class="sm" data-otx="'+E(o.id)+'">Obriši otpremnicu</button></div></div>'};
 async function drawOt(){const adm=me.role==='admin';
- if(!adm){opts($('ots'),me.sites,'<option value="">– odaberite gradilište –</option>','');if(!$('otd').value)$('otd').value=today();$('otd').max=today();
+ if(!adm){opts($('ots'),me.sites,'<option value="">– odaberite gradilište –</option>','<option value="__admin__">Odluka administratora</option>');if(!$('otd').value)$('otd').value=today();$('otd').max=today();
   $('otth').innerHTML=otPend.map((d,i)=>'<span style="position:relative"><img src="'+d+'" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"><button class="x" data-otp="'+i+'" aria-label="Makni" style="position:absolute;top:-8px;right:-8px;width:30px;height:30px;font-size:16px">✕</button></span>').join('');
   $('otsb').disabled=!otPend.length}
- else if(!$('aom').value)$('aom').value=today().slice(0,7);
- try{otList=await api('GET','otpremnice'+(adm?'?month='+$('aom').value:''))}catch(e){return}
- if(!adm){$('otl').innerHTML=otList.length?otList.map(o=>otCard(o,0)).join(''):'<div class="card mu">Još niste poslali nijednu otpremnicu.</div>';return}
- const uq=a=>[...new Set(a)].sort((x,y)=>x.localeCompare(y,'hr')).map(x=>[x,x]);fill($('aow'),uq(otList.map(o=>o.name)),'Svi radnici');fill($('aos'),uq(otList.map(o=>o.site)),'Sva gradilišta');
- const L=otList.filter(o=>(!$('aow').value||o.name===$('aow').value)&&(!$('aos').value||o.site===$('aos').value));
- $('aon').textContent='Prikazano '+L.length+' od '+otList.length+' otpremnica u mjesecu, najnovije na vrhu. Klik na fotografiju otvara je u punoj veličini.';
- $('aol').innerHTML=L.length?L.map(o=>otCard(o,1)).join(''):'<div class="card mu">Nema otpremnica za odabrane filtere.</div>'}
+ else if(!$('aod1').value&&!$('aod2').value)$('aod1').value=today().slice(0,8)+'01';
+ let r;try{r=await api('GET','otpremnice'+(adm?'?od='+$('aod1').value+'&do='+$('aod2').value:''))}catch(e){return}otList=r.list;otSites=r.sites;
+ if(!adm){const keep={};document.querySelectorAll('#otl input[id^="oa_"]').forEach(i=>{if(i.value)keep[i.id]=i.value});
+  $('otl').innerHTML=otList.length?otList.map(otCard).join(''):'<div class="card mu">Još niste poslali nijednu otpremnicu.</div>';for(const k in keep)if($(k))$(k).value=keep[k];return}
+ const all=otList.flatMap(o=>o.files.map((f,i)=>({o,f,i,site:o.adminSite[f]||o.site||''}))),uq=a=>[...new Set(a)].sort((x,y)=>x.localeCompare(y,'hr'));
+ otMs('aosl','aoss',uq(all.map(x=>x.site)).map(s=>[s,s?E(s):'<i>Odluka administratora</i>']),otFs,'Sva gradilišta');otMs('aowl','aows',uq(all.map(x=>x.o.name)).map(n=>[n,E(n)]),otFw,'Svi radnici');
+ const L=all.filter(x=>(!otFs.size||otFs.has(x.site))&&(!otFw.size||otFw.has(x.o.name)));
+ $('aon').textContent='Prikazano '+L.length+' od '+all.length+' fotografija, najnovije prvo. Klik na fotografiju otvara je u punoj veličini.';
+ $('aol').innerHTML=L.length?L.map(otItem).join(''):'<div class="card mu">Nema otpremnica za odabrane filtere.</div>'}
 async function otAdd(files){$('otm').textContent='';try{for(const f of files){if(otPend.length>=10){say('otm','Najviše 10 fotografija po otpremnici.');break}otPend.push(await shrink(f))}}catch(x){say('otm',x.message)}drawOt()}
 $('otcb').onclick=()=>$('otc').click();$('otgb').onclick=()=>$('otg').click();
 $('otc').onchange=e=>{otAdd([...e.target.files]);e.target.value=''};$('otg').onchange=e=>{otAdd([...e.target.files]);e.target.value=''};
 $('otth').onclick=e=>{const b=e.target.closest('[data-otp]');if(b){otPend.splice(+b.dataset.otp,1);drawOt()}};
-$('otsb').onclick=async()=>{const site=$('ots').value,date=$('otd').value;if(!otPend.length)return say('otm','Fotografirajte otpremnicu.');if(!site)return say('otm','Odaberite gradilište.');
+$('otsb').onclick=async()=>{const site=$('ots').value,date=$('otd').value;if(!otPend.length)return say('otm','Fotografirajte otpremnicu.');if(!site)return say('otm','Odaberite gradilište ili „Odluka administratora”.');
  const B=$('otsb');B.disabled=true;try{const files=[];for(let i=0;i<otPend.length;i++){B.textContent='Šaljem '+(i+1)+'/'+otPend.length+'…';files.push((await api('POST','otpremnice/foto',{data:otPend[i]})).f)}
   await api('POST','otpremnice',{site,date,note:$('otn').value,files});otPend=[];$('otn').value='';say('otm','Otpremnica je poslana.',1);await load()}
  catch(x){say('otm',x.message+' Fotografije su ostale, pokušajte ponovno.')}finally{B.textContent='POŠALJI OTPREMNICU';drawOt()}};
 const otDel=async e=>{const b=e.target.closest('[data-otx]');if(!b)return;if(!await cf('Obrisati ovu otpremnicu i njezine fotografije?'))return;try{await api('DELETE','otpremnice/'+b.dataset.otx);toast('Otpremnica je obrisana.');await load()}catch(x){toast(x.message)}};
-$('otl').onclick=otDel;$('aol').onclick=otDel;$('aom').onchange=drawOt;$('aow').onchange=drawOt;$('aos').onchange=drawOt;
+$('otl').onclick=async e=>{const a=e.target.closest('[data-oa]');if(!a)return otDel(e);const[id,pid]=a.dataset.oa.split('|'),i=$('oa_'+pid);
+ try{await api('POST','otpremnice/'+id+'/odgovor',{pid,text:i.value});i.value='';toast('Odgovor je poslan administratoru.');await load()}catch(x){toast(x.message)}};
+$('aol').onclick=async e=>{const t=e.target;
+ if(t.closest('[data-oe]')){otEdit=t.closest('[data-oe]').dataset.oe;drawOt();return}
+ if(t.closest('[data-oec]')){otEdit='';drawOt();return}
+ const sv=t.closest('[data-oes]');if(sv){const[id,f]=sv.dataset.oes.split('|'),nw=$('oes').value==='__new',site=nw?$('oen').value.trim():$('oes').value;if(!site)return toast('Upišite naziv gradilišta.');
+  try{await api('PUT','otpremnice/'+id+'/site',{f,site});otEdit='';toast('Gradilište je promijenjeno.');await load()}catch(x){toast(x.message)}return}
+ const q=t.closest('[data-oq]');if(q){const[id,f]=q.dataset.oq.split('|'),txt=await pr('Što trebate pojasniti? Radnik će dobiti obavijest i odgovoriti u Otpremnicama.');if(!txt)return;
+  try{await api('POST','otpremnice/'+id+'/pitanje',{f,text:txt});toast('Zahtjev za objašnjenje je poslan radniku.');await load()}catch(x){toast(x.message)}return}
+ otDel(e)};
+$('aol').onchange=e=>{if(e.target.id==='oes')$('oen').classList.toggle('hide',e.target.value!=='__new')};
+$('aosl').onchange=e=>{const v=e.target.value;e.target.checked?otFs.add(v):otFs.delete(v);drawOt()};$('aowl').onchange=e=>{const v=e.target.value;e.target.checked?otFw.add(v):otFw.delete(v);drawOt()};
+$('aod1').onchange=drawOt;$('aod2').onchange=drawOt;$('aox').onclick=()=>{otFs.clear();otFw.clear();$('aod1').value='';$('aod2').value='';drawOt()};
 /* Pošta radnika: gumb s pismom (broj = nepročitane poruke i obavijesti) */
 function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',adm);$('psb').classList.toggle('hide',!adm);if(adm)return;
  $('ptn').classList.toggle('hide',!inbox.unread);$('ptn').textContent=inbox.unread;
@@ -736,7 +773,7 @@ $('lu2').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
 let liveRev=null,liveBusy=0;
 async function liveCheck(){if(!me||liveBusy||document.hidden||$('app').classList.contains('hide'))return;
  const a=document.activeElement,typing=a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT'&&/^(text|number|password|email|search|tel)$/.test(a.type));
- if(typing||!$('dlg').classList.contains('hide'))return;
+ if(typing||!$('dlg').classList.contains('hide')||document.querySelector('.otedit'))return;
  liveBusy=1;try{const r=await api('GET','rev');if(r.rev!==liveRev)await load()}catch(e){}finally{liveBusy=0}}
 setInterval(liveCheck,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)liveCheck()});window.addEventListener('focus',liveCheck);
 /*BOOT*/load().then(()=>{if(!me)showLogin()});/*/BOOT*/

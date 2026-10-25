@@ -166,8 +166,11 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='POST password'){fail('U demu se lozinka ne mijenja.')}
  else if(key==='GET rev'){out={rev:liveRev}}
  else if(key==='POST otpremnice'&&s[1]==='foto'){noAdm();const f='u-'+C.otpKey(U.id)+'-'+uid().replace(/[^0-9a-z]/g,'')+'.jpg';DF[f]=String(b.data||'');out={f}}
+ else if(key==='PUT otpremnice'&&s[2]==='site'){adm();const r=C.otpSetSite(U,s[1],String(b.f||''),b.site);if(typeof r==='string')fail(r)}
+ else if(key==='POST otpremnice'&&s[2]==='pitanje'){adm();const r=C.otpAsk(U,s[1],String(b.f||''),b.text);if(typeof r==='string')fail(r)}
+ else if(key==='POST otpremnice'&&s[2]==='odgovor'){const r=C.otpAnswer(U,s[1],String(b.pid||''),b.text);if(typeof r==='string')fail(r)}
  else if(key==='POST otpremnice'){noAdm();const o=C.otpCheck(U,b,f=>!!DF[f]);if(typeof o==='string')fail(o);db.otpremnice.push(o)}
- else if(key==='GET otpremnice'){out=C.otpList(U,Q.month||'')}
+ else if(key==='GET otpremnice'){out={list:C.otpList(U,Q.od||'',Q.do||''),sites:U.role==='admin'?C.otpSitesAll():[]}}
  else if(key==='DELETE otpremnice'){const r=C.otpDelete(U,s[1]);if(typeof r==='string')fail(r);r.forEach(f=>delete DF[f])}
  else if(key==='GET inbox'){out=core().inbox(U.id)}
  else if(key==='DELETE inbox'){if(!core().inboxHide(U.id,s[1],s[2]))fail('Stavka nije pronađena.');out={ok:1}}

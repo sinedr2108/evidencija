@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=7;
+const DATA_VERSION=8;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -29,7 +29,8 @@ const MIGRATIONS={
   4:d=>{ /* poruke administratora radnicima */ if(!Array.isArray(d.poruke))d.poruke=[]; },
   5:d=>{ /* zahtjevi za novo gradilište i obavijesti o novim gradilištima */ if(!Array.isArray(d.sitereq))d.sitereq=[];if(!Array.isArray(d.siteNews))d.siteNews=[];const n=Date.now();(d.users||[]).forEach(u=>{if(!u.siteSeen)u.siteSeen=n}) },
   6:d=>{ /* pošta radnika: što je radnik ručno obrisao iz svoje pošte (zapisi ostaju) */ if(!d.inboxDel||typeof d.inboxDel!=='object')d.inboxDel={};if(!d.inboxCleaned){const n=new Date();d.inboxCleaned=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')} },
-  7:d=>{ /* otpremnice (fotografije su datoteke u data/otpremnice) */ if(!Array.isArray(d.otpremnice))d.otpremnice=[]; }
+  7:d=>{ /* otpremnice (fotografije su datoteke u data/otpremnice) */ if(!Array.isArray(d.otpremnice))d.otpremnice=[]; },
+  8:d=>{ /* otpremnice: gradilišta koja je administrator ručno upisao (vrijede samo u Otpremnicama) */ if(!Array.isArray(d.otpSites))d.otpSites=[]; }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -201,7 +202,11 @@ R('POST','/api/otpremnice/foto',1,c=>{if(noAdm(c))return;const m=/^data:image\/j
   const f='u-'+core.otpKey(c.u.id)+'-'+crypto.randomBytes(8).toString('hex')+'.jpg';fs.writeFileSync(otpPath(f),buf);c.send(200,{f})});
 R('POST','/api/otpremnice',1,c=>{if(noAdm(c))return;const o=core.otpCheck(c.u,c.b,f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});
   db.otpremnice.push(o);save();c.send(200,{ok:1})});
-R('GET','/api/otpremnice',1,c=>c.send(200,core.otpList(c.u,/^\d{4}-\d{2}$/.test(c.q.month||'')?c.q.month:'')));
+const ymdOk=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'');
+R('GET','/api/otpremnice',1,c=>c.send(200,{list:core.otpList(c.u,ymdOk(c.q.od)?c.q.od:'',ymdOk(c.q.do)?c.q.do:''),sites:c.u.role==='admin'?core.otpSitesAll():[]}));
+R('PUT','/api/otpremnice/:id/site',2,c=>{const r=core.otpSetSite(c.u,c.p[0],String(c.b.f||''),c.b.site);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
+R('POST','/api/otpremnice/:id/pitanje',2,c=>{const r=core.otpAsk(c.u,c.p[0],String(c.b.f||''),c.b.text);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
+R('POST','/api/otpremnice/:id/odgovor',1,c=>{const r=core.otpAnswer(c.u,c.p[0],String(c.b.pid||''),c.b.text);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
 R('GET','/api/otpremnice/foto/:f',1,c=>{const f=c.p[0];if(!core.otpName(f)||!fs.existsSync(otpPath(f)))return c.send(404,{e:'Fotografija nije pronađena.'});
   if(c.u.role!=='admin'&&!core.otpOwn(c.u.id,f))return c.send(403,{e:'Nemate pristup.'});
   const o=db.otpremnice.find(x=>x.files.includes(f)),nm='otpremnica-'+(o?o.date+'-'+o.site.replace(/[^\w\u00C0-\u024F-]+/g,'_')+'-'+(o.files.indexOf(f)+1):f.slice(0,-4))+'.jpg';

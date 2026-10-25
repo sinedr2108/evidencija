@@ -8,7 +8,7 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 ## Arhitektura
 - **Node.js ≥ 18, bez ovisnosti** (osim neobaveznog `nodemailer` za e-mail). `server.js` (HTTP, rute `R(metoda, putanja, razina, fn)`; razina 0 = javno, 1 = prijavljen, 2 = administrator), `core.js` (poslovna pravila, dijeli ga server i preglednik kao `window.Core`; izvještaji, xlsx, PDF), `public/index.html` (cijelo sučelje, vanilla JS), `public/logo.png`.
 - Podaci: **jedna datoteka `data/db.json`**. Lozinke scrypt, potpisani HttpOnly kolačić (30 dana), zaštita od pogađanja lozinke (5 pokušaja / 15 min, po IP-u; iza Cloudflare Tunnela koristi `CF-Connecting-IP`).
-- **Podaci se uvijek nasljeđuju**: `DATA_VERSION` (trenutno **7**) + `MIGRATIONS` u `server.js`; kopija u `data/backup` pri svakom pokretanju i prije migracije; starija verzija odbija novije podatke. Nikad ne brisati ni preimenovati postojeća polja – samo dodati migraciju.
+- **Podaci se uvijek nasljeđuju**: `DATA_VERSION` (trenutno **8**) + `MIGRATIONS` u `server.js`; kopija u `data/backup` pri svakom pokretanju i prije migracije; starija verzija odbija novije podatke. Nikad ne brisati ni preimenovati postojeća polja – samo dodati migraciju.
 - `nadogradnja.ps1` (Windows: zaustavi zadatak, kopija u `C:\evidencija-backup\DATUM`, kopira nove datoteke bez mape `data`, pokrene), `reset-admin.js` (nova lozinka bez brisanja podataka).
 - Demo za isprobavanje (bez servera, podaci u pregledniku): `razvoj/build-demo.py <mapa evidencija> <izlaz.html>` – objavljen kao artifact.
 
@@ -41,6 +41,7 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 - Admin IZVJEŠTAJI: *Ukupno sati po danu* i *Svi unosi u mjesecu* skriveni, otvaraju se gumbima pod **Detaljni pregledi** s vlastitim filterima (od/do datuma, radnik, gradilište, vrsta, topli obrok).
 - **Pošta radnika** (verzija podataka 6): gumb s pismom gore na početnoj radnika (crveni broj = nepročitano) → poruke, obavijesti i poslani zahtjevi sa statusom, najnovije na vrhu; ručno brisanje ✕ i automatsko čišćenje početkom mjeseca (ostaje 5). Samo se skriva radniku (`inboxDel`, `inboxCleaned`), zapisi ostaju.
 - **OTPREMNICE** (verzija podataka 7): radnik fotografira (do 10 fotografija), gradilište + datum + napomena; fotografije su datoteke u `data/otpremnice` (smanjene u pregledniku, svaka < 1 MB jer server odbija veće zahtjeve), zapis u `db.otpremnice`. Admin stranica OTPREMNICE (filteri mjesec/radnik/gradilište, preuzimanje, brisanje). `nadogradnja.ps1` izuzima `data\otpremnice` iz kopije – **te fotografije trebaju zasebnu sigurnosnu kopiju**.
+- **Otpremnice – administrator** (v8): prikaz po fotografiji u A4 okviru; filteri datum od–do + višestruko gradilište i poslao; izmjena gradilišta po fotografiji (`adminSite[f]`), ručno upisana gradilišta samo u `otpSites`; pitanja radniku (`pitanja`, obavijest) i odgovori; radnik može odabrati „Odluka administratora” (site prazan).
 - Filter radnika: aktivni / svi (i izbrisani). Nove opcije toplog obroka velikim slovima.
 
 ## Dogovoreni način rada

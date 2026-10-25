@@ -157,7 +157,7 @@
     db.requests = db.requests || [];
     db.prijenos = db.prijenos || {};
     db.slreq = db.slreq || [];
-    db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || [];
+    db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
     const dfmt = d => d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.';
     /* radni dani (pon-pet, bez praznika) od-do, najvise 92 dana; null = neispravan raspon */
     function rangeDates(from, to) {
@@ -209,11 +209,35 @@
       if (!files.length) return 'Fotografirajte otpremnicu.';
       if (files.length > 10) return 'Najviše 10 fotografija po otpremnici.';
       if (files.some(f => !otpOwn(u.id, f) || !exists(f))) return 'Fotografija nije pronađena. Pošaljite ponovno.';
-      if (!(db.sites || []).includes(site)) return 'Odaberite gradilište s popisa.';
+      if (site !== OTP_ADMIN && !(db.sites || []).includes(site)) return 'Odaberite gradilište s popisa.';
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayIso()) return 'Neispravan datum (ne može biti u budućnosti).';
-      return { id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid: u.id, site, date, note: String(b.note || '').trim().slice(0, 300), files, ts: Date.now() };
+      return { id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid: u.id, site: site === OTP_ADMIN ? '' : site, date, note: String(b.note || '').trim().slice(0, 300), files, ts: Date.now(), adminSite: {}, pitanja: [] };
     }
-    const otpList = (u, month) => db.otpremnice.filter(o => (u.role === 'admin' ? (!month || o.date.startsWith(month)) : o.uid === u.id)).sort((x, y) => y.ts - x.ts).slice(0, u.role === 'admin' ? 5000 : 30).map(o => ({ ...o, name: nameOf(o.uid) }));
+    /* radnik može odabrati "Odluka administratora" (site ostaje prazan); administrator gradilište mijenja po fotografiji (adminSite[f]),
+       a ručno upisana gradilišta vrijede samo u Otpremnicama (db.otpSites), ne i u ostatku aplikacije */
+    const OTP_ADMIN = '__admin__';
+    const otpSite = (o, f) => ((o.adminSite || {})[f]) || o.site || '';
+    const otpList = (u, od, dO) => db.otpremnice.filter(o => (u.role === 'admin' ? ((!od || o.date >= od) && (!dO || o.date <= dO)) : o.uid === u.id)).sort((x, y) => y.ts - x.ts).slice(0, u.role === 'admin' ? 5000 : 30)
+      .map(o => ({ ...o, adminSite: o.adminSite || {}, pitanja: o.pitanja || [], name: nameOf(o.uid) }));
+    const otpSitesAll = () => [...new Set((db.sites || []).concat(db.otpSites))].sort((a, b) => a.localeCompare(b, 'hr'));
+    function otpSetSite(u, id, f, site) {
+      const o = db.otpremnice.find(x => x.id === id); if (!o || !o.files.includes(f)) return 'Fotografija nije pronađena.';
+      site = String(site || '').trim().slice(0, 100); if (!site) return 'Odaberite ili upišite gradilište.';
+      if (!(db.sites || []).includes(site) && !db.otpSites.includes(site)) db.otpSites.push(site);
+      o.adminSite = o.adminSite || {}; if (site === o.site) delete o.adminSite[f]; else o.adminSite[f] = site; return o;
+    }
+    function otpAsk(u, id, f, text) {
+      const o = db.otpremnice.find(x => x.id === id); if (!o || !o.files.includes(f)) return 'Fotografija nije pronađena.';
+      text = String(text || '').trim().slice(0, 500); if (!text) return 'Upišite pitanje.';
+      (o.pitanja = o.pitanja || []).push({ id: Math.random().toString(36).slice(2) + Date.now().toString(36), f, ts: Date.now(), from: u.id, text, answer: '', answerTs: 0 });
+      notify(o.uid, 'Administrator traži dodatno objašnjenje za otpremnicu (' + (otpSite(o, f) || 'odluka administratora') + ', ' + dfmt(o.date) + ', fotografija ' + (o.files.indexOf(f) + 1) + '): „' + text + '“. Odgovorite u dijelu OTPREMNICE.');
+      return o;
+    }
+    function otpAnswer(u, id, pid, text) {
+      const o = db.otpremnice.find(x => x.id === id && x.uid === u.id), q = o && (o.pitanja || []).find(x => x.id === pid); if (!q) return 'Pitanje nije pronađeno.';
+      text = String(text || '').trim().slice(0, 1000); if (!text) return 'Upišite odgovor.';
+      q.answer = text; q.answerTs = Date.now(); return o;
+    }
     /* brisanje: administrator uvijek, radnik svoju otpremnicu samo na dan slanja; vraća datoteke za brisanje */
     function otpDelete(u, id) {
       const i = db.otpremnice.findIndex(o => o.id === id); if (i < 0) return 'Otpremnica nije pronađena.';
@@ -421,7 +445,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
