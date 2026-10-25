@@ -32,7 +32,8 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 - Poruke administratora radnicima (pojedinačno/odabranima/svima), ostaju dok radnik ne potvrdi čitanje; admin vidi tko je i kada pročitao.
 
 ## Sučelje
-- Radnik – početna: fond, sati za slobodan dan, obavijesti/odluke/poruke, 4 gumba: ŠIHTERICA (plava), GODIŠNJI (ljubičasta), SLOBODNI DAN (žuta), IZVJEŠTAJI (zelena); gumb "?" dolje desno = **upute za radnike** (odjeljak `p-up` u index.html).
+- Radnik – **početna** (od 25.10.2026.): obavijesti/odluke/poruke, gumb s pismom, gumb "?" (upute) i tri grupe: OTPREMNICE (u izradi), EVIDENCIJA RADNOG VREMENA (stranica `ev`), ALAT (u izradi).
+- Radnik – EVIDENCIJA RADNOG VREMENA (bivša početna): fond, sati za slobodan dan, 4 gumba: ŠIHTERICA (plava), GODIŠNJI (ljubičasta), SLOBODNI DAN (žuta), IZVJEŠTAJI (zelena); gumb "?" dolje desno = **upute za radnike** (odjeljak `p-up` u index.html).
 - Kalendar u ŠIHTERICI: crveno = radni dan bez unosa, zelena točka = ima unos, žuto S = slobodan dan, ljubičasto G = godišnji, podcrtano = praznik.
 - IZVJEŠTAJI radnika: mjesec/godina, kartice, **Spremi kao PDF**.
 - Administrator – početna: zahtjevi na čekanju + gumbi IZVJEŠTAJI, SLOBODNI DANI, GODIŠNJI ODMOR (crvena), GRADILIŠTA, OBAVIJESTI RADNICIMA, ODOBRENI ZAHTJEVI, STATISTIKA, TOPLI OBROK, POSTAVKE. Svaka podstranica ima kućicu za povratak; logo na vrhu.

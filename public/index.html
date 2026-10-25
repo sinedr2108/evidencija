@@ -37,6 +37,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
 .gt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.gt button{padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font-weight:600}
 .gt button.on{background:var(--gr);color:var(--grx);border-color:var(--gr)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.grp{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}.grp .tile{min-height:96px;font-size:19px}.t-ot{background:#ea580c;color:#fff}.t-al{background:var(--gy);color:#fff}
 .tile{min-height:110px;border:0;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:.04em;padding:12px;line-height:1.2;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 .t-sh{background:var(--sh);color:var(--shx)}.t-go{background:var(--pu);color:#fff}.t-go2{background:var(--rd);color:var(--rdx)}.t-sl{background:var(--yl);color:#1a1500}.t-iz{background:var(--gr);color:var(--grx)}
 .t-iz2{background:var(--sh);color:var(--shx)}.t-gr2{background:var(--gr);color:var(--grx)}.t-st{background:var(--pu);color:#fff}.t-ps{background:var(--gy);color:#fff}.t-zh{background:#0d9488;color:#fff}.t-po{background:#db2777;color:#fff}.t-ob{background:#ea580c;color:#fff}
@@ -78,11 +79,20 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
  <div class="tabs" id="tabs"></div>
  <section id="v-unos">
   <div id="hm" class="pg">
+   <div class="grp">
+    <button class="tile t-ot" data-pg="ot">OTPREMNICE</button>
+    <button class="tile t-sh" data-pg="ev">EVIDENCIJA RADNOG VREMENA</button>
+    <button class="tile t-al" data-pg="al">ALAT</button>
+   </div>
+  </div>
+  <div id="p-ev" class="pg hide">
    <div class="tiles">
     <button class="tile t-sh" data-pg="sh">ŠIHTERICA</button><button class="tile t-go" data-pg="go">GODIŠNJI</button>
     <button class="tile t-sl" data-pg="sl">SLOBODNI DAN</button><button class="tile t-iz" data-pg="iz">IZVJEŠTAJI</button>
    </div>
   </div>
+  <div id="p-ot" class="pg hide"><div class="card" style="border-top:5px solid #ea580c"><b>OTPREMNICE</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
+  <div id="p-al" class="pg hide"><div class="card" style="border-top:5px solid var(--gy)"><b>ALAT</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
   <div id="p-sh" class="pg hide">
   <div class="card sh">
    <div class="shh">ŠIHTERICA</div>
@@ -120,7 +130,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
   </div>
   <div id="p-pt" class="pg hide"><div class="mu" style="margin-bottom:8px">Poruke i obavijesti koje ste primili te zahtjevi koje ste poslali, najnovije na vrhu. Na kraju mjeseca automatski ostaje samo 5 najnovijih.</div><div id="ptl"></div></div>
   <div id="p-up" class="pg hide"><div class="card upute">
-   <p class="mu">Upute za radnike · ažurirano 23.10.2026.</p>
+   <p class="mu">Upute za radnike · ažurirano 25.10.2026.</p>
    <h3>Prijava</h3>
    <ul><li>Otvorite adresu aplikacije koju ste dobili e-mailom i upišite korisničko ime i lozinku.</li>
    <li>Nakon prve prijave promijenite lozinku: na početnoj stranici gumb <b>Lozinka</b>.</li>
@@ -128,13 +138,16 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li>Ako zaboravite lozinku, javite se administratoru – on vam može poslati nove podatke za prijavu.</li>
    <li>Aplikacija se <b>sama osvježava</b> (svakih desetak sekundi): odluke, poruke i obavijesti administratora pojavit će se bez odjave i ponovne prijave. Dok upisujete tekst, osvježavanje čeka da završite.</li></ul>
    <h3>Početna stranica</h3>
-   <ul><li><b>Fond sati</b> – koliko sati treba odraditi u mjesecu (radni dani × 8 h) i koliko ste upisali.</li>
-   <li><b>Sati za slobodan dan</b> – vaše trenutno stanje (vidi dio Slobodni dan).</li>
-   <li><b>Obavijesti</b> – odluke administratora o vašim zahtjevima. Vide se do kraja dana na koji se odnose; administrator vidi da ste ih pročitali čim otvorite početnu stranicu.</li>
+   <ul><li><b>Obavijesti</b> – odluke administratora o vašim zahtjevima. Vide se do kraja dana na koji se odnose; administrator vidi da ste ih pročitali čim otvorite početnu stranicu.</li>
    <li><b>Novo gradilište</b> – kad administrator doda novo gradilište, obavijest se prikaže pri prvom sljedećem otvaranju aplikacije.</li>
    <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada.</li>
    <li><b>Gumb s pismom</b> (gore, uz Lozinka i Odjava) – sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište) s njihovim statusom, najnovije na vrhu. Crveni broj na gumbu je broj nepročitanih poruka. Svaku stavku možete obrisati gumbom ✕ (briše se samo iz vaše pošte). Na kraju mjeseca automatski ostaje samo 5 najnovijih.</li>
-   <li>Četiri gumba vode na stranice <b>ŠIHTERICA</b>, <b>GODIŠNJI</b>, <b>SLOBODNI DAN</b> i <b>IZVJEŠTAJI</b>. Gumb s kućicom gore desno vraća vas na početnu.</li></ul>
+   <li>Gumb <b>?</b> dolje desno otvara ove upute.</li>
+   <li>Tri glavna dijela: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b> i <b>ALAT</b>. Otpremnice i Alat su u izradi.</li></ul>
+   <h3>EVIDENCIJA RADNOG VREMENA</h3>
+   <ul><li><b>Fond sati</b> – koliko sati treba odraditi u mjesecu (radni dani × 8 h) i koliko ste upisali.</li>
+   <li><b>Sati za slobodan dan</b> – vaše trenutno stanje (vidi dio Slobodni dan).</li>
+   <li>Četiri gumba vode na stranice <b>ŠIHTERICA</b>, <b>GODIŠNJI</b>, <b>SLOBODNI DAN</b> i <b>IZVJEŠTAJI</b>. Gumb s kućicom gore desno s tih stranica vraća vas na Evidenciju radnog vremena, a odatle na početnu stranicu.</li></ul>
    <h3>ŠIHTERICA – dnevni unos</h3>
    <ol><li>U kalendaru odaberite dan.
      <ul><li><span class="ux" style="background:rgba(220,38,38,.16);border-color:var(--er);color:var(--er)">15</span> crveno – radni dan bez unosa (obavezno ga je upisati),</li>
@@ -350,11 +363,11 @@ function draw(){
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
  drawCal();drawPt();applyPage();
 }
-let page='hm';const TIT={pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke'};
+let page='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
- const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps']:['sh','go','sl','iz','up','pt'];
+ const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps']:['ev','ot','al','sh','go','sl','iz','up','pt'];
  $('upb').classList.toggle('hide',adm||page!=='hm');
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
@@ -362,7 +375,7 @@ function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
  $('nav').classList.toggle('hide',page===home);$('navt').textContent=TIT[page]||'';
  $('hdr').classList.toggle('hide',page!==home);
- if(!adm){$('fond').classList.toggle('hide',page!=='hm');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
+ if(!adm){$('fond').classList.toggle('hide',page!=='ev');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
 function setPage(p){page=p;try{if(p==='hm'||p==='ahm'){if(location.hash)history.pushState(null,'',location.pathname+location.search)}else location.hash=p}catch(e){}draw();window.scrollTo(0,0)}
 document.querySelectorAll('.tile').forEach(b=>b.onclick=()=>setPage(b.dataset.pg));
 /* Pošta radnika: gumb s pismom (broj = nepročitane poruke i obavijesti) */
@@ -376,7 +389,8 @@ function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',a
 $('ptb').onclick=()=>setPage('pt');
 $('ptl').onclick=async e=>{const b=e.target.closest('[data-ptd]');if(!b)return;const[k,id]=b.dataset.ptd.split('|');
  if(!await cf('Obrisati ovu stavku iz vaše pošte? Administratoru i u izvještajima ostaje zapisana.'))return;try{await api('DELETE','inbox/'+k+'/'+id);await load()}catch(x){toast(x.message)}};
-$('home').onclick=()=>setPage('hm');$('upb').onclick=()=>setPage('up');
+/* kućica: iz ŠIHTERICE, GODIŠNJEG, SLOBODNOG DANA i IZVJEŠTAJA natrag na Evidenciju radnog vremena, inače na početnu */
+$('home').onclick=()=>setPage(['sh','go','sl','iz'].includes(page)?'ev':'hm');$('upb').onclick=()=>setPage('up');
 window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);page=TIT[p]?p:'hm';if(me)draw()});
 const isHol=d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Core.holidays(+d.slice(0,4)).has(d);
 const slOk=d=>slreq.some(r=>r.uid===me.id&&r.status==='approved'&&r.date===d&&(!r.entryId||r.entryId===editId));
