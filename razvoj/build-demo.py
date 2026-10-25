@@ -108,10 +108,13 @@ const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];
 const strs=a=>[...new Set((Array.isArray(a)?a:[]).map(s=>String(s).trim()).filter(Boolean))];
 const mon=m=>/^\d{4}-\d{2}$/.test(m||'');
 const fail=t=>{throw new Error(t)};
+/* demo: aktivnosti radnika za administratora (samo u memoriji) */
+let DAn=0;const DA=[],DAT={'POST entries':'Novi unos radnog vremena','PUT entries':'Izmjena unosa radnog vremena','DELETE entries':'Obrisan unos radnog vremena','POST close':'Završen mjesec','POST slreq':'Zahtjev za slobodan dan','POST gorq':'Zahtjev za godišnji odmor','POST requests':'Zahtjev za ponovno otvaranje mjeseca','POST sitereq':'Zahtjev za novo gradilište','DELETE slreq':'Povučen zahtjev za slobodan dan','DELETE gorq':'Povučen zahtjev za godišnji odmor','DELETE requests':'Povučen zahtjev za otvaranje mjeseca','DELETE sitereq':'Povučen zahtjev za novo gradilište','POST otpremnice':'Nova otpremnica','POST otpremnice/odgovor':'Odgovor na pitanje o otpremnici','DELETE otpremnice':'Obrisana otpremnica','POST password':'Promjena lozinke'};
+const demoAkt=(u,t,d)=>{DA.push({id:++DAn,ts:Date.now(),uid:u.id,name:u.name,t,d,login:t==='Prijava u aplikaciju'});if(DA.length>300)DA.shift()};
 function linkSl(e){db.slreq.forEach(q=>{if(q.entryId===e.id)q.entryId=null});if(e.vrsta!=='Slobodan dan')return;const m=e.date.slice(0,7),mine=db.entries.filter(x=>x.uid===e.uid&&x!==e);
  if(core().bank(mine,m,core().pr(e.uid,m))<8){const ap=core().approval(e.uid,e.date,null);if(ap)ap.entryId=e.id}}
 async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries(new URLSearchParams(qs||'')),s=p.split('/'),key=m+' '+s[0]+(s[1]&&(s[0]==='report')?'/'+s[1]:'');
- if(key==='POST login'){const x=db.users.find(z=>z.username===String(b.username||'').toLowerCase());if(!x)fail('Nepoznat korisnik.');if(x.disabled||x.deleted)fail('Račun je onemogućen. Obratite se administratoru.');cur=x.id;return{ok:1}}
+ if(key==='POST login'){const x=db.users.find(z=>z.username===String(b.username||'').toLowerCase());if(!x)fail('Nepoznat korisnik.');if(x.disabled||x.deleted)fail('Račun je onemogućen. Obratite se administratoru.');cur=x.id;if(x.role==='user')demoAkt(x,'Prijava u aplikaciju','');return{ok:1}}
  if(key==='POST logout'){cur=null;return{ok:1}}
  const U=db.users.find(z=>z.id===cur);if(!U||U.disabled||U.deleted){cur=null;showLogin();fail('Prijavite se.')}
  const C=core(),adm=()=>{if(U.role!=='admin')fail('Samo za administratore.')},noAdm=()=>{if(U.role==='admin')fail('Administratori ne unose radno vrijeme.')};
@@ -176,7 +179,9 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='DELETE inbox'){if(!core().inboxHide(U.id,s[1],s[2]))fail('Stavka nije pronađena.');out={ok:1}}
  else if(key==='GET report'){adm();if(!mon(Q.month))fail('Neispravan mjesec.');out=C.report(Q.month,flt(Q),todayStr())}
  else if(key==='POST report/send'){adm();if(!mon(b.month))fail('Neispravan mjesec.');const to=db.users.filter(z=>z.role==='admin'&&z.email).map(z=>z.email);out={msg:'Demo: e-mail se ovdje ne šalje. Na pravom serveru ide s Excel privitkom na: '+(to.join(', ')||'(nema upisanih adresa)')}}
+ else if(key==='GET aktivnost'){adm();const sq=Q.b==='demo'?+Q.s||0:0;out={boot:'demo',seq:DA.length?DA[DA.length-1].id:0,list:DA.filter(a=>a.id>sq)}}
  else fail('Nepoznata radnja.');
+ if(U&&U.role==='user'&&m!=='GET'){const t=DAT[key+(s[2]?'/'+s[2]:'')]||(s[1]!=='foto'&&DAT[key]);if(t)demoAkt(U,t,[b.date&&C.dfmt(b.date),b.from&&C.dfmt(b.from)+(b.to&&b.to!==b.from?' – '+C.dfmt(b.to):''),b.month,b.vrsta,b.site,b.hours!=null&&String(b.hours).replace('.',',')+' h',b.text,b.reason,b.note].filter(Boolean).join(' · '))}
  persist();return clone(out)}
 async function dlSite(kind){const q=new URLSearchParams(shq()),per=q.get('period'),st=q.get('site')||'';const nm='sati-po-gradilistima-'+per+(kind==='xlsx'?'.xlsx':'.csv');
  try{const d=await claude.use('downloads');if(!d){toast('Preuzimanje nije dostupno u ovom prikazu.');return}await d.save({filename:nm,data:kind==='xlsx'?core().siteXlsx(per,st):core().siteCsv(per,st)})}catch(e){toast('Preuzimanje nije uspjelo.')}}

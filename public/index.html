@@ -71,7 +71,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
  <button class="big" id="lb">Prijava</button><div class="msg" id="lm" style="color:var(--er)"></div>
 </section><!--/LOGIN-->
 <div id="app" class="hide">
- <div class="fl" id="hdr" style="justify-content:space-between;align-items:flex-start"><div><h1>Evidencija radnog vremena</h1><div class="mu" id="who"></div></div><span class="fl"><button class="sm hide" id="ptb" aria-label="Poruke i zahtjevi" title="Poruke i zahtjevi" style="position:relative;padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span id="ptn" class="hide" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--er);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center"></span></button><button class="sm hide" id="psb">Postavke</button><button class="sm" id="pw">Lozinka</button><button class="sm" id="out">Odjava</button></span></div>
+ <div class="fl" id="hdr" style="justify-content:space-between;align-items:flex-start"><div><h1>Evidencija radnog vremena</h1><div class="mu" id="who"></div></div><span class="fl"><button class="sm hide" id="ptb" aria-label="Poruke i zahtjevi" title="Poruke i zahtjevi" style="position:relative;padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span id="ptn" class="hide" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--er);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center"></span></button><button class="sm hide" id="akb" aria-label="Aktivnosti radnika" title="Aktivnosti radnika" style="position:relative;padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span id="akn" class="hide" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--er);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center"></span></button><button class="sm hide" id="psb">Postavke</button><button class="sm" id="pw">Lozinka</button><button class="sm" id="out">Odjava</button></span></div>
  <div class="fl hide" id="nav" style="justify-content:space-between;align-items:center;margin-bottom:10px"><h1 id="navt" style="margin:0"></h1><button class="sm" id="home" aria-label="Početna stranica" title="Početna" style="padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button></div>
  <div class="card" id="fond" style="margin-top:10px"></div>
  <div id="odl"></div>
@@ -294,6 +294,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <div class="mu" style="margin-top:6px">Poruka se radniku prikazuje na početnoj stranici dok ne potvrdi da ju je pročitao.</div></div>
    <h2>Poslane poruke</h2><div id="pl"></div>
   </div>
+  <div id="p-akt" class="pg hide"><div class="card" id="aks"></div><div class="mu" style="margin:4px 0 8px">Radnje radnika od zadnjeg pokretanja servera, najnovije na vrhu (najviše 300).</div><div id="akl"></div></div>
   <div id="p-aot" class="pg hide"><div class="card">
    <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label for="aod1">Datum otpremnice od</label><input type="date" id="aod1"></div><div><label for="aod2">do</label><input type="date" id="aod2"></div></div>
    <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label>Gradilište</label><details class="ms"><summary id="aoss"></summary><div id="aosl"></div></details></div><div><label>Poslao</label><details class="ms"><summary id="aows"></summary><div id="aowl"></div></details></div></div>
@@ -392,18 +393,18 @@ function draw(){
  $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
  if(me.role==='admin'&&tab==='adm')drawAdm();
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
- drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();applyPage();
+ drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='akt')drawAkt();applyPage();if(me.role==='admin'&&akUid!==me.id)akCheck();
 }
-let page='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat'};
+let page='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
- const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal']:['ev','ot','al','sh','go','sl','iz','up','pt'];
+ const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt']:['ev','ot','al','sh','go','sl','iz','up','pt'];
  $('upb').classList.toggle('hide',adm||page!=='hm');
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
  if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
- if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
+ if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='akt'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
  $('nav').classList.toggle('hide',page===home);$('navt').textContent=TIT[page]||'';
  $('hdr').classList.toggle('hide',page!==home);
  if(!adm){$('fond').classList.toggle('hide',page!=='ev');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
@@ -480,7 +481,7 @@ $('aol').onchange=e=>{if(e.target.id==='oes')$('oen').classList.toggle('hide',e.
 $('aosl').onchange=e=>{const v=e.target.value;e.target.checked?otFs.add(v):otFs.delete(v);drawOt()};$('aowl').onchange=e=>{const v=e.target.value;e.target.checked?otFw.add(v):otFw.delete(v);drawOt()};
 $('aod1').onchange=drawOt;$('aod2').onchange=drawOt;$('aox').onclick=()=>{otFs.clear();otFw.clear();$('aod1').value='';$('aod2').value='';drawOt()};
 /* Pošta radnika: gumb s pismom (broj = nepročitane poruke i obavijesti) */
-function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',adm);$('psb').classList.toggle('hide',!adm);if(adm)return;
+function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',adm);$('psb').classList.toggle('hide',!adm);$('akb').classList.toggle('hide',!adm);if(adm)return;
  $('ptn').classList.toggle('hide',!inbox.unread);$('ptn').textContent=inbox.unread;
  const ts=t=>new Date(t).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),C={po:'#db2777',ob:'var(--ac)',sl:'var(--yl)',go:'var(--pu)',mj:'var(--sh)',gr:'var(--gr)'};
  $('ptl').innerHTML=inbox.items.length?inbox.items.map(x=>{const req=x.status!==undefined;
@@ -780,6 +781,34 @@ $('lu2').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.pw){const n=await pr('Nova lozinka (min. 6 znakova):');if(n){await api('PUT','users/'+b.dataset.pw,{password:n});toast('Lozinka je promijenjena.')}}
   else if(b.dataset.dis){const[id,d]=b.dataset.dis.split('|');if(d==='1'&&!await cf('Onemogućiti prijavu? Radnik se neće moći prijaviti ni unositi podatke, a svi dosadašnji podaci ostaju.'))return;await api('PUT','users/'+id,{disabled:d==='1'});toast(d==='1'?'Prijava je onemogućena.':'Prijava je omogućena.');await load()}
   else if(b.dataset.del&&await cf('Izbrisati korisnika iz aplikacije? Više se neće moći prijaviti ni unositi podatke. Svi dosad uneseni podaci ostaju u evidenciji i izvještajima.')){await api('DELETE','users/'+b.dataset.del);await load()}}catch(x){toast(x.message)}};
+/* AKTIVNOSTI RADNIKA: administratorov preglednik svakih 10 s dohvaća nove radnje radnika i prikazuje ih kao skočnu obavijest
+   u Windowsima (i kad je kartica u pozadini ili prozor smanjen). Uključuje se na stranici zvona; postavka vrijedi za taj preglednik. */
+let akB='',akS=0,akL=[],akU=0,akBusy=0,akUid='';
+const lsG=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsS=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const akOk=()=>'Notification' in window&&window.isSecureContext,akTm=t=>new Date(t).toLocaleTimeString('hr-HR',{hour:'2-digit',minute:'2-digit'});
+function akShow(t,b,tag){try{const n=new Notification(t,{body:b,icon:'/logo.png',tag});n.onclick=()=>{window.focus();setPage('akt');n.close()}}catch(e){}}
+function akNotify(l){if(lsG('akOn')!=='1'||!akOk()||Notification.permission!=='granted')return;l=l.filter(a=>!a.login||lsG('akPr')!=='0');if(!l.length)return;
+ if(l.length>4)akShow(l.length+' novih aktivnosti radnika',l.slice(-6).reverse().map(a=>akTm(a.ts)+' '+a.name+': '+a.t+(a.d?' ('+a.d.split('\n')[0]+')':'')).join('\n'),'akt-g'+l[l.length-1].id);
+ else l.forEach(a=>akShow(a.name+': '+a.t,(a.d?a.d+'\n':'')+'Vrijeme: '+akTm(a.ts),'akt'+a.id))}
+async function akCheck(){if(!me||me.role!=='admin'||akBusy)return;if(akUid!==me.id){akUid=me.id;akB='';akS=0;akL=[];akU=0}
+ akBusy=1;try{const first=!akB,r=await api('GET','aktivnost?b='+akB+'&s='+akS),nw=first?[]:r.list;
+  akL=(r.boot===akB?akL.concat(r.list):r.list).slice(-300);akB=r.boot;akS=r.seq;
+  if(nw.length){akNotify(nw);if(page!=='akt')akU+=nw.length}$('akn').classList.toggle('hide',!akU);$('akn').textContent=akU>99?'99+':akU;
+  if(page==='akt')drawAkt()}catch(e){}finally{akBusy=0}}
+function drawAkt(){akU=0;$('akn').classList.add('hide');const on=lsG('akOn')==='1',pm=akOk()?Notification.permission:'';
+ $('aks').innerHTML='<b>Obavijesti u Windowsima</b><div style="margin:6px 0">'+(!akOk()?'<span style="color:var(--er)">Ovaj preglednik ne može prikazati obavijesti na ovoj adresi.</span> Obavijesti rade kad je aplikacija otvorena preko sigurne adrese (https://…) ili na samom serveru preko http://localhost:3000. Preko http://IP-adrese u lokalnoj mreži preglednik ih ne dopušta.'
+  :pm==='denied'?'<span style="color:var(--er)">Preglednik je blokirao obavijesti za ovu stranicu.</span> Kliknite ikonu lijevo od adrese (lokot), kod <b>Obavijesti</b> odaberite <b>Dopusti</b> i osvježite stranicu.'
+  :on&&pm==='granted'?'<b style="color:var(--ok)">Uključeno.</b> Svaka nova radnja radnika prikazuje se kao skočna obavijest u Windowsima.':'Isključeno.')+'</div>'
+  +(akOk()&&pm!=='denied'?(on&&pm==='granted'?'<button class="sm" id="akt1">Probna obavijest</button> <button class="sm" id="ak0">Isključi</button>':'<button id="ak1">Uključi obavijesti u Windowsima</button>'):'')
+  +'<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:400"><input type="checkbox" id="akpr" style="width:auto"'+(lsG('akPr')!=='0'?' checked':'')+'> Obavijesti i o prijavi radnika u aplikaciju</label>'
+  +'<div class="mu" style="margin-top:6px">Obavijesti stižu dok je aplikacija otvorena u pregledniku (kartica smije biti u pozadini, prozor smanjen). Ako je prozor dugo smanjen, obavijest može kasniti do jedne minute. Klik na obavijest otvara ovu stranicu.</div>';
+ $('akl').innerHTML=akL.length?akL.slice().reverse().map(a=>'<div class="card" style="border-left:5px solid '+(a.login?'var(--bd)':'var(--ac)')+'"><b>'+E(a.name)+': '+E(a.t)+'</b><div class="mu">'+new Date(a.ts).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</div>'+(a.d?'<div style="white-space:pre-wrap;margin-top:4px">'+E(a.d)+'</div>':'')+'</div>').join(''):'<div class="card mu">Još nema zabilježenih aktivnosti.</div>'}
+$('akb').onclick=()=>setPage('akt');
+$('aks').onclick=async e=>{const id=e.target.id;
+ if(id==='ak1'){const r=await Notification.requestPermission();if(r==='granted'){lsS('akOn','1');akShow('Evidencija: obavijesti su uključene','Ovako će izgledati obavijest o aktivnosti radnika.','akt-test')}drawAkt()}
+ else if(id==='ak0'){lsS('akOn','0');drawAkt()}else if(id==='akt1')akShow('Evidencija: probna obavijest','Obavijesti o aktivnostima radnika rade.','akt-test')};
+$('aks').onchange=e=>{if(e.target.id==='akpr')lsS('akPr',e.target.checked?'1':'0')};
+setInterval(akCheck,10000);
 /* Automatsko osvježavanje: svakih 10 s (i pri povratku u aplikaciju) provjeri je li itko promijenio podatke; ako jest, učitaj ih ponovno.
    Ne osvježava dok korisnik upisuje u polje ili je otvoren dijalog – tada se osvježi čim završi. */
 let liveRev=null,liveBusy=0;

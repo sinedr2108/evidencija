@@ -83,10 +83,40 @@ setInterval(()=>{const n=new Date(),t=new Date(+n+864e5),m=ym(n);
 const inboxTick=()=>{const m=ym(new Date());if(db.inboxCleaned===m)return;db.users.filter(u=>u.role==='user').forEach(u=>core.inboxClean(u.id));db.inboxCleaned=m;save()};inboxTick();setInterval(inboxTick,6e5);
 
 /* ---- rute ---- */
-const routes=[],R=(m,p,a,f)=>routes.push([m,new RegExp('^'+p.replace(/:\w+/g,'([^/]+)')+'$'),a,f]);
+const routes=[],R=(m,p,a,f)=>routes.push([m,new RegExp('^'+p.replace(/:\w+/g,'([^/]+)')+'$'),a,f,m+' '+p]);
 const noAdm=c=>c.u.role==='admin'&&(c.send(403,{e:'Administratori ne unose radno vrijeme.'}),true);
 const valid=m=>/^\d{4}-\d{2}$/.test(m||'');
 const fails={};
+/* ===== Aktivnosti radnika za obavijesti administratoru =====
+   Svaka uspješna radnja radnika zapisuje se u memoriju (zadnjih 300, ne u db.json). Administratorov preglednik ih
+   svakih 10 s dohvaća (/api/aktivnost) i prikazuje kao skočnu obavijest u Windowsima. pre() se izvodi prije radnje
+   (npr. podaci unosa koji se briše), f() nakon uspjeha i vraća [naslov, detalji]. */
+const BOOT=Date.now().toString(36),akt=[];let aktSeq=0;
+const aktD=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'')?d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4)+'.':String(d||''),aktM=m=>/^\d{4}-\d{2}$/.test(m||'')?m.slice(5,7)+'/'+m.slice(0,4):String(m||'');
+const aktE=e=>e?aktD(e.date)+' · '+(e.vrsta||'Redovan rad')+(e.site?' · '+e.site:'')+' · '+String(e.hours).replace('.',',')+' h'+(e.meal?' · '+e.meal:'')+(e.teren?' · teren':''):'';
+const aktR=(k,c)=>db[k].find(x=>x.id===c.p[0]&&x.uid===c.u.id),aktN=t=>t?'\nNapomena: '+t:'',aktS=t=>{t=String(t||'');return t.length>160?t.slice(0,157)+'…':t};
+const AKT={
+  'POST /api/login':{f:()=>['Prijava u aplikaciju','']},
+  'POST /api/entries':{f:(c,_,o)=>['Novi unos radnog vremena',aktE(o)]},
+  'PUT /api/entries/:id':{pre:c=>aktE(db.entries.find(x=>x.id===c.p[0])),f:(c,was,o)=>['Izmjena unosa radnog vremena',aktE(o)+(was&&was!==aktE(o)?'\nPrije: '+was:'')]},
+  'DELETE /api/entries/:id':{pre:c=>aktE(db.entries.find(x=>x.id===c.p[0]&&x.uid===c.u.id)),f:(c,was)=>['Obrisan unos radnog vremena',was]},
+  'POST /api/close':{f:c=>['Završen mjesec','Mjesec '+aktM(c.b.month)]},
+  'POST /api/slreq':{f:c=>['Zahtjev za slobodan dan',aktD(c.b.date)+aktN(aktS(c.b.reason))]},
+  'POST /api/gorq':{f:(c,_,o)=>['Zahtjev za godišnji odmor',aktD(c.b.from)+(c.b.to&&c.b.to!==c.b.from?' – '+aktD(c.b.to):'')+(o&&o.dana?' ('+o.dana+' dana)':'')+aktN(aktS(c.b.reason))]},
+  'POST /api/requests':{f:c=>['Zahtjev za ponovno otvaranje mjeseca','Mjesec '+aktM(c.b.month)+aktN(aktS(c.b.reason))]},
+  'POST /api/sitereq':{f:c=>['Zahtjev za novo gradilište',aktS(c.b.text)]},
+  'DELETE /api/slreq/:id':{pre:c=>aktR('slreq',c),f:(c,q)=>['Povučen zahtjev za slobodan dan',q?aktD(q.date):'']},
+  'DELETE /api/gorq/:id':{pre:c=>aktR('gorq',c),f:(c,q)=>['Povučen zahtjev za godišnji odmor',q?aktD(q.dates[0])+(q.dates.length>1?' – '+aktD(q.dates[q.dates.length-1]):''):'']},
+  'DELETE /api/requests/:id':{pre:c=>aktR('requests',c),f:(c,q)=>['Povučen zahtjev za otvaranje mjeseca',q?'Mjesec '+aktM(q.month):'']},
+  'DELETE /api/sitereq/:id':{pre:c=>aktR('sitereq',c),f:(c,q)=>['Povučen zahtjev za novo gradilište',q?aktS(q.text):'']},
+  'POST /api/otpremnice':{f:c=>{const n=(Array.isArray(c.b.files)?c.b.files.length:0);return['Nova otpremnica',(c.b.site===core.OTP_ADMIN?'Odluka administratora':String(c.b.site||''))+' · '+aktD(c.b.date)+' · '+n+(n===1?' fotografija':n<5?' fotografije':' fotografija')+aktN(aktS(c.b.note))]}},
+  'DELETE /api/otpremnice/:id':{pre:c=>db.otpremnice.find(x=>x.id===c.p[0]),f:(c,o)=>['Obrisana otpremnica',o?(o.site||'Odluka administratora')+' · '+aktD(o.date):'']},
+  'POST /api/otpremnice/:id/odgovor':{pre:c=>db.otpremnice.find(x=>x.id===c.p[0]),f:(c,o)=>['Odgovor na pitanje o otpremnici',(o?(core.otpSite(o,o.files[0])||'Odluka administratora')+' · '+aktD(o.date)+'\n':'')+aktS(c.b.text)]},
+  'POST /api/poruke/:id/read':{pre:c=>db.poruke.find(x=>x.id===c.p[0]),f:(c,p)=>['Pročitana poruka',p?aktS(p.text):'']},
+  'POST /api/password':{f:()=>['Promjena lozinke','']}
+};
+function aktAdd(u,t,d){akt.push({id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'});if(akt.length>300)akt.shift()}
+R('GET','/api/aktivnost',2,c=>{const s=c.q.b===BOOT?+c.q.s||0:0;c.send(200,{boot:BOOT,seq:aktSeq,list:akt.filter(a=>a.id>s)})});
 R('POST','/api/login',0,c=>{
   const un=String(c.b.username||'').trim().toLowerCase(),key=c.ip+'|'+un,f=fails[key];
   if(f&&f.n>=5&&Date.now()<f.until)return c.send(429,{e:'Previše pogrešnih pokušaja. Pokušajte ponovno za 15 minuta.'});
@@ -317,7 +347,7 @@ http.createServer((req,res)=>{
     return raw(200,fs.readFileSync(path.join(__dirname,'core.js')),{'Content-Type':'application/javascript; charset=utf-8'});
   let body='';req.on('data',d=>{body+=d;if(body.length>1e6)req.destroy()});
   req.on('end',()=>{
-    for(const [m,re,auth,fn] of routes){
+    for(const [m,re,auth,fn,key] of routes){
       const x=m===req.method&&re.exec(url.pathname);if(!x)continue;
       let b={};try{b=body?JSON.parse(body):{}}catch(e){return send(400,{e:'Neispravan zahtjev.'})}
       const c={b,p:x.slice(1),q:Object.fromEntries(url.searchParams),h:req.headers,send,raw,ip:clientIp(req)};
@@ -326,6 +356,9 @@ http.createServer((req,res)=>{
         if(c.u&&(c.u.disabled||c.u.deleted))return send(401,{e:'Račun je onemogućen. Obratite se administratoru.'});
         if(!c.u)return send(401,{e:'Prijavite se.'});
         if(auth===2&&c.u.role!=='admin')return send(403,{e:'Samo za administratore.'})}
+      const ak=req.method!=='GET'&&AKT[key];
+      if(ak){let u=c.u,pre;try{if(!u)u=db.users.find(x=>x.username===String(b.username||'').trim().toLowerCase());if(u&&u.role==='user'&&ak.pre)pre=ak.pre(c)}catch(e){}
+        if(u&&u.role==='user')c.send=(code,o,h)=>{if(code===200)try{const[t,d]=ak.f(c,pre,o);aktAdd(u,t,d)}catch(e){console.error(e)}send(code,o,h)}}
       return Promise.resolve(fn(c)).catch(e=>{console.error(e);send(500,{e:'Greška na serveru.'})});
     }
     send(404,{e:'Nije pronađeno.'});
