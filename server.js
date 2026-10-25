@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=6;
+const DATA_VERSION=7;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -28,7 +28,8 @@ const MIGRATIONS={
   },
   4:d=>{ /* poruke administratora radnicima */ if(!Array.isArray(d.poruke))d.poruke=[]; },
   5:d=>{ /* zahtjevi za novo gradilište i obavijesti o novim gradilištima */ if(!Array.isArray(d.sitereq))d.sitereq=[];if(!Array.isArray(d.siteNews))d.siteNews=[];const n=Date.now();(d.users||[]).forEach(u=>{if(!u.siteSeen)u.siteSeen=n}) },
-  6:d=>{ /* pošta radnika: što je radnik ručno obrisao iz svoje pošte (zapisi ostaju) */ if(!d.inboxDel||typeof d.inboxDel!=='object')d.inboxDel={};if(!d.inboxCleaned){const n=new Date();d.inboxCleaned=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')} }
+  6:d=>{ /* pošta radnika: što je radnik ručno obrisao iz svoje pošte (zapisi ostaju) */ if(!d.inboxDel||typeof d.inboxDel!=='object')d.inboxDel={};if(!d.inboxCleaned){const n=new Date();d.inboxCleaned=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')} },
+  7:d=>{ /* otpremnice (fotografije su datoteke u data/otpremnice) */ if(!Array.isArray(d.otpremnice))d.otpremnice=[]; }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -191,6 +192,25 @@ R('DELETE','/api/poruke/:id',2,c=>{const i=db.poruke.findIndex(x=>x.id===c.p[0])
 /* Pošta radnika (gumb s pismom) */
 R('GET','/api/inbox',1,c=>c.send(200,core.inbox(c.u.id)));
 R('DELETE','/api/inbox/:k/:id',1,c=>{if(!core.inboxHide(c.u.id,c.p[0],c.p[1]))return c.send(404,{e:'Stavka nije pronađena.'});save();c.send(200,{ok:1})});
+/* OTPREMNICE: radnik fotografira i šalje. Fotografija ide zasebnim zahtjevom (smanjena u pregledniku, < 1 MB) i sprema se kao
+   datoteka u data/otpremnice, a zapis otpremnice s popisom datoteka u bazu. */
+const OTP=path.join(DIR,'otpremnice');fs.mkdirSync(OTP,{recursive:true});
+const otpPath=f=>path.join(OTP,f);
+R('POST','/api/otpremnice/foto',1,c=>{if(noAdm(c))return;const m=/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(c.b.data||''));
+  const buf=m&&Buffer.from(m[1],'base64');if(!buf||buf.length<500||buf[0]!==0xFF||buf[1]!==0xD8)return c.send(400,{e:'Neispravna fotografija.'});
+  const f='u-'+core.otpKey(c.u.id)+'-'+crypto.randomBytes(8).toString('hex')+'.jpg';fs.writeFileSync(otpPath(f),buf);c.send(200,{f})});
+R('POST','/api/otpremnice',1,c=>{if(noAdm(c))return;const o=core.otpCheck(c.u,c.b,f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});
+  db.otpremnice.push(o);save();c.send(200,{ok:1})});
+R('GET','/api/otpremnice',1,c=>c.send(200,core.otpList(c.u,/^\d{4}-\d{2}$/.test(c.q.month||'')?c.q.month:'')));
+R('GET','/api/otpremnice/foto/:f',1,c=>{const f=c.p[0];if(!core.otpName(f)||!fs.existsSync(otpPath(f)))return c.send(404,{e:'Fotografija nije pronađena.'});
+  if(c.u.role!=='admin'&&!core.otpOwn(c.u.id,f))return c.send(403,{e:'Nemate pristup.'});
+  const o=db.otpremnice.find(x=>x.files.includes(f)),nm='otpremnica-'+(o?o.date+'-'+o.site.replace(/[^\w\u00C0-\u024F-]+/g,'_')+'-'+(o.files.indexOf(f)+1):f.slice(0,-4))+'.jpg';
+  c.raw(200,fs.readFileSync(otpPath(f)),{'Content-Type':'image/jpeg','Cache-Control':'private, max-age=31536000',...(c.q.dl?{'Content-Disposition':"attachment; filename=\"otpremnica.jpg\"; filename*=UTF-8''"+encodeURIComponent(nm)}:{})})});
+R('DELETE','/api/otpremnice/:id',1,c=>{const r=core.otpDelete(c.u,c.p[0]);if(typeof r==='string')return c.send(400,{e:r});
+  r.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();c.send(200,{ok:1})});
+/* poslane fotografije koje nisu postale dio otpremnice (prekinuto slanje) brišu se nakon 2 dana */
+const otpSweep=()=>{try{const used=new Set(db.otpremnice.flatMap(o=>o.files));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
+otpSweep();setInterval(otpSweep,6*36e5);
 R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/close',1,c=>{if(noAdm(c))return;if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   const md=core.missingDays(c.u.id,c.b.month);if(md.length)return c.send(400,{e:'Unos se ne može završiti. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.'});

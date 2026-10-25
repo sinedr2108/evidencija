@@ -103,6 +103,8 @@ function seed(){
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
 function initDb(){db=null;_c=null;try{const s=localStorage.getItem(KEY);if(s)db=JSON.parse(s)}catch(e){}if(!db){db=seed();persist()}}
 initDb();
+/* demo: fotografije otpremnica samo u memoriji (ne preživljavaju ponovno otvaranje) */
+const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];
 const strs=a=>[...new Set((Array.isArray(a)?a:[]).map(s=>String(s).trim()).filter(Boolean))];
 const mon=m=>/^\d{4}-\d{2}$/.test(m||'');
 const fail=t=>{throw new Error(t)};
@@ -163,6 +165,10 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='DELETE users'){adm();if(s[1]===U.id)fail('Ne možete obrisati sami sebe.');const x=db.users.find(z=>z.id===s[1]);if(!x||x.deleted)fail('Nije pronađeno.');x.deleted=Date.now();x.disabled=true;x.username='~'+x.id;x.email='';for(const k of ['slreq','gorq','requests'])db[k]=db[k].filter(r=>!(r.uid===x.id&&r.status==='open'));db.obav=db.obav.filter(o=>o.uid!==x.id)}
  else if(key==='POST password'){fail('U demu se lozinka ne mijenja.')}
  else if(key==='GET rev'){out={rev:liveRev}}
+ else if(key==='POST otpremnice'&&s[1]==='foto'){noAdm();const f='u-'+C.otpKey(U.id)+'-'+uid().replace(/[^0-9a-z]/g,'')+'.jpg';DF[f]=String(b.data||'');out={f}}
+ else if(key==='POST otpremnice'){noAdm();const o=C.otpCheck(U,b,f=>!!DF[f]);if(typeof o==='string')fail(o);db.otpremnice.push(o)}
+ else if(key==='GET otpremnice'){out=C.otpList(U,Q.month||'')}
+ else if(key==='DELETE otpremnice'){const r=C.otpDelete(U,s[1]);if(typeof r==='string')fail(r);r.forEach(f=>delete DF[f])}
  else if(key==='GET inbox'){out=core().inbox(U.id)}
  else if(key==='DELETE inbox'){if(!core().inboxHide(U.id,s[1],s[2]))fail('Stavka nije pronađena.');out={ok:1}}
  else if(key==='GET report'){adm();if(!mon(Q.month))fail('Neispravan mjesec.');out=C.report(Q.month,flt(Q),todayStr())}

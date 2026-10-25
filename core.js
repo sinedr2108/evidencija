@@ -157,7 +157,7 @@
     db.requests = db.requests || [];
     db.prijenos = db.prijenos || {};
     db.slreq = db.slreq || [];
-    db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {};
+    db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || [];
     const dfmt = d => d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.';
     /* radni dani (pon-pet, bez praznika) od-do, najvise 92 dana; null = neispravan raspon */
     function rangeDates(from, to) {
@@ -181,6 +181,7 @@
     const nameOf = id => (db.users.find(u => u.id === id) || {}).name || '?';
     /* Pošta radnika: primljene poruke i obavijesti te poslani zahtjevi, najnovije prvo. Zapisi se nikad ne brišu, samo skrivaju za tog radnika
        (db.inboxDel[uid]): ručno gumbom ✕ i automatski početkom mjeseca (inboxClean) – tada ostaje samo 5 najnovijih. */
+    const ymdOf = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
     const ymOf = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1); };
     function inbox(uid) {
       const del = new Set(db.inboxDel[uid] || []), L = [], st = q => ({ status: q.status, note: q.note || '', decided: q.decided || 0, changed: !!q.changed });
@@ -198,6 +199,26 @@
       const cur = ymOf(Date.now()), l = db.inboxDel[uid] = db.inboxDel[uid] || []; let n = 0;
       inbox(uid).items.forEach((x, i) => { if (i >= 5 && ymOf(x.ts) < cur) { l.push(x.k + '|' + x.id); n++; } });
       if (l.length > 1000) l.splice(0, l.length - 1000); return n;
+    }
+    /* OTPREMNICE: fotografije su zasebne datoteke (ime počinje oznakom radnika), u bazi je samo zapis */
+    const otpKey = id => String(id).replace(/[^0-9a-z]/gi, '').slice(0, 8).toLowerCase();
+    const otpName = f => /^u-[0-9a-z]{1,8}-[0-9a-z]{6,24}\.jpg$/.test(f);
+    const otpOwn = (uid, f) => otpName(f) && f.startsWith('u-' + otpKey(uid) + '-');
+    function otpCheck(u, b, exists) {
+      const files = [...new Set(Array.isArray(b.files) ? b.files.map(String) : [])], site = String(b.site || '').trim(), date = String(b.date || '');
+      if (!files.length) return 'Fotografirajte otpremnicu.';
+      if (files.length > 10) return 'Najviše 10 fotografija po otpremnici.';
+      if (files.some(f => !otpOwn(u.id, f) || !exists(f))) return 'Fotografija nije pronađena. Pošaljite ponovno.';
+      if (!(db.sites || []).includes(site)) return 'Odaberite gradilište s popisa.';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayIso()) return 'Neispravan datum (ne može biti u budućnosti).';
+      return { id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid: u.id, site, date, note: String(b.note || '').trim().slice(0, 300), files, ts: Date.now() };
+    }
+    const otpList = (u, month) => db.otpremnice.filter(o => (u.role === 'admin' ? (!month || o.date.startsWith(month)) : o.uid === u.id)).sort((x, y) => y.ts - x.ts).slice(0, u.role === 'admin' ? 5000 : 30).map(o => ({ ...o, name: nameOf(o.uid) }));
+    /* brisanje: administrator uvijek, radnik svoju otpremnicu samo na dan slanja; vraća datoteke za brisanje */
+    function otpDelete(u, id) {
+      const i = db.otpremnice.findIndex(o => o.id === id); if (i < 0) return 'Otpremnica nije pronađena.';
+      const o = db.otpremnice[i]; if (u.role !== 'admin' && (o.uid !== u.id || ymdOf(o.ts) !== todayIso())) return 'Otpremnicu možete obrisati samo na dan slanja. Javite se administratoru.';
+      db.otpremnice.splice(i, 1); return o.files;
     }
     /* Ručno brisanje iz pošte: skriva se samo radniku; nepročitana poruka/obavijest time se smatra pročitanom */
     function inboxHide(uid, k, id) {
@@ -400,7 +421,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

@@ -19,8 +19,8 @@ Stop-ScheduledTask -TaskName $Task -ErrorAction SilentlyContinue
 Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -like "*server.js*" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
 Start-Sleep -Seconds 2
 
-Write-Host "2/5 Spremam kopiju stare verzije i podataka u $bk"
-robocopy $App $bk /E /NFL /NDL /NJH /NJS /NP | Out-Null
+Write-Host "2/5 Spremam kopiju stare verzije i podataka u $bk (bez fotografija otpremnica, one se ne diraju)"
+robocopy $App $bk /E /XD "$App\data\otpremnice" /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "Kopija nije uspjela (robocopy $LASTEXITCODE). Ništa nije promijenjeno." }
 
 Write-Host "3/5 Raspakiravam novu verziju..."

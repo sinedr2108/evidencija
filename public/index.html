@@ -91,7 +91,16 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
     <button class="tile t-sl" data-pg="sl">SLOBODNI DAN</button><button class="tile t-iz" data-pg="iz">IZVJEŠTAJI</button>
    </div>
   </div>
-  <div id="p-ot" class="pg hide"><div class="card" style="border-top:5px solid #ea580c"><b>OTPREMNICE</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
+  <div id="p-ot" class="pg hide"><div class="card" style="border-top:5px solid #ea580c"><div class="shh" style="color:#ea580c">FOTOGRAFIRAJ I POŠALJI</div>
+   <input type="file" id="otc" accept="image/*" capture="environment" class="hide"><input type="file" id="otg" accept="image/*" multiple class="hide">
+   <button class="big" id="otcb" style="background:#ea580c;color:#fff">FOTOGRAFIRAJ OTPREMNICU</button><button class="sm" id="otgb" style="width:100%;margin-top:8px">Odaberi iz galerije</button>
+   <div class="mu" style="margin-top:6px">Ako otpremnica ima više stranica, fotografirajte svaku (najviše 10).</div>
+   <div id="otth" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+   <label for="ots">Gradilište</label><select id="ots"></select>
+   <label for="otd">Datum otpremnice</label><input type="date" id="otd">
+   <label for="otn">Napomena (neobavezno)</label><input id="otn" maxlength="300">
+   <button class="big" id="otsb">POŠALJI OTPREMNICU</button><div class="msg" id="otm"></div></div>
+   <h2>Poslane otpremnice</h2><div id="otl"></div></div>
   <div id="p-al" class="pg hide"><div class="card" style="border-top:5px solid var(--gy)"><b>ALAT</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
   <div id="p-sh" class="pg hide">
   <div class="card sh">
@@ -143,7 +152,12 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada.</li>
    <li><b>Gumb s pismom</b> (gore, uz Lozinka i Odjava) – sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište) s njihovim statusom, najnovije na vrhu. Crveni broj na gumbu je broj nepročitanih poruka. Svaku stavku možete obrisati gumbom ✕ (briše se samo iz vaše pošte). Na kraju mjeseca automatski ostaje samo 5 najnovijih.</li>
    <li>Gumb <b>?</b> dolje desno otvara ove upute.</li>
-   <li>Tri glavna dijela: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b> i <b>ALAT</b>. Otpremnice i Alat su u izradi.</li></ul>
+   <li>Tri glavna dijela: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b> i <b>ALAT</b> (Alat je u izradi).</li></ul>
+   <h3>OTPREMNICE – fotografiraj i pošalji</h3>
+   <ol><li>Kliknite <b>FOTOGRAFIRAJ OTPREMNICU</b> – otvara se kamera mobitela. Fotografirajte otpremnicu ravno i čitljivo. Ako ima više stranica, fotografirajte svaku (najviše 10). Već snimljenu fotografiju možete odabrati gumbom <b>Odaberi iz galerije</b>.</li>
+   <li>Pogrešnu fotografiju maknite gumbom ✕ na sličici.</li>
+   <li>Odaberite <b>gradilište</b> i <b>datum otpremnice</b>, po želji upišite napomenu i kliknite <b>POŠALJI OTPREMNICU</b>.</li>
+   <li>Ispod su vaše poslane otpremnice. Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li></ol>
    <h3>EVIDENCIJA RADNOG VREMENA</h3>
    <ul><li><b>Fond sati</b> – koliko sati treba odraditi u mjesecu (radni dani × 8 h) i koliko ste upisali.</li>
    <li><b>Sati za slobodan dan</b> – vaše trenutno stanje (vidi dio Slobodni dan).</li>
@@ -200,7 +214,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <button class="tile t-iz2" data-pg="aiz">IZVJEŠTAJI</button><button class="tile t-sl" data-pg="asl">SLOBODNI DANI</button>
    <button class="tile t-go2" data-pg="ago">GODIŠNJI ODMOR</button><button class="tile t-gr2" data-pg="agr">GRADILIŠTA</button>
    <button class="tile t-po" data-pg="apo">OBAVIJESTI RADNICIMA</button><button class="tile t-zh" data-pg="azh">ODOBRENI ZAHTJEVI</button><button class="tile t-st" data-pg="ast">STATISTIKA</button><button class="tile t-ob" data-pg="aob">TOPLI OBROK</button>
-   <button class="tile t-ps" data-pg="aps">POSTAVKE</button>
+   <button class="tile t-ot" data-pg="aot">OTPREMNICE</button><button class="tile t-ps" data-pg="aps">POSTAVKE</button>
   </div></div>
   <div id="af" class="pg hide">
   <div class="card"><label for="rm">Mjesec</label><input type="month" id="rm">
@@ -272,6 +286,9 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <div class="mu" style="margin-top:6px">Poruka se radniku prikazuje na početnoj stranici dok ne potvrdi da ju je pročitao.</div></div>
    <h2>Poslane poruke</h2><div id="pl"></div>
   </div>
+  <div id="p-aot" class="pg hide"><div class="card">
+   <div class="grid3"><div><label for="aom">Mjesec (datum otpremnice)</label><input type="month" id="aom"></div><div><label for="aow">Radnik</label><select id="aow"></select></div><div><label for="aos">Gradilište</label><select id="aos"></select></div></div>
+   <div class="mu" id="aon" style="margin-top:6px"></div></div><div id="aol"></div></div>
   <div id="p-aps" class="pg hide">
   <h2>Gradilišta (popis za radnike)</h2><div class="card"><div class="fl"><input id="ns" placeholder="Naziv gradilišta"><button class="sm" id="as">Dodaj</button></div><div id="ls"></div></div>
   <h2>Opcije toplog obroka</h2><div class="card"><div class="fl"><input id="nm" placeholder="NAZIV OPCIJE (NPR. RESTORAN 4)" autocapitalize="characters" style="text-transform:uppercase"><button class="sm" id="am2">Dodaj</button></div><div id="lm2"></div></div>
@@ -361,23 +378,53 @@ function draw(){
  $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
  if(me.role==='admin'&&tab==='adm')drawAdm();
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
- drawCal();drawPt();applyPage();
+ drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();applyPage();
 }
-let page='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke'};
+let page='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
- const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps']:['ev','ot','al','sh','go','sl','iz','up','pt'];
+ const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot']:['ev','ot','al','sh','go','sl','iz','up','pt'];
  $('upb').classList.toggle('hide',adm||page!=='hm');
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
  if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
- if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
+ if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
  $('nav').classList.toggle('hide',page===home);$('navt').textContent=TIT[page]||'';
  $('hdr').classList.toggle('hide',page!==home);
  if(!adm){$('fond').classList.toggle('hide',page!=='ev');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
 function setPage(p){page=p;try{if(p==='hm'||p==='ahm'){if(location.hash)history.pushState(null,'',location.pathname+location.search)}else location.hash=p}catch(e){}draw();window.scrollTo(0,0)}
 document.querySelectorAll('.tile').forEach(b=>b.onclick=()=>setPage(b.dataset.pg));
+/* OTPREMNICE: fotografija se u pregledniku smanji (najviše 1600 px, < 0,9 MB) i šalje zasebno, zatim zapis otpremnice */
+let otPend=[],otList=[],fotoSrc=f=>'/api/otpremnice/foto/'+encodeURIComponent(f),fotoDl=f=>fotoSrc(f)+'?dl=1';
+async function shrink(file){const src=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('Fotografija se ne može učitati. Pokušajte ponovno ili odaberite drugu.'));i.src=src});
+ const s=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.round(img.naturalWidth*s);cv.height=Math.round(img.naturalHeight*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+ let q=.8,d=cv.toDataURL('image/jpeg',q);while(d.length>900000&&q>.3){q-=.1;d=cv.toDataURL('image/jpeg',q)}if(d.length>990000)throw new Error('Fotografija je prevelika.');return d}finally{URL.revokeObjectURL(src)}}
+const otTs=t=>new Date(t).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),otDm=d=>d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4)+'.';
+const otImgs=(o,dl)=>'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+o.files.map((f,i)=>'<span style="display:inline-flex;flex-direction:column;gap:4px;align-items:center"><a href="'+fotoSrc(f)+'" target="_blank" rel="noopener"><img src="'+fotoSrc(f)+'" alt="Fotografija '+(i+1)+'" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"></a>'+(dl?'<a class="sm" style="padding:4px 8px;text-decoration:none" href="'+fotoDl(f)+'" download>Preuzmi</a>':'')+'</span>').join('')+'</div>';
+const otCard=(o,adm)=>'<div class="card" style="border-left:5px solid #ea580c"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(o.site)+'</b> · '+otDm(o.date)+(adm?'<div><b>'+E(o.name)+'</b></div>':'')+'<div class="mu">poslano '+otTs(o.ts)+' · '+o.files.length+' fotogr.</div></div>'
+ +((adm||new Date(o.ts).toLocaleDateString('sv')===today())?'<span><button class="x" data-otx="'+E(o.id)+'" aria-label="Obriši" title="Obriši">✕</button></span>':'')+'</div>'+(o.note?'<div style="margin-top:6px">'+E(o.note)+'</div>':'')+otImgs(o,adm)+'</div>';
+async function drawOt(){const adm=me.role==='admin';
+ if(!adm){opts($('ots'),me.sites,'<option value="">– odaberite gradilište –</option>','');if(!$('otd').value)$('otd').value=today();$('otd').max=today();
+  $('otth').innerHTML=otPend.map((d,i)=>'<span style="position:relative"><img src="'+d+'" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"><button class="x" data-otp="'+i+'" aria-label="Makni" style="position:absolute;top:-8px;right:-8px;width:30px;height:30px;font-size:16px">✕</button></span>').join('');
+  $('otsb').disabled=!otPend.length}
+ else if(!$('aom').value)$('aom').value=today().slice(0,7);
+ try{otList=await api('GET','otpremnice'+(adm?'?month='+$('aom').value:''))}catch(e){return}
+ if(!adm){$('otl').innerHTML=otList.length?otList.map(o=>otCard(o,0)).join(''):'<div class="card mu">Još niste poslali nijednu otpremnicu.</div>';return}
+ const uq=a=>[...new Set(a)].sort((x,y)=>x.localeCompare(y,'hr')).map(x=>[x,x]);fill($('aow'),uq(otList.map(o=>o.name)),'Svi radnici');fill($('aos'),uq(otList.map(o=>o.site)),'Sva gradilišta');
+ const L=otList.filter(o=>(!$('aow').value||o.name===$('aow').value)&&(!$('aos').value||o.site===$('aos').value));
+ $('aon').textContent='Prikazano '+L.length+' od '+otList.length+' otpremnica u mjesecu, najnovije na vrhu. Klik na fotografiju otvara je u punoj veličini.';
+ $('aol').innerHTML=L.length?L.map(o=>otCard(o,1)).join(''):'<div class="card mu">Nema otpremnica za odabrane filtere.</div>'}
+async function otAdd(files){$('otm').textContent='';try{for(const f of files){if(otPend.length>=10){say('otm','Najviše 10 fotografija po otpremnici.');break}otPend.push(await shrink(f))}}catch(x){say('otm',x.message)}drawOt()}
+$('otcb').onclick=()=>$('otc').click();$('otgb').onclick=()=>$('otg').click();
+$('otc').onchange=e=>{otAdd([...e.target.files]);e.target.value=''};$('otg').onchange=e=>{otAdd([...e.target.files]);e.target.value=''};
+$('otth').onclick=e=>{const b=e.target.closest('[data-otp]');if(b){otPend.splice(+b.dataset.otp,1);drawOt()}};
+$('otsb').onclick=async()=>{const site=$('ots').value,date=$('otd').value;if(!otPend.length)return say('otm','Fotografirajte otpremnicu.');if(!site)return say('otm','Odaberite gradilište.');
+ const B=$('otsb');B.disabled=true;try{const files=[];for(let i=0;i<otPend.length;i++){B.textContent='Šaljem '+(i+1)+'/'+otPend.length+'…';files.push((await api('POST','otpremnice/foto',{data:otPend[i]})).f)}
+  await api('POST','otpremnice',{site,date,note:$('otn').value,files});otPend=[];$('otn').value='';say('otm','Otpremnica je poslana.',1);await load()}
+ catch(x){say('otm',x.message+' Fotografije su ostale, pokušajte ponovno.')}finally{B.textContent='POŠALJI OTPREMNICU';drawOt()}};
+const otDel=async e=>{const b=e.target.closest('[data-otx]');if(!b)return;if(!await cf('Obrisati ovu otpremnicu i njezine fotografije?'))return;try{await api('DELETE','otpremnice/'+b.dataset.otx);toast('Otpremnica je obrisana.');await load()}catch(x){toast(x.message)}};
+$('otl').onclick=otDel;$('aol').onclick=otDel;$('aom').onchange=drawOt;$('aow').onchange=drawOt;$('aos').onchange=drawOt;
 /* Pošta radnika: gumb s pismom (broj = nepročitane poruke i obavijesti) */
 function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',adm);if(adm)return;
  $('ptn').classList.toggle('hide',!inbox.unread);$('ptn').textContent=inbox.unread;

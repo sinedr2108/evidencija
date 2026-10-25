@@ -8,7 +8,7 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 ## Arhitektura
 - **Node.js ≥ 18, bez ovisnosti** (osim neobaveznog `nodemailer` za e-mail). `server.js` (HTTP, rute `R(metoda, putanja, razina, fn)`; razina 0 = javno, 1 = prijavljen, 2 = administrator), `core.js` (poslovna pravila, dijeli ga server i preglednik kao `window.Core`; izvještaji, xlsx, PDF), `public/index.html` (cijelo sučelje, vanilla JS), `public/logo.png`.
 - Podaci: **jedna datoteka `data/db.json`**. Lozinke scrypt, potpisani HttpOnly kolačić (30 dana), zaštita od pogađanja lozinke (5 pokušaja / 15 min, po IP-u; iza Cloudflare Tunnela koristi `CF-Connecting-IP`).
-- **Podaci se uvijek nasljeđuju**: `DATA_VERSION` (trenutno **6**) + `MIGRATIONS` u `server.js`; kopija u `data/backup` pri svakom pokretanju i prije migracije; starija verzija odbija novije podatke. Nikad ne brisati ni preimenovati postojeća polja – samo dodati migraciju.
+- **Podaci se uvijek nasljeđuju**: `DATA_VERSION` (trenutno **7**) + `MIGRATIONS` u `server.js`; kopija u `data/backup` pri svakom pokretanju i prije migracije; starija verzija odbija novije podatke. Nikad ne brisati ni preimenovati postojeća polja – samo dodati migraciju.
 - `nadogradnja.ps1` (Windows: zaustavi zadatak, kopija u `C:\evidencija-backup\DATUM`, kopira nove datoteke bez mape `data`, pokrene), `reset-admin.js` (nova lozinka bez brisanja podataka).
 - Demo za isprobavanje (bez servera, podaci u pregledniku): `razvoj/build-demo.py <mapa evidencija> <izlaz.html>` – objavljen kao artifact.
 
@@ -32,7 +32,7 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 - Poruke administratora radnicima (pojedinačno/odabranima/svima), ostaju dok radnik ne potvrdi čitanje; admin vidi tko je i kada pročitao.
 
 ## Sučelje
-- Radnik – **početna** (od 25.10.2026.): obavijesti/odluke/poruke, gumb s pismom, gumb "?" (upute) i tri grupe: OTPREMNICE (u izradi), EVIDENCIJA RADNOG VREMENA (stranica `ev`), ALAT (u izradi).
+- Radnik – **početna** (od 25.10.2026.): obavijesti/odluke/poruke, gumb s pismom, gumb "?" (upute) i tri grupe: OTPREMNICE (fotografiraj i pošalji), EVIDENCIJA RADNOG VREMENA (stranica `ev`), ALAT (u izradi).
 - Radnik – EVIDENCIJA RADNOG VREMENA (bivša početna): fond, sati za slobodan dan, 4 gumba: ŠIHTERICA (plava), GODIŠNJI (ljubičasta), SLOBODNI DAN (žuta), IZVJEŠTAJI (zelena); gumb "?" dolje desno = **upute za radnike** (odjeljak `p-up` u index.html).
 - Kalendar u ŠIHTERICI: crveno = radni dan bez unosa, zelena točka = ima unos, žuto S = slobodan dan, ljubičasto G = godišnji, podcrtano = praznik.
 - IZVJEŠTAJI radnika: mjesec/godina, kartice, **Spremi kao PDF**.
@@ -40,6 +40,7 @@ Web aplikacija (prilagođena mobitelu) za evidenciju radnog vremena radnika gra�
 - **Automatsko osvježavanje** (od 23.10.2026.): preglednik svakih 10 s pita `/api/rev` (broj izmjene, samo u memoriji servera, raste pri svakom `save()`) i ponovno učitava podatke kad se promijeni; ne osvježava dok se upisuje tekst ili je otvoren dijalog.
 - Admin IZVJEŠTAJI: *Ukupno sati po danu* i *Svi unosi u mjesecu* skriveni, otvaraju se gumbima pod **Detaljni pregledi** s vlastitim filterima (od/do datuma, radnik, gradilište, vrsta, topli obrok).
 - **Pošta radnika** (verzija podataka 6): gumb s pismom gore na početnoj radnika (crveni broj = nepročitano) → poruke, obavijesti i poslani zahtjevi sa statusom, najnovije na vrhu; ručno brisanje ✕ i automatsko čišćenje početkom mjeseca (ostaje 5). Samo se skriva radniku (`inboxDel`, `inboxCleaned`), zapisi ostaju.
+- **OTPREMNICE** (verzija podataka 7): radnik fotografira (do 10 fotografija), gradilište + datum + napomena; fotografije su datoteke u `data/otpremnice` (smanjene u pregledniku, svaka < 1 MB jer server odbija veće zahtjeve), zapis u `db.otpremnice`. Admin stranica OTPREMNICE (filteri mjesec/radnik/gradilište, preuzimanje, brisanje). `nadogradnja.ps1` izuzima `data\otpremnice` iz kopije – **te fotografije trebaju zasebnu sigurnosnu kopiju**.
 - Filter radnika: aktivni / svi (i izbrisani). Nove opcije toplog obroka velikim slovima.
 
 ## Dogovoreni način rada
