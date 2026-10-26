@@ -219,6 +219,9 @@
     const otpSite = (o, f) => ((o.adminSite || {})[f]) || o.site || '';
     const otpList = (u, od, dO) => db.otpremnice.filter(o => (u.role === 'admin' ? ((!od || o.date >= od) && (!dO || o.date <= dO)) : o.uid === u.id)).sort((x, y) => y.ts - x.ts).slice(0, u.role === 'admin' ? 5000 : 30)
       .map(o => ({ ...o, adminSite: o.adminSite || {}, pitanja: o.pitanja || [], name: nameOf(o.uid) }));
+    /* otpremnice se zajedno s fotografijama brišu OTP_DANA dana nakon slanja; vraća datoteke za brisanje */
+    const OTP_DANA = 60;
+    function otpExpire(now) { const old = db.otpremnice.filter(o => now - o.ts > OTP_DANA * 864e5); if (!old.length) return []; db.otpremnice = db.otpremnice.filter(o => !old.includes(o)); return old.flatMap(o => o.files); }
     const otpSitesAll = () => [...new Set((db.sites || []).concat(db.otpSites))].sort((a, b) => a.localeCompare(b, 'hr'));
     function otpSetSite(u, id, f, site) {
       const o = db.otpremnice.find(x => x.id === id); if (!o || !o.files.includes(f)) return 'Fotografija nije pronađena.';
@@ -445,7 +448,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

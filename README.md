@@ -34,6 +34,8 @@ Lozinke putuju mrežom, zato koristite HTTPS: IIS s *URL Rewrite + ARR* kao reve
 Svi podaci su u jednoj datoteci: `data\db.json`. Kopirajte je redovito (npr. Task Scheduler jednom dnevno).
 
 ## 6. Novosti u izvještajima
+- **Upute za administratore** (26.10.2026.): plavi gumb **?** dolje desno i na svakoj administratorskoj stranici otvara upute za tu stranicu (Početna, Otpremnice, Evidencija, Alat, Izvještaji, Slobodni dani, Godišnji odmor, Gradilišta, Obavijesti radnicima, Odobreni zahtjevi, Statistika, Topli obrok, Postavke, Aktivnosti radnika); **Sve upute** prikazuje sve.
+- **Automatsko brisanje otpremnica** (26.10.2026.): otpremnice se zajedno s fotografijama brišu **60 dana nakon slanja** (provjera pri pokretanju i svakih 6 sati; `OTP_DANA` u core.js). Fotografije nemaju sigurnosnu kopiju, važne treba preuzeti na vrijeme.
 - **Ikona s logom** (26.10.2026.): kvadratne ikone iz loga na žutoj podlozi s natpisom TiDy Connect ispod loga (`public/icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `favicon.png`) i `manifest.webmanifest` (naziv TiDy Connect). Na mobitelu treba obrisati stari prečac i ponovno dodati aplikaciju na početni zaslon.
 - **Novi naziv: TiDy Connect** (26.10.2026.): u zaglavlju, na prijavi, u kartici preglednika, kao ime ikone na mobitelu, u e-mailovima (ime pošiljatelja, naslovi) i u PDF izvještajima. Grupa EVIDENCIJA RADNOG VREMENA zadržava ime.
 - **Upute po stranicama** (26.10.2026.): plavi gumb **?** dolje desno sada je na svakoj stranici radnika (Početna, Otpremnice, Alat, Evidencija, Šihterica, Godišnji, Slobodni dan, Izvještaji, Poruke i zahtjevi) i otvara upute samo za tu stranicu. Gumb **Sve upute** prikazuje cijele upute, a kućica vraća na stranicu s koje su upute otvorene.

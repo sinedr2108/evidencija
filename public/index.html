@@ -102,7 +102,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <label for="otd">Datum otpremnice</label><input type="date" id="otd">
    <label for="otn">Napomena (neobavezno)</label><input id="otn" maxlength="300">
    <button class="big" id="otsb">POŠALJI OTPREMNICU</button><div class="msg" id="otm"></div></div>
-   <h2>Poslane otpremnice</h2><div id="otl"></div></div>
+   <h2>Poslane otpremnice</h2><div class="mu" style="margin:-4px 0 8px">Otpremnice se zajedno s fotografijama automatski brišu 60 dana nakon slanja.</div><div id="otl"></div></div>
   <div id="p-al" class="pg hide"><div class="card" style="border-top:5px solid var(--gy)"><b>ALAT</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
   <div id="p-sh" class="pg hide">
   <div class="card sh">
@@ -173,7 +173,8 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li>Pogrešnu fotografiju maknite gumbom ✕ na sličici.</li>
    <li>Odaberite <b>gradilište</b> i <b>datum otpremnice</b>, po želji upišite napomenu i kliknite <b>POŠALJI OTPREMNICU</b>. Ako ne znate na koje gradilište otpremnica ide, na kraju popisa odaberite <b>Odluka administratora</b>.</li>
    <li>Ispod su vaše poslane otpremnice. Klik na sličicu otvara fotografiju u A4 obliku (strelicama listate stranice, <b>Puna veličina</b> za povećanje). Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li>
-   <li>Ako administrator zatraži <b>dodatno objašnjenje</b>, dobit ćete obavijest. Pitanje je ispod te otpremnice: upišite odgovor i kliknite <b>Pošalji odgovor</b>. Ako administrator promijeni gradilište, to piše uz otpremnicu.</li></ol>
+   <li>Ako administrator zatraži <b>dodatno objašnjenje</b>, dobit ćete obavijest. Pitanje je ispod te otpremnice: upišite odgovor i kliknite <b>Pošalji odgovor</b>. Ako administrator promijeni gradilište, to piše uz otpremnicu.</li>
+   <li>Poslane otpremnice s fotografijama automatski se brišu <b>60 dana nakon slanja</b>.</li></ol>
    </div>
    <div class="uh" data-h="al">
    <h3>ALAT</h3>
@@ -325,6 +326,104 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <div class="mu" style="margin-top:6px">Poruka se radniku prikazuje na početnoj stranici dok ne potvrdi da ju je pročitao.</div></div>
    <h2>Poslane poruke</h2><div id="pl"></div>
   </div>
+  <div id="p-aup" class="pg hide"><div class="card upute">
+   <p class="mu">Upute za administratore · ažurirano 26.10.2026.</p>
+   <div class="uh" data-h="ahm">
+   <h3>Početna stranica</h3>
+   <ul><li>Na vrhu su <b>zahtjevi na čekanju</b>: slobodan dan, godišnji odmor, ponovno otvaranje mjeseca i novo gradilište. Svaki prihvatite ili odbijte, po želji s napomenom. Radnik odluku odmah vidi na svojoj početnoj stranici i u pošti.</li>
+   <li>Zahtjev za novo gradilište možete prije prihvaćanja urediti (naziv). Prihvaćeno gradilište dolazi na popis za sve radnike, a radnici dobiju obavijest.</li>
+   <li>Tri glavna dijela: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b> i <b>ALAT</b> (u izradi).</li>
+   <li>Gumbi gore: <b>zvono</b> (aktivnosti radnika i obavijesti u Windowsima), <b>Postavke</b>, <b>Lozinka</b> i <b>Odjava</b>.</li>
+   <li>Plavi gumb <b>?</b> dolje desno na svakoj stranici otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>, a kućica vraća na stranicu s koje ste došli.</li>
+   <li>Aplikacija se sama osvježava svakih desetak sekundi, pa se novi unosi i zahtjevi radnika pojavljuju bez ponovne prijave.</li></ul>
+   </div>
+   <div class="uh" data-h="aot">
+   <h3>OTPREMNICE</h3>
+   <ul><li>Svaka fotografija prikazuje se zasebno u A4 okviru, a ispod piše tko ju je poslao i kada, gradilište, datum otpremnice i napomena. Klik na fotografiju otvara je u punoj veličini.</li>
+   <li><b>Filteri</b>: datum otpremnice od–do te višestruki odabir gradilišta i pošiljatelja (označite jedno ili više). <b>Poništi filtere</b> vraća sve.</li>
+   <li><b>Promijeni gradilište</b>: odaberite gradilište s popisa ili <i>+ Upiši novo gradilište…</i>. Ručno upisano gradilište vrijedi samo u Otpremnicama i ne pojavljuje se radnicima u šihterici. Radnik vidi da ste promijenili gradilište.</li>
+   <li><b>Zatraži objašnjenje</b>: upišite pitanje. Radnik dobiva obavijest i odgovara ispod otpremnice, a pitanje i odgovor vidite ispod fotografije.</li>
+   <li>Otpremnice s gradilištem <b>Odluka administratora</b> radnik je poslao bez gradilišta: odredite ga gumbom Promijeni gradilište.</li>
+   <li><b>Preuzmi</b> sprema fotografiju na računalo. <b>Obriši otpremnicu</b> briše otpremnicu sa svim fotografijama.</li>
+   <li>Otpremnice se zajedno s fotografijama <b>automatski brišu 60 dana nakon slanja</b> i nemaju sigurnosnu kopiju, pa važne preuzmite na vrijeme.</li></ul>
+   </div>
+   <div class="uh" data-h="aev">
+   <h3>EVIDENCIJA RADNOG VREMENA</h3>
+   <ul><li>Gumbi vode na stranice: <b>IZVJEŠTAJI</b>, <b>SLOBODNI DANI</b>, <b>GODIŠNJI ODMOR</b>, <b>GRADILIŠTA</b>, <b>OBAVIJESTI RADNICIMA</b>, <b>ODOBRENI ZAHTJEVI</b>, <b>STATISTIKA</b> i <b>TOPLI OBROK</b>. Svaka ima svoje upute pod gumbom <b>?</b>.</li>
+   <li>Kućica s tih stranica vraća ovamo, a odavde na početnu.</li></ul>
+   </div>
+   <div class="uh" data-h="aal">
+   <h3>ALAT</h3>
+   <ul><li>Ovaj dio je u izradi. Kad bude spreman, ovdje će biti upute.</li></ul>
+   </div>
+   <div class="uh" data-h="aiz">
+   <h3>IZVJEŠTAJI</h3>
+   <ul><li>Na vrhu odaberite <b>Mjesec</b> i po potrebi filtere <b>Radnik</b>, <b>Gradilište</b> i <b>Vrsta upisa</b>. Filteri vrijede za sve tablice na stranici i za sve izvoze. Ispod izbornika Radnik birate prikaz aktivnih ili svih radnika (i izbrisanih).</li>
+   <li>Izvoz: <b>Excel</b> (svi listovi), CSV (sažetak, po danima, po gradilištima, slobodni dani, svi unosi), <b>Ispiši</b> i <b>Pošalji e-mailom</b> (administratorima s upisanim e-mailom). Zadnjeg dana u mjesecu poslije 23:00 izvještaj se šalje sam.</li>
+   <li><b>Izvještaj po radniku</b>: upisani sati, fond sati (radni dani × 8 h) i razlika, prekovremeni sati i sati za slobodan dan. U toj tablici upisujete <b>prijenos sati za slobodan dan</b> iz prošlog mjeseca (može biti negativan).</li>
+   <li>Ako je radnik <b>završio mjesec</b>, ovdje ga možete ponovno otvoriti.</li>
+   <li><b>Radnici bez unosa</b>: radni dani do jučer za koje radnik nema nijedan unos.</li>
+   <li><b>Detaljni pregledi</b>: gumbi <i>Ukupno sati po danu</i> i <i>Svi unosi u mjesecu</i> otvaraju tablice s vlastitim filterima (od–do datuma, radnik, gradilište, vrsta, topli obrok). Ponovni klik ih zatvara.</li></ul>
+   </div>
+   <div class="uh" data-h="asl">
+   <h3>SLOBODNI DANI</h3>
+   <ul><li>Popis tko je kada koristio slobodan dan u odabranom mjesecu, s oznakom je li uz odobren zahtjev.</li>
+   <li>Na dnu je tablica za trenutni mjesec: radnici s 5 ili više sati za slobodan dan i radnici s odobrenim zahtjevom (odobreno, iskorišteno ili na čekanju).</li>
+   <li>Pravilo: svaki dan s 9 ili više sati rada donosi 1 sat; slobodan dan oduzima 8 sati. Radnik s 8 ili više sati sam odabire slobodan dan, a s manje šalje zahtjev koji odobravate na početnoj stranici.</li></ul>
+   </div>
+   <div class="uh" data-h="ago">
+   <h3>GODIŠNJI ODMOR</h3>
+   <ul><li>Za svakog radnika i godinu (godina iz polja Mjesec) upišite <b>ukupni godišnji odmor</b> i <b>početno iskorišteno stanje</b>. Dalje aplikacija sama zbraja iskorištene dane.</li>
+   <li><b>Odobri godišnji odmor za više radnika</b>: označite radnike, odaberite datum (ili <i>Više dana</i> od–do), po želji napomenu i kliknite <b>Odobri odabranim radnicima</b>. Radnici dobivaju obavijest, a opcija Godišnji odmor otključava se za te dane.</li>
+   <li>Zahtjeve radnika za godišnji odobravate na početnoj stranici. Računaju se samo radni dani bez praznika.</li></ul>
+   </div>
+   <div class="uh" data-h="agr">
+   <h3>GRADILIŠTA</h3>
+   <ul><li>Za svako gradilište tablica radnika po mjesecima s ukupnim satima po radniku, po mjesecu i ukupno.</li>
+   <li>Razdoblje: <b>odabrana godina</b> ili <b>ukupno (sve godine)</b>; po želji jedno gradilište.</li>
+   <li>Izvoz u <b>Excel</b> (list po gradilištu) i <b>CSV</b>.</li>
+   <li>Popis gradilišta za radnike uređuje se u <b>Postavkama</b>.</li></ul>
+   </div>
+   <div class="uh" data-h="apo">
+   <h3>OBAVIJESTI RADNICIMA</h3>
+   <ul><li>Upišite tekst poruke, odaberite <b>sve radnike</b> ili <b>odabrane radnike</b> i kliknite <b>Pošalji poruku</b>.</li>
+   <li>Radnik poruku vidi na početnoj stranici dok ne klikne <i>Pročitao/la sam</i>.</li>
+   <li>Ispod su poslane poruke: „Pročitalo x / y“ i za svakog radnika vrijeme čitanja ili „nije pročitano“. Poruku možete obrisati.</li></ul>
+   </div>
+   <div class="uh" data-h="azh">
+   <h3>ODOBRENI ZAHTJEVI</h3>
+   <ul><li>Svi zahtjevi i odobrenja: slobodni dani, godišnji odmor (i odobrenja bez zahtjeva), ponovno otvaranje mjeseca i nova gradilišta.</li>
+   <li>Filteri: godina, vrsta, status (prihvaćeno, odbijeno, na čekanju) i radnik.</li>
+   <li>Uz svaku odluku piše tko ju je donio i kada te je li je radnik vidio.</li>
+   <li><b>Promijeni u odbijeno/prihvaćeno</b> mijenja odluku; radnik dobiva novu obavijest. Odluka se ne može mijenjati kad je datum prošao ili je radnik dan već iskoristio.</li></ul>
+   </div>
+   <div class="uh" data-h="ast">
+   <h3>STATISTIKA</h3>
+   <ul><li>Rang liste za odabrani mjesec ili cijelu godinu: najviše sati, prekovremeni, višak i manjak prema fondu, bolovanje, godišnji, slobodni dani, teren, topli obroci, dani bez unosa, gradilišta po satima i broju radnika i drugo.</li>
+   <li>Prvo mjesto ima medalju, a klik na naslov otvara cijelu listu.</li></ul>
+   </div>
+   <div class="uh" data-h="aob">
+   <h3>TOPLI OBROK</h3>
+   <ul><li>Filteri: mjesec (prazno = svi mjeseci), radnik i restoran.</li>
+   <li>Prikaz: zbroj po restoranima, popis po radnicima (restoran, broj obroka, dani) i popis svih obroka.</li>
+   <li>Opcije toplog obroka uređuju se u <b>Postavkama</b>.</li></ul>
+   </div>
+   <div class="uh" data-h="aps">
+   <h3>POSTAVKE</h3>
+   <ul><li><b>Gradilišta</b>: popis koji radnici biraju u šihterici. Novo gradilište radnici vide kao obavijest.</li>
+   <li><b>Opcije toplog obroka</b>: nove opcije spremaju se velikim slovima.</li>
+   <li><b>Korisnici</b>: dodavanje radnika i administratora (ime i prezime, korisničko ime, lozinka, uloga, e-mail). Uz svakog korisnika: <b>Izmijeni</b>, <b>Pošalji login podatke</b> (šalje novu lozinku e-mailom), <b>Onemogući prijavu</b> i <b>Izbriši</b>. Izbrisani korisnik se ne može prijaviti, ali njegovi podaci ostaju u izvještajima; pod <i>Izbrisani korisnici</i> može se trajno obrisati.</li>
+   <li><b>E-mail i adresa aplikacije</b>: adresa aplikacije (link u e-mailovima) i SMTP podaci pružatelja e-pošte. Spremite pa kliknite <b>Pošalji probni e-mail meni</b>.</li></ul>
+   </div>
+   <div class="uh" data-h="akt">
+   <h3>Aktivnosti radnika (zvono)</h3>
+   <ul><li>Popis radnji radnika s detaljima, najnovije na vrhu: prijava, unosi i izmjene sati, zahtjevi, završen mjesec, otpremnice, odgovori, pročitane poruke. Crveni broj na zvonu su nove radnje.</li>
+   <li><b>Uključi obavijesti u Windowsima</b> i dopustite obavijesti u pregledniku: svaka nova radnja pojavi se kao skočni prozor. <b>Probna obavijest</b> provjerava radi li.</li>
+   <li>Obavijesti stižu dok je aplikacija otvorena u pregledniku (smije biti u pozadini) i samo preko https adrese ili na serveru preko localhost.</li>
+   <li>Kvačicom birate želite li obavijesti i o prijavama. Popis se briše ponovnim pokretanjem servera.</li></ul>
+   </div>
+   <div id="aupall" style="margin-top:16px"><button class="sm" id="aupa">Sve upute</button></div>
+  </div></div>
   <div id="p-akt" class="pg hide"><div class="card" id="aks"></div><div class="mu" style="margin:4px 0 8px">Radnje radnika od zadnjeg pokretanja servera, najnovije na vrhu (najviše 300).</div><div id="akl"></div></div>
   <div id="p-aot" class="pg hide"><div class="card">
    <div class="grid3" style="grid-template-columns:1fr 1fr;gap:8px"><div><label for="aod1">Datum otpremnice od</label><input type="date" id="aod1"></div><div><label for="aod2">do</label><input type="date" id="aod2"></div></div>
@@ -426,18 +525,18 @@ function draw(){
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
  drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='akt')drawAkt();applyPage();if(me.role==='admin'&&akUid!==me.id)akCheck();
 }
-let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika'};
+let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika',aup:'Upute za administratore'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
- const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt']:['ev','ot','al','sh','go','sl','iz','up','pt'];
- $('upb').classList.toggle('hide',adm||page==='up');
- if(!adm&&page==='up'){const all=upFrom==='up';document.querySelectorAll('#p-up .uh').forEach(d=>d.classList.toggle('hide',!all&&d.dataset.h!==upFrom));$('upall').classList.toggle('hide',all)}
+ const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt','aup']:['ev','ot','al','sh','go','sl','iz','up','pt'];
+ $('upb').classList.toggle('hide',page==='up'||page==='aup');
+ {const U=adm?'aup':'up';if(page===U){const all=upFrom===U;document.querySelectorAll('#p-'+U+' .uh').forEach(d=>d.classList.toggle('hide',!all&&d.dataset.h!==(upFrom===home?home:upFrom)));$(U+'all').classList.toggle('hide',all)}}
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
  if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
- if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='akt'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
- $('nav').classList.toggle('hide',page===home);$('navt').textContent=page==='up'&&upFrom!=='up'?'Upute: '+(upFrom==='hm'?'Početna stranica':TIT[upFrom]):TIT[page]||'';
+ if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='akt'||page==='aup'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
+ $('nav').classList.toggle('hide',page===home);$('navt').textContent=(page==='up'||page==='aup')&&upFrom!==page?'Upute: '+(upFrom===home?'Početna stranica':TIT[upFrom]):TIT[page]||'';
  $('hdr').classList.toggle('hide',page!==home);
  if(!adm){$('fond').classList.toggle('hide',page!=='ev');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
 function setPage(p){page=p;try{if(p==='hm'||p==='ahm'){if(location.hash)history.pushState(null,'',location.pathname+location.search)}else location.hash=p}catch(e){}draw();window.scrollTo(0,0)}
@@ -450,6 +549,7 @@ async function shrink(file){const src=URL.createObjectURL(file);try{const img=aw
 const otTs=t=>new Date(t).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),otDm=d=>d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4)+'.';
 const otSiteTx=s=>s?E(s):'<span style="color:var(--er)">Odluka administratora</span>';
 /* radnik: popis poslanih otpremnica, izmjene gradilišta koje je napravio administrator i pitanja s poljem za odgovor */
+const OTP_DANA=60;
 const otCard=o=>{const ch=o.files.map((f,i)=>o.adminSite[f]?'<div class="mu">Fotografija '+(i+1)+': administrator je odredio gradilište <b>'+E(o.adminSite[f])+'</b></div>':'').join('');
  const pq=o.pitanja.map(q=>'<div style="margin-top:8px;padding:8px;border-radius:8px;background:var(--bg)"><div><b>Administrator pita</b> (fotografija '+(o.files.indexOf(q.f)+1)+', '+otTs(q.ts)+'):</div><div style="white-space:pre-wrap">'+E(q.text)+'</div>'
   +(q.answer?'<div style="margin-top:4px"><b>Vaš odgovor:</b> <span style="white-space:pre-wrap">'+E(q.answer)+'</span></div>':'<input id="oa_'+E(q.id)+'" maxlength="1000" placeholder="Upišite odgovor" style="margin-top:6px"><button class="sm pri" data-oa="'+E(o.id+'|'+q.id)+'" style="margin-top:6px">Pošalji odgovor</button>')+'</div>').join('');
@@ -480,7 +580,7 @@ async function drawOt(){const adm=me.role==='admin';
  const all=otList.flatMap(o=>o.files.map((f,i)=>({o,f,i,site:o.adminSite[f]||o.site||''}))),uq=a=>[...new Set(a)].sort((x,y)=>x.localeCompare(y,'hr'));
  otMs('aosl','aoss',uq(all.map(x=>x.site)).map(s=>[s,s?E(s):'<i>Odluka administratora</i>']),otFs,'Sva gradilišta');otMs('aowl','aows',uq(all.map(x=>x.o.name)).map(n=>[n,E(n)]),otFw,'Svi radnici');
  const L=all.filter(x=>(!otFs.size||otFs.has(x.site))&&(!otFw.size||otFw.has(x.o.name)));
- $('aon').textContent='Prikazano '+L.length+' od '+all.length+' fotografija, najnovije prvo. Klik na fotografiju otvara je u punoj veličini.';
+ $('aon').textContent='Prikazano '+L.length+' od '+all.length+' fotografija, najnovije prvo. Klik na fotografiju otvara je u punoj veličini. Otpremnice se zajedno s fotografijama automatski brišu '+OTP_DANA+' dana nakon slanja, pa važne preuzmite na vrijeme.';
  $('aol').innerHTML=L.length?L.map(otItem).join(''):'<div class="card mu">Nema otpremnica za odabrane filtere.</div>'}
 async function otAdd(files){$('otm').textContent='';try{for(const f of files){if(otPend.length>=10){say('otm','Najviše 10 fotografija po otpremnici.');break}otPend.push(await shrink(f))}}catch(x){say('otm',x.message)}drawOt()}
 $('otcb').onclick=()=>$('otc').click();$('otgb').onclick=()=>$('otg').click();
@@ -524,8 +624,8 @@ $('ptb').onclick=()=>setPage('pt');
 $('ptl').onclick=async e=>{const b=e.target.closest('[data-ptd]');if(!b)return;const[k,id]=b.dataset.ptd.split('|');
  if(!await cf('Obrisati ovu stavku iz vaše pošte? Administratoru i u izvještajima ostaje zapisana.'))return;try{await api('DELETE','inbox/'+k+'/'+id);await load()}catch(x){toast(x.message)}};
 /* kućica: iz ŠIHTERICE, GODIŠNJEG, SLOBODNOG DANA i IZVJEŠTAJA natrag na Evidenciju radnog vremena, inače na početnu */
-$('home').onclick=()=>setPage(page==='up'?upBack:['sh','go','sl','iz'].includes(page)?'ev':['aiz','asl','ago','agr','apo','azh','ast','aob'].includes(page)?'aev':me.role==='admin'?'ahm':'hm');
-$('psb').onclick=()=>setPage('aps');$('upb').onclick=()=>{upFrom=upBack=page;setPage('up')};$('upa').onclick=()=>{upFrom='up';draw();window.scrollTo(0,0)};
+$('home').onclick=()=>setPage(page==='up'||page==='aup'?upBack:['sh','go','sl','iz'].includes(page)?'ev':['aiz','asl','ago','agr','apo','azh','ast','aob'].includes(page)?'aev':me.role==='admin'?'ahm':'hm');
+$('psb').onclick=()=>setPage('aps');$('upb').onclick=()=>{upFrom=upBack=page;setPage(me.role==='admin'?'aup':'up')};$('upa').onclick=()=>{upFrom='up';draw();window.scrollTo(0,0)};$('aupa').onclick=()=>{upFrom='aup';draw();window.scrollTo(0,0)};
 window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);page=TIT[p]?p:'hm';if(me)draw()});
 const isHol=d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Core.holidays(+d.slice(0,4)).has(d);
 const slOk=d=>slreq.some(r=>r.uid===me.id&&r.status==='approved'&&r.date===d&&(!r.entryId||r.entryId===editId));

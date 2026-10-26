@@ -244,7 +244,8 @@ R('GET','/api/otpremnice/foto/:f',1,c=>{const f=c.p[0];if(!core.otpName(f)||!fs.
 R('DELETE','/api/otpremnice/:id',1,c=>{const r=core.otpDelete(c.u,c.p[0]);if(typeof r==='string')return c.send(400,{e:r});
   r.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();c.send(200,{ok:1})});
 /* poslane fotografije koje nisu postale dio otpremnice (prekinuto slanje) brišu se nakon 2 dana */
-const otpSweep=()=>{try{const used=new Set(db.otpremnice.flatMap(o=>o.files));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
+const otpSweep=()=>{try{const old=core.otpExpire(Date.now());if(old.length){old.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();console.log('Obrisane otpremnice starije od '+core.OTP_DANA+' dana, fotografija: '+old.length)}}catch(e){console.error(e)}
+  try{const used=new Set(db.otpremnice.flatMap(o=>o.files));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
 otpSweep();setInterval(otpSweep,6*36e5);
 R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/close',1,c=>{if(noAdm(c))return;if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
