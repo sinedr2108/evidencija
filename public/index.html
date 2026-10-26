@@ -415,7 +415,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <ul><li><b>Gradilišta</b>: popis koji radnici biraju u šihterici. Novo gradilište radnici vide kao obavijest.</li>
    <li><b>Opcije toplog obroka</b>: nove opcije spremaju se velikim slovima.</li>
    <li><b>Korisnici</b>: dodavanje radnika i administratora (ime i prezime, korisničko ime, lozinka, uloga, e-mail). Uz svakog korisnika: <b>Izmijeni</b>, <b>Pošalji login podatke</b> (šalje novu lozinku e-mailom), <b>Onemogući prijavu</b> i <b>Izbriši</b>. Izbrisani korisnik se ne može prijaviti, ali njegovi podaci ostaju u izvještajima; pod <i>Izbrisani korisnici</i> može se trajno obrisati.</li>
-   <li><b>Administratorska prava po grupama</b>: kod radnika kliknite <b>Izmijeni</b> i označite <i>Otpremnice</i> i/ili <i>Evidencija radnog vremena</i>. Radnik tada dobiva gumb <b>Administracija</b> i u administratorskom dijelu vidi samo te grupe. Postavke, korisnici, e-mail i aktivnosti radnika ostaju samo vama. Grupa Evidencija uključuje i odlučivanje o zahtjevima, izvještaje i obavijesti radnicima.</li>
+   <li><b>Administratorska prava po grupama</b>: kod radnika kliknite <b>Izmijeni</b> i označite <i>Otpremnice</i>, <i>Evidencija radnog vremena</i> i/ili <i>Alat</i>. Radnik tada dobiva gumb <b>Administracija</b> i u administratorskom dijelu vidi samo te grupe. Postavke, korisnici, e-mail i aktivnosti radnika ostaju samo vama. Grupa Evidencija uključuje i odlučivanje o zahtjevima, izvještaje i obavijesti radnicima.</li>
    <li><b>E-mail i adresa aplikacije</b>: adresa aplikacije (link u e-mailovima) i SMTP podaci pružatelja e-pošte. Spremite pa kliknite <b>Pošalji probni e-mail meni</b>.</li></ul>
    </div>
    <div class="uh" data-h="akt">
@@ -474,7 +474,7 @@ const cf=t=>dlgOpen(t,0),pr=(t,v)=>dlgOpen(t,1,v);
 const showLogin=()=>{$('login').classList.remove('hide');$('app').classList.add('hide');$('upb').classList.add('hide');snShow=[]};
 /* DJELOMIČNA ADMINISTRATORSKA PRAVA: radnik s pravima (me.prava) gumbom Administracija prelazi u administratorski dio,
    ali vidi samo svoje grupe (me.grp). Server svaku administratorsku radnju posebno provjerava. */
-const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena'},admView=()=>{try{return sessionStorage.getItem('admView')==='1'}catch(e){return false}},setAdmView=v=>{try{sessionStorage.setItem('admView',v?'1':'0')}catch(e){}};
+const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena',al:'Alat'},admView=()=>{try{return sessionStorage.getItem('admView')==='1'}catch(e){return false}},setAdmView=v=>{try{sessionStorage.setItem('admView',v?'1':'0')}catch(e){}};
 async function load(){
  try{me=await api('GET','me');me.full=me.role==='admin';me.prava=me.prava||[];if(!me.full&&me.prava.length&&admView())me.role='admin';me.pa=!me.full&&me.role==='admin';me.grp=me.full?['ot','ev','al']:me.pa?me.prava:[];
  const d=await api('GET','data'+(me.pa?'?adm=1':''));entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin')users=await api('GET','users');else inbox=await api('GET','inbox')}catch(e){return}

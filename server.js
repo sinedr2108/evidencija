@@ -31,7 +31,7 @@ const MIGRATIONS={
   6:d=>{ /* pošta radnika: što je radnik ručno obrisao iz svoje pošte (zapisi ostaju) */ if(!d.inboxDel||typeof d.inboxDel!=='object')d.inboxDel={};if(!d.inboxCleaned){const n=new Date();d.inboxCleaned=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')} },
   7:d=>{ /* otpremnice (fotografije su datoteke u data/otpremnice) */ if(!Array.isArray(d.otpremnice))d.otpremnice=[]; },
   8:d=>{ /* otpremnice: gradilišta koja je administrator ručno upisao (vrijede samo u Otpremnicama) */ if(!Array.isArray(d.otpSites))d.otpSites=[]; },
-  9:d=>{ /* djelomična administratorska prava radnika po grupama: 'ot' Otpremnice, 'ev' Evidencija radnog vremena */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) }
+  9:d=>{ /* djelomična administratorska prava radnika po grupama: 'ot' Otpremnice, 'ev' Evidencija radnog vremena, 'al' Alat */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -86,7 +86,7 @@ const inboxTick=()=>{const m=ym(new Date());if(db.inboxCleaned===m)return;db.use
 /* ---- rute ---- */
 const routes=[],R=(m,p,a,f)=>routes.push([m,new RegExp('^'+p.replace(/:\w+/g,'([^/]+)')+'$'),a,f,m+' '+p]);
 /* GRUPE: radnik može dobiti administratorska prava samo za pojedine grupe; razina rute 'ot'/'ev' to provjerava na serveru */
-const GRUPE=['ot','ev'],can=(u,g)=>!!u&&(u.role==='admin'||(u.role==='user'&&!u.disabled&&!u.deleted&&Array.isArray(u.prava)&&u.prava.includes(g)));
+const GRUPE=['ot','ev','al'],can=(u,g)=>!!u&&(u.role==='admin'||(u.role==='user'&&!u.disabled&&!u.deleted&&Array.isArray(u.prava)&&u.prava.includes(g)));
 const noAdm=c=>c.u.role==='admin'&&(c.send(403,{e:'Administratori ne unose radno vrijeme.'}),true);
 const valid=m=>/^\d{4}-\d{2}$/.test(m||'');
 const fails={};
