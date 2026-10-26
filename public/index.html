@@ -205,7 +205,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li>Upišite <b>naziv materijala</b>, odaberite <b>jediničnu mjeru</b> (kom, m, m², m³, kg, t, l, …), upišite <b>količinu</b> i kliknite <b>Dodaj u popis</b> (ili Enter u polju količine). Svaka stavka dobiva redni broj.</li>
    <li>Stavku ispravljate olovkom ✎ (pa <b>Spremi izmjenu stavke</b>), a brišete gumbom ✕. Nedovršen popis ostaje spremljen na ovom uređaju i kad zatvorite aplikaciju.</li>
    <li>Kad ste gotovi, kliknite <b>ZAVRŠI UNOS</b>. Prikazat će se cijeli popis i tri gumba: <b>Pošalji</b>, <b>Uredi</b> (natrag na unos) i <b>Odustani od slanja</b>.</li>
-   <li>Poslana narudžba stiže administratoru u aplikaciju i na njegov e-mail kao PDF. Ako odustanete, popis ostaje u <b>Mojim narudžbama</b> označen kao <b>Nije poslano</b>; kasnije ga možete <b>Urediti</b> ili <b>Poslati</b>.</li></ol>
+   <li>Poslana narudžba stiže administratoru u aplikaciju i na njegov e-mail kao PDF. Ako odustanete, popis ostaje u <b>Mojim narudžbama</b> označen kao <b>Nije poslano</b>; kasnije ga možete <b>Urediti</b>, <b>Poslati</b> ili trajno <b>Obrisati</b>. Poslana narudžba se ne može obrisati.</li></ol>
    <ul><li><b>Moje narudžbe</b>: filteri po datumu, gradilištu, administratoru i statusu. Svaku narudžbu možete preuzeti kao PDF.</li>
    <li><b>Ukupna lista materijala</b> zbraja sav materijal iz narudžbi koje odgovaraju filterima (isti naziv u istoj mjeri), a može se preuzeti kao PDF.</li></ul>
    </div>
@@ -988,7 +988,7 @@ const nmCard=(o,adm)=>{const ok=o.status==='sent';
  return '<div class="card" style="border-left:5px solid '+(ok?'#0d9488':'var(--er)')+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(o.site)+'</b>'+(adm?' · naručio '+E(o.name):' · za '+E(o.adminName))
  +'<div class="mu">'+(ok?'poslano '+nmDt(o.sentTs):'spremljeno '+nmDt(o.updated))+' · '+nmSt(o.items.length)+(adm&&o.adminId!==me.id?' · primatelj '+E(o.adminName):'')+'</div></div><span class="badge '+(ok?'b-ok':'b-no')+'">'+(ok?'Poslano':'Nije poslano')+'</span></div>'
  +'<details style="margin-top:6px"'+(adm?' open':'')+'><summary style="cursor:pointer">Popis materijala</summary>'+nmRows(o.items,false)+'</details>'
- +'<div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm" data-nmp="'+E(o.id)+'">Preuzmi PDF</button>'+(!adm&&!ok?'<button class="sm" data-nmu="'+E(o.id)+'">Uredi</button><button class="sm pri" data-nmsd="'+E(o.id)+'">Pošalji</button>':'')+'</div></div>'};
+ +'<div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm" data-nmp="'+E(o.id)+'">Preuzmi PDF</button>'+(!adm&&!ok?'<button class="sm" data-nmu="'+E(o.id)+'">Uredi</button><button class="sm pri" data-nmsd="'+E(o.id)+'">Pošalji</button><button class="sm" data-nmdel="'+E(o.id)+'" style="color:var(--er);border-color:var(--er)">Obriši</button>':'')+'</div></div>'};
 function nmTotHtml(pre,list){const t=Core.nmTotal(list);
  return '<div class="card"><b>Ukupna lista materijala</b><div class="mu" style="margin:4px 0">'+nmPl(list.length,'narudžba','narudžbe','narudžbi')+' prema filterima, isti materijal u istoj mjeri je zbrojen.</div>'+(t.length?t.map((x,i)=>'<div class="nmr"><span class="rb">'+(i+1)+'.</span><span>'+E(x.naziv)+'</span><span class="nmq">'+Core.nmNum(x.kol)+' '+E(x.jm)+'</span></div>').join('')+'<button class="sm" data-nmtp="'+pre+'" style="margin-top:8px">Preuzmi PDF</button>':'<div class="mu">Nema materijala za odabrane filtere.</div>')+'</div>'}
 function nmTotPdf(pre){const adm=pre==='anm',list=adm?nmAList():nmHList(),t=Core.nmTotal(list),od=$(pre+'od').value,dO=$(pre+'do').value,dd=x=>x.split('-').reverse().join('.')+'.';
@@ -1033,7 +1033,9 @@ $('nmsend').onclick=async()=>{const d=nmDraft(),B=$('nmsend');B.disabled=true;
 $('nmcancel').onclick=async()=>{const d=nmDraft();if(!await cf('Odustati od slanja? Popis ostaje u Mojim narudžbama označen kao nije poslan, pa ga kasnije možete urediti i poslati.'))return;
  try{await nmPost({id:d.id,adminId:d.adminId,site:d.site,items:d.items,send:false},'Narudžba je spremljena kao nije poslana.');nmD=nmNew();nmStore();nmRev=false;await load()}catch(x){say('nmrm',x.message)}};
 const nmPdf=id=>{const o=nmData.list.find(x=>x.id===id);if(o)saveFile('narudzba-materijala-'+nmDay(o)+'.pdf',Core.pdf(Core.nmDoc(o)),'application/pdf')};
-$('nmhl').onclick=async e=>{const p=e.target.closest('[data-nmp]'),u=e.target.closest('[data-nmu]'),s=e.target.closest('[data-nmsd]');
+$('nmhl').onclick=async e=>{const p=e.target.closest('[data-nmp]'),u=e.target.closest('[data-nmu]'),s=e.target.closest('[data-nmsd]'),x=e.target.closest('[data-nmdel]');
+ if(x){const o=nmData.list.find(z=>z.id===x.dataset.nmdel);if(!o||!await cf('Trajno obrisati neposlanu narudžbu za '+o.site+' ('+nmSt(o.items.length)+')? Ovo se ne može poništiti.'))return;
+  try{await api('DELETE','narudzbe/'+o.id);if(nmDraft().id===o.id){nmD=nmNew();nmStore();nmRev=false}toast('Narudžba je obrisana.');await load()}catch(y){toast(y.message)}return}
  if(p)return nmPdf(p.dataset.nmp);
  if(u){const o=nmData.list.find(x=>x.id===u.dataset.nmu);if(!o)return;const d=nmDraft();if(d.items.length&&d.id!==o.id&&!await cf('U unosu već imate popis koji niste završili. Zamijeniti ga ovom narudžbom?'))return;
   nmD={uid:me.id,id:o.id,adminId:o.adminId,site:o.site,items:o.items.map(x=>({...x}))};nmEi=-1;nmRev=false;nmStore();nmRender();window.scrollTo(0,0);return}

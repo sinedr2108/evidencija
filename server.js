@@ -118,6 +118,7 @@ const AKT={
   'POST /api/otpremnice/:id/odgovor':{pre:c=>db.otpremnice.find(x=>x.id===c.p[0]),f:(c,o)=>['Odgovor na pitanje o otpremnici',(o?(core.otpSite(o,o.files[0])||'Odluka administratora')+' · '+aktD(o.date)+'\n':'')+aktS(c.b.text)]},
   'POST /api/poruke/:id/read':{pre:c=>db.poruke.find(x=>x.id===c.p[0]),f:(c,p)=>['Pročitana poruka',p?aktS(p.text):'']},
   'POST /api/narudzbe':{f:(c,_,o)=>[c.b.send?'Narudžba materijala poslana':'Narudžba materijala spremljena (nije poslana)',String(c.b.site||'')+' · primatelj: '+core.nameOf(String(c.b.adminId||''))+' · stavki: '+(Array.isArray(c.b.items)?c.b.items.length:0)]},
+  'DELETE /api/narudzbe/:id':{pre:c=>db.narudzbe.find(x=>x.id===c.p[0]&&x.uid===c.u.id),f:(c,o)=>['Obrisana neposlana narudžba materijala',o?o.site+' · stavki: '+o.items.length:'']},
   'POST /api/password':{f:()=>['Promjena lozinke','']}
 };
 function aktAdd(u,t,d){akt.push({id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'});if(akt.length>300)akt.shift()}
@@ -282,6 +283,7 @@ R('POST','/api/narudzbe',1,async c=>{if(noAdm(c))return;const o=core.nmSave(c.u,
       attachments:[{filename:'narudzba-materijala-'+o.site.replace(/[^\wÀ-ɏ-]+/g,'_').slice(0,60)+'.pdf',content:Buffer.from(Core.pdf(Core.nmDoc(v)))}]});o.mailTs=Date.now();delete o.mailErr;save()}
     catch(e){mail='E-mail nije poslan: '+e.message;o.mailErr=String(e.message).slice(0,200);save()}}
   c.send(200,{ok:1,id:o.id,mail:mail||'',mailTo:mail?'':a.email})});
+R('DELETE','/api/narudzbe/:id',1,c=>{if(noAdm(c))return;const r=core.nmDelete(c.u,c.p[0]);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
 /* Zahtjev radnika za novo gradilište */
 R('POST','/api/sitereq',1,c=>{if(noAdm(c))return;const t=String(c.b.text||'').trim().slice(0,200);if(!t)return c.send(400,{e:'Upišite opisni naziv gradilišta.'});
   db.sitereq.push({id:crypto.randomUUID(),uid:c.u.id,text:t,ts:Date.now(),status:'open'});save();c.send(200,{ok:1})});

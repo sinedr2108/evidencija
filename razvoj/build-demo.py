@@ -177,6 +177,7 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='DELETE otpremnice'){const r=C.otpDelete(U,s[1]);if(typeof r==='string')fail(r);r.forEach(f=>delete DF[f])}
  else if(key==='GET narudzbe'){out={list:C.nmList(U,!!Q.adm&&C.canG(U,'nm'),!!Q.svi),primatelji:C.nmPrimatelji(),jm:Core.NM_JM}}
  else if(key==='POST narudzbe'){noAdm();const o=C.nmSave(U,b);if(typeof o==='string')fail(o);out={ok:1,id:o.id,mail:o.status==='sent'?'Demo: e-mail se ovdje ne šalje; na pravom serveru primatelj dobiva e-mail s PDF-om.':''}}
+ else if(key==='DELETE narudzbe'){noAdm();const r=C.nmDelete(U,s[1]);if(typeof r==='string')fail(r);out={ok:1}}
  else if(key==='GET inbox'){out=core().inbox(U.id)}
  else if(key==='DELETE inbox'){if(!core().inboxHide(U.id,s[1],s[2]))fail('Stavka nije pronađena.');out={ok:1}}
  else if(key==='GET report'){adm();if(!mon(Q.month))fail('Neispravan mjesec.');out=C.report(Q.month,flt(Q),todayStr())}

@@ -256,6 +256,7 @@
       if (b.send) o.sentTs = now; else o.cancelTs = now;
       return o;
     }
+    function nmDelete(u, id) { const i = db.narudzbe.findIndex(x => x.id === id && x.uid === u.id); if (i < 0) return 'Narudžba nije pronađena.'; if (db.narudzbe[i].status === 'sent') return 'Poslana narudžba se ne može obrisati.'; return db.narudzbe.splice(i, 1)[0]; }
     const nmView = o => ({ ...o, name: nameOf(o.uid), adminName: nameOf(o.adminId) });
     /* radnik: svoje narudžbe; primatelj (adm): poslane njemu, a puni administrator uz svi=1 sve poslane */
     const nmList = (u, adm, svi) => db.narudzbe.filter(o => adm ? o.status === 'sent' && (o.adminId === u.id || (svi && u.role === 'admin')) : o.uid === u.id).sort((a, b) => (b.sentTs || b.updated) - (a.sentTs || a.updated)).slice(0, 2000).map(nmView);
@@ -484,7 +485,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
