@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=9;
+const DATA_VERSION=10;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -31,7 +31,8 @@ const MIGRATIONS={
   6:d=>{ /* pošta radnika: što je radnik ručno obrisao iz svoje pošte (zapisi ostaju) */ if(!d.inboxDel||typeof d.inboxDel!=='object')d.inboxDel={};if(!d.inboxCleaned){const n=new Date();d.inboxCleaned=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')} },
   7:d=>{ /* otpremnice (fotografije su datoteke u data/otpremnice) */ if(!Array.isArray(d.otpremnice))d.otpremnice=[]; },
   8:d=>{ /* otpremnice: gradilišta koja je administrator ručno upisao (vrijede samo u Otpremnicama) */ if(!Array.isArray(d.otpSites))d.otpSites=[]; },
-  9:d=>{ /* djelomična administratorska prava radnika po grupama: 'ot' Otpremnice, 'ev' Evidencija radnog vremena, 'al' Alat */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) }
+  9:d=>{ /* djelomična administratorska prava radnika po grupama: 'ot' Otpremnice, 'ev' Evidencija radnog vremena, 'al' Alat */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) },
+  10:d=>{ /* NARUČI MATERIJAL: narudžbe materijala radnika */ if(!Array.isArray(d.narudzbe))d.narudzbe=[]; }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -86,7 +87,7 @@ const inboxTick=()=>{const m=ym(new Date());if(db.inboxCleaned===m)return;db.use
 /* ---- rute ---- */
 const routes=[],R=(m,p,a,f)=>routes.push([m,new RegExp('^'+p.replace(/:\w+/g,'([^/]+)')+'$'),a,f,m+' '+p]);
 /* GRUPE: radnik može dobiti administratorska prava samo za pojedine grupe; razina rute 'ot'/'ev' to provjerava na serveru */
-const GRUPE=['ot','ev','al'],can=(u,g)=>!!u&&(u.role==='admin'||(u.role==='user'&&!u.disabled&&!u.deleted&&Array.isArray(u.prava)&&u.prava.includes(g)));
+const GRUPE=['ot','ev','al','nm'],can=(u,g)=>!!u&&(u.role==='admin'||(u.role==='user'&&!u.disabled&&!u.deleted&&Array.isArray(u.prava)&&u.prava.includes(g)));
 const noAdm=c=>c.u.role==='admin'&&(c.send(403,{e:'Administratori ne unose radno vrijeme.'}),true);
 const valid=m=>/^\d{4}-\d{2}$/.test(m||'');
 const fails={};
@@ -116,6 +117,7 @@ const AKT={
   'DELETE /api/otpremnice/:id':{pre:c=>db.otpremnice.find(x=>x.id===c.p[0]),f:(c,o)=>['Obrisana otpremnica',o?(o.site||'Odluka administratora')+' · '+aktD(o.date):'']},
   'POST /api/otpremnice/:id/odgovor':{pre:c=>db.otpremnice.find(x=>x.id===c.p[0]),f:(c,o)=>['Odgovor na pitanje o otpremnici',(o?(core.otpSite(o,o.files[0])||'Odluka administratora')+' · '+aktD(o.date)+'\n':'')+aktS(c.b.text)]},
   'POST /api/poruke/:id/read':{pre:c=>db.poruke.find(x=>x.id===c.p[0]),f:(c,p)=>['Pročitana poruka',p?aktS(p.text):'']},
+  'POST /api/narudzbe':{f:(c,_,o)=>[c.b.send?'Narudžba materijala poslana':'Narudžba materijala spremljena (nije poslana)',String(c.b.site||'')+' · primatelj: '+core.nameOf(String(c.b.adminId||''))+' · stavki: '+(Array.isArray(c.b.items)?c.b.items.length:0)]},
   'POST /api/password':{f:()=>['Promjena lozinke','']}
 };
 function aktAdd(u,t,d){akt.push({id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'});if(akt.length>300)akt.shift()}
@@ -267,6 +269,19 @@ R('PUT','/api/config',2,c=>{const s=strs(c.b.sites),m=[...new Set(strs(c.b.meals
 /* Novo gradilište: radnici ga vide kao obavijest pri prvom otvaranju aplikacije nakon dodavanja */
 function addNews(list){const t=Date.now();list.forEach(x=>db.siteNews.push({site:x,ts:t}));if(db.siteNews.length>200)db.siteNews=db.siteNews.slice(-200)}
 R('POST','/api/sitenews/seen',1,c=>{c.u.siteSeen=Date.now();save();c.send(200,{ok:1})});
+/* ===== NARUČI MATERIJAL =====
+   Radnik sastavlja popis materijala za gradilište i šalje ga odabranom primatelju (administrator ili radnik s pravom 'nm').
+   Poslana narudžba vidi se u primateljevoj grupi NARUDŽBE MATERIJALA i šalje mu se e-mailom s PDF-om. Neposlana ostaje radniku označena kao nije poslana. */
+R('GET','/api/narudzbe',1,c=>{const adm=!!c.q.adm&&can(c.u,'nm');c.send(200,{list:core.nmList(c.u,adm,!!c.q.svi),primatelji:core.nmPrimatelji(),jm:Core.NM_JM})});
+R('POST','/api/narudzbe',1,async c=>{if(noAdm(c))return;const o=core.nmSave(c.u,c.b);if(typeof o==='string')return c.send(400,{e:o});save();
+  if(o.status!=='sent')return c.send(200,{ok:1,id:o.id});
+  const a=db.users.find(x=>x.id===o.adminId),v=core.nmView(o);let mail;
+  if(!a||!a.email)mail='Primatelj nema upisan e-mail, narudžba je vidljiva samo u aplikaciji.';
+  else{const M=mailer();if(M.err)mail='E-mail nije poslan: '+M.err;
+    else try{await M.t.sendMail({from:M.from,to:a.email,subject:'Narudžba materijala za '+o.site,text:c.u.name+' Vam šalje narudžbu materijala za '+o.site+'.',
+      attachments:[{filename:'narudzba-materijala-'+o.site.replace(/[^\wÀ-ɏ-]+/g,'_').slice(0,60)+'.pdf',content:Buffer.from(Core.pdf(Core.nmDoc(v)))}]});o.mailTs=Date.now();delete o.mailErr;save()}
+    catch(e){mail='E-mail nije poslan: '+e.message;o.mailErr=String(e.message).slice(0,200);save()}}
+  c.send(200,{ok:1,id:o.id,mail:mail||'',mailTo:mail?'':a.email})});
 /* Zahtjev radnika za novo gradilište */
 R('POST','/api/sitereq',1,c=>{if(noAdm(c))return;const t=String(c.b.text||'').trim().slice(0,200);if(!t)return c.send(400,{e:'Upišite opisni naziv gradilišta.'});
   db.sitereq.push({id:crypto.randomUUID(),uid:c.u.id,text:t,ts:Date.now(),status:'open'});save();c.send(200,{ok:1})});

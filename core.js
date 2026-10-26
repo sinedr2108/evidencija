@@ -153,6 +153,15 @@
   }
 
   /* ---- jezgra nad bazom ---- */
+  /* ---- NARUČI MATERIJAL: jedinične mjere, PDF narudžbe i ukupna lista (dijele server, preglednik i demo) ---- */
+  const NM_JM = ['kom', 'm', 'm²', 'm³', 'kg', 't', 'l', 'pak', 'vreća', 'kutija', 'rola', 'paleta', 'set', 'par'];
+  const nmNum = v => String(Math.round(v * 1000) / 1000).replace('.', ',');
+  const nmDt = t => { const d = new Date(t), p = n => String(n).padStart(2, '0'); return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear() + '. ' + p(d.getHours()) + ':' + p(d.getMinutes()); };
+  const nmDoc = o => ({ title: 'Narudžba materijala – ' + o.site, footer: 'TiDy Connect – narudžba materijala',
+    info: ['Naručio: ' + (o.name || ''), 'Primatelj: ' + (o.adminName || ''), 'Gradilište: ' + o.site, (o.status === 'sent' ? 'Poslano: ' + nmDt(o.sentTs) : 'Nije poslano (spremljeno ' + nmDt(o.updated || o.ts) + ')')],
+    blocks: [{ table: [{ head: true, cells: [{ t: 'R. br.', right: true }, { t: 'Materijal' }, { t: 'Količina', right: true }, { t: 'Jed. mjera' }] }].concat(o.items.map((it, i) => ({ cells: [{ t: (i + 1) + '.', right: true }, { t: it.naziv }, { t: nmNum(it.kol), right: true }, { t: it.jm }] }))) }] });
+  /* zbroj istog materijala (naziv bez obzira na velika/mala slova) u istoj jediničnoj mjeri */
+  const nmTotal = list => { const m = new Map(); list.forEach(o => o.items.forEach(it => { const k = it.naziv.trim().toLocaleLowerCase('hr') + '|' + it.jm; const x = m.get(k) || { naziv: it.naziv.trim(), jm: it.jm, kol: 0, n: 0 }; x.kol += it.kol; x.n++; m.set(k, x); })); return [...m.values()].sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr') || a.jm.localeCompare(b.jm, 'hr')); };
   function Core(db) {
     db.requests = db.requests || [];
     db.prijenos = db.prijenos || {};
@@ -223,6 +232,33 @@
     const OTP_DANA = 60;
     function otpExpire(now) { const old = db.otpremnice.filter(o => now - o.ts > OTP_DANA * 864e5); if (!old.length) return []; db.otpremnice = db.otpremnice.filter(o => !old.includes(o)); return old.flatMap(o => o.files); }
     const otpSitesAll = () => [...new Set((db.sites || []).concat(db.otpSites))].sort((a, b) => a.localeCompare(b, 'hr'));
+    /* NARUČI MATERIJAL: radnik šalje popis materijala odabranom primatelju (administrator ili radnik s pravom 'nm') */
+    const canG = (u, g) => !!u && (u.role === 'admin' || (u.role === 'user' && !u.disabled && !u.deleted && Array.isArray(u.prava) && u.prava.includes(g)));
+    const nmPrimatelji = () => db.users.filter(u => !u.deleted && !u.disabled && !u.purged && canG(u, 'nm')).map(u => ({ id: u.id, name: u.name })).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
+    function nmSave(u, b) {
+      const adminId = String(b.adminId || ''), site = String(b.site || '').trim(), items = Array.isArray(b.items) ? b.items : [];
+      if (!nmPrimatelji().some(x => x.id === adminId)) return 'Odaberite administratora kojem šaljete narudžbu.';
+      if (!(db.sites || []).includes(site)) return 'Odaberite gradilište s popisa.';
+      if (!items.length) return 'Dodajte barem jednu stavku materijala.';
+      if (items.length > 200) return 'Najviše 200 stavki po narudžbi.';
+      const it = [];
+      for (const x of items) {
+        const naziv = String(x && x.naziv || '').trim().slice(0, 120), jm = String(x && x.jm || ''), kol = Math.round(parseFloat(String(x && x.kol).replace(',', '.')) * 1000) / 1000;
+        if (!naziv) return 'Svaka stavka mora imati naziv materijala.';
+        if (!NM_JM.includes(jm)) return 'Odaberite jediničnu mjeru za „' + naziv + '”.';
+        if (!isFinite(kol) || kol <= 0 || kol > 1e7) return 'Upišite ispravnu količinu za „' + naziv + '”.';
+        it.push({ naziv, jm, kol });
+      }
+      const now = Date.now(); let o;
+      if (b.id) { o = db.narudzbe.find(x => x.id === b.id && x.uid === u.id); if (!o) return 'Narudžba nije pronađena.'; if (o.status === 'sent') return 'Poslana narudžba se više ne može mijenjati.'; }
+      else { o = { id: Math.random().toString(36).slice(2) + now.toString(36), uid: u.id, ts: now }; db.narudzbe.push(o); }
+      Object.assign(o, { adminId, site, items: it, updated: now, status: b.send ? 'sent' : 'unsent' });
+      if (b.send) o.sentTs = now; else o.cancelTs = now;
+      return o;
+    }
+    const nmView = o => ({ ...o, name: nameOf(o.uid), adminName: nameOf(o.adminId) });
+    /* radnik: svoje narudžbe; primatelj (adm): poslane njemu, a puni administrator uz svi=1 sve poslane */
+    const nmList = (u, adm, svi) => db.narudzbe.filter(o => adm ? o.status === 'sent' && (o.adminId === u.id || (svi && u.role === 'admin')) : o.uid === u.id).sort((a, b) => (b.sentTs || b.updated) - (a.sentTs || a.updated)).slice(0, 2000).map(nmView);
     function otpSetSite(u, id, f, site) {
       const o = db.otpremnice.find(x => x.id === id); if (!o || !o.files.includes(f)) return 'Fotografija nije pronađena.';
       site = String(site || '').trim().slice(0, 100); if (!site) return 'Odaberite ili upišite gradilište.';
@@ -448,8 +484,8 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
-  Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc;
+  Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
 })(typeof window !== 'undefined' ? window : this);

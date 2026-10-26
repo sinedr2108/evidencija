@@ -104,7 +104,7 @@ function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
 function initDb(){db=null;_c=null;try{const s=localStorage.getItem(KEY);if(s)db=JSON.parse(s)}catch(e){}if(!db){db=seed();persist()}}
 initDb();
 /* demo: fotografije otpremnica samo u memoriji (ne preživljavaju ponovno otvaranje) */
-const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];
+const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];if(!Array.isArray(db.narudzbe))db.narudzbe=[];
 const strs=a=>[...new Set((Array.isArray(a)?a:[]).map(s=>String(s).trim()).filter(Boolean))];
 const mon=m=>/^\d{4}-\d{2}$/.test(m||'');
 const fail=t=>{throw new Error(t)};
@@ -175,6 +175,8 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='POST otpremnice'){noAdm();const o=C.otpCheck(U,b,f=>!!DF[f]);if(typeof o==='string')fail(o);db.otpremnice.push(o)}
  else if(key==='GET otpremnice'){{const A=U.role==='admin'||(!!Q.adm&&PR.includes('ot'));out={list:C.otpList(U,Q.od||'',Q.do||'',A),sites:A?C.otpSitesAll():[]}}}
  else if(key==='DELETE otpremnice'){const r=C.otpDelete(U,s[1]);if(typeof r==='string')fail(r);r.forEach(f=>delete DF[f])}
+ else if(key==='GET narudzbe'){out={list:C.nmList(U,!!Q.adm&&C.canG(U,'nm'),!!Q.svi),primatelji:C.nmPrimatelji(),jm:Core.NM_JM}}
+ else if(key==='POST narudzbe'){noAdm();const o=C.nmSave(U,b);if(typeof o==='string')fail(o);out={ok:1,id:o.id,mail:o.status==='sent'?'Demo: e-mail se ovdje ne šalje; na pravom serveru primatelj dobiva e-mail s PDF-om.':''}}
  else if(key==='GET inbox'){out=core().inbox(U.id)}
  else if(key==='DELETE inbox'){if(!core().inboxHide(U.id,s[1],s[2]))fail('Stavka nije pronađena.');out={ok:1}}
  else if(key==='GET report'){adm();if(!mon(Q.month))fail('Neispravan mjesec.');out=C.report(Q.month,flt(Q),todayStr())}

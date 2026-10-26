@@ -39,7 +39,10 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
 .ms summary{padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ms[open] summary{border-color:var(--ac)}.ms>div{border:1px solid var(--bd);border-radius:10px;margin-top:4px;padding:4px 10px;max-height:260px;overflow:auto;background:var(--card)}.ms label{display:flex;gap:8px;align-items:center;color:var(--tx);margin:8px 0;font-size:15px}.ms input{width:auto}
 .a4grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.a4grid>.card{margin:0;padding:10px}.a4{display:block;aspect-ratio:210/297;background:#fff;border:1px solid var(--bd);border-radius:6px;overflow:hidden}.a4 img{width:100%;height:100%;object-fit:contain;display:block}
-.grp{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}.grp .tile{min-height:96px;font-size:19px}.t-ot{background:#ea580c;color:#fff}.t-al{background:var(--gy);color:#fff}
+.grp{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}.grp .tile{min-height:96px;font-size:19px}.t-ot{background:#ea580c;color:#fff}.t-al{background:var(--gy);color:#fff}.t-nm{background:#0d9488;color:#fff}
+.nmr{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)}.nmr .rb{color:var(--mu);font-weight:700;text-align:right}.nmq{white-space:nowrap;font-weight:700}
+.nmin{display:grid;grid-template-columns:1fr 110px 100px;gap:8px}@media(max-width:520px){.nmin{grid-template-columns:1fr 1fr}.nmin #nmn{grid-column:1/-1}}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}.b-ok{background:rgba(21,128,61,.12);color:var(--ok)}.b-no{background:rgba(185,28,28,.1);color:var(--er)}
 .tile{min-height:110px;border:0;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:.04em;padding:12px;line-height:1.2;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 .t-sh{background:var(--sh);color:var(--shx)}.t-go{background:var(--pu);color:#fff}.t-go2{background:var(--rd);color:var(--rdx)}.t-sl{background:var(--yl);color:#1a1500}.t-iz{background:var(--gr);color:var(--grx)}
 .t-iz2{background:var(--sh);color:var(--shx)}.t-gr2{background:var(--gr);color:var(--grx)}.t-st{background:var(--pu);color:#fff}.t-ps{background:var(--gy);color:#fff}.t-zh{background:#0d9488;color:#fff}.t-po{background:#db2777;color:#fff}.t-ob{background:#ea580c;color:#fff}
@@ -84,6 +87,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <div class="grp">
     <button class="tile t-ot" data-pg="ot">OTPREMNICE</button>
     <button class="tile t-sh" data-pg="ev">EVIDENCIJA RADNOG VREMENA</button>
+    <button class="tile t-nm" data-pg="nm">NARUČI MATERIJAL</button>
     <button class="tile t-al" data-pg="al">ALAT</button>
    </div>
   </div>
@@ -103,6 +107,24 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <label for="otn">Napomena (neobavezno)</label><input id="otn" maxlength="300">
    <button class="big" id="otsb">POŠALJI OTPREMNICU</button><div class="msg" id="otm"></div></div>
    <h2>Poslane otpremnice</h2><div class="mu" style="margin:-4px 0 8px">Otpremnice se zajedno s fotografijama automatski brišu 60 dana nakon slanja.</div><div id="otl"></div></div>
+  <div id="p-nm" class="pg hide">
+   <div class="card" id="nmed"><h2 style="margin-top:0" id="nmet">Nova narudžba</h2>
+    <label for="nma">Administrator (kome šaljete)</label><select id="nma"></select>
+    <label for="nms">Gradilište</label><select id="nms"></select>
+    <label>Stavka materijala</label>
+    <div class="nmin"><input id="nmn" maxlength="120" placeholder="Naziv materijala"><select id="nmj" aria-label="Jedinična mjera"></select><input id="nmk" inputmode="decimal" placeholder="Količina" aria-label="Količina"></div>
+    <div class="fl" style="margin-top:8px"><button class="sm pri" id="nmadd">Dodaj u popis</button><button class="sm hide" id="nmaddx">Odustani od izmjene</button></div>
+    <div id="nml" style="margin-top:10px"></div>
+    <div class="msg" id="nmm"></div>
+    <button class="big" id="nmdone" style="margin-top:12px">ZAVRŠI UNOS</button>
+   </div>
+   <div class="card hide" id="nmrev" style="border-top:5px solid #0d9488"><h2 style="margin-top:0">Pregled narudžbe</h2><div id="nmrv"></div><div class="msg" id="nmrm"></div>
+    <div class="fl" style="flex-wrap:wrap;margin-top:12px"><button class="sm pri" id="nmsend">Pošalji</button><button class="sm" id="nmedit">Uredi</button><button class="sm" id="nmcancel">Odustani od slanja</button></div></div>
+   <h2>Moje narudžbe</h2>
+   <details class="card"><summary style="cursor:pointer;font-weight:600">Filteri</summary><div class="nmin" style="margin-top:8px;grid-template-columns:1fr 1fr"><div><label for="nmhod">Od datuma</label><input type="date" id="nmhod"></div><div><label for="nmhdo">Do datuma</label><input type="date" id="nmhdo"></div></div><label for="nmhfs">Gradilište</label><select id="nmhfs"></select><label for="nmha">Administrator</label><select id="nmha"></select><label for="nmhs">Status</label><select id="nmhs"><option value="">Sve</option><option value="sent">Poslane</option><option value="unsent">Nije poslano</option></select><button class="sm" id="nmhfx" style="margin-top:8px">Poništi filtere</button></details>
+   <div class="fl" style="margin:8px 0"><button class="sm" id="nmtot">Ukupna lista materijala</button></div><div id="nmtv" class="hide"></div>
+   <div id="nmhl"></div>
+  </div>
   <div id="p-al" class="pg hide"><div class="card" style="border-top:5px solid var(--gy)"><b>ALAT</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
   <div id="p-sh" class="pg hide">
   <div class="card sh">
@@ -157,7 +179,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada.</li>
    <li><b>Gumb s pismom</b> (gore, uz Lozinka i Odjava) – sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište) s njihovim statusom, najnovije na vrhu. Crveni broj na gumbu je broj nepročitanih poruka. Svaku stavku možete obrisati gumbom ✕ (briše se samo iz vaše pošte). Na kraju mjeseca automatski ostaje samo 5 najnovijih.</li>
    <li>Plavi gumb <b>?</b> dolje desno postoji na svakoj stranici i otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>.</li>
-   <li>Tri glavna dijela: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b> i <b>ALAT</b> (Alat je u izradi).</li>
+   <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUČI MATERIJAL</b> i <b>ALAT</b> (Alat je u izradi).</li>
    <li>Ako vam je administrator dao prava za neki dio administracije, gore imate gumb <b>Administracija</b>. Njime prelazite u administratorski dio (vidite samo dodijeljene grupe), a gumbom <b>Radnički dio</b> se vraćate.</li></ul>
    </div>
    <div class="uh" data-h="pt">
@@ -176,6 +198,16 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li>Ispod su vaše poslane otpremnice. Klik na sličicu otvara fotografiju u A4 obliku (strelicama listate stranice, <b>Puna veličina</b> za povećanje). Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li>
    <li>Ako administrator zatraži <b>dodatno objašnjenje</b>, dobit ćete obavijest. Pitanje je ispod te otpremnice: upišite odgovor i kliknite <b>Pošalji odgovor</b>. Ako administrator promijeni gradilište, to piše uz otpremnicu.</li>
    <li>Poslane otpremnice s fotografijama automatski se brišu <b>60 dana nakon slanja</b>.</li></ol>
+   </div>
+   <div class="uh" data-h="nm">
+   <h3>NARUČI MATERIJAL</h3>
+   <ol><li>Odaberite <b>administratora</b> kojem šaljete narudžbu i <b>gradilište</b>.</li>
+   <li>Upišite <b>naziv materijala</b>, odaberite <b>jediničnu mjeru</b> (kom, m, m², m³, kg, t, l, …), upišite <b>količinu</b> i kliknite <b>Dodaj u popis</b> (ili Enter u polju količine). Svaka stavka dobiva redni broj.</li>
+   <li>Stavku ispravljate olovkom ✎ (pa <b>Spremi izmjenu stavke</b>), a brišete gumbom ✕. Nedovršen popis ostaje spremljen na ovom uređaju i kad zatvorite aplikaciju.</li>
+   <li>Kad ste gotovi, kliknite <b>ZAVRŠI UNOS</b>. Prikazat će se cijeli popis i tri gumba: <b>Pošalji</b>, <b>Uredi</b> (natrag na unos) i <b>Odustani od slanja</b>.</li>
+   <li>Poslana narudžba stiže administratoru u aplikaciju i na njegov e-mail kao PDF. Ako odustanete, popis ostaje u <b>Mojim narudžbama</b> označen kao <b>Nije poslano</b>; kasnije ga možete <b>Urediti</b> ili <b>Poslati</b>.</li></ol>
+   <ul><li><b>Moje narudžbe</b>: filteri po datumu, gradilištu, administratoru i statusu. Svaku narudžbu možete preuzeti kao PDF.</li>
+   <li><b>Ukupna lista materijala</b> zbraja sav materijal iz narudžbi koje odgovaraju filterima (isti naziv u istoj mjeri), a može se preuzeti kao PDF.</li></ul>
    </div>
    <div class="uh" data-h="al">
    <h3>ALAT</h3>
@@ -249,6 +281,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
   <div id="ahm" class="pg"><div class="grp">
    <button class="tile t-ot" data-pg="aot">OTPREMNICE</button>
    <button class="tile t-sh" data-pg="aev">EVIDENCIJA RADNOG VREMENA</button>
+   <button class="tile t-nm" data-pg="anm">NARUDŽBE MATERIJALA</button>
    <button class="tile t-al" data-pg="aal">ALAT</button>
   </div></div>
   <div id="p-aev" class="pg hide"><div class="tiles">
@@ -256,6 +289,11 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <button class="tile t-go2" data-pg="ago">GODIŠNJI ODMOR</button><button class="tile t-gr2" data-pg="agr">GRADILIŠTA</button>
    <button class="tile t-po" data-pg="apo">OBAVIJESTI RADNICIMA</button><button class="tile t-zh" data-pg="azh">ODOBRENI ZAHTJEVI</button><button class="tile t-st" data-pg="ast">STATISTIKA</button><button class="tile t-ob" data-pg="aob">TOPLI OBROK</button>
      </div></div>
+  <div id="p-anm" class="pg hide">
+   <details class="card"><summary style="cursor:pointer;font-weight:600">Filteri</summary><div class="nmin" style="margin-top:8px;grid-template-columns:1fr 1fr"><div><label for="anmod">Od datuma</label><input type="date" id="anmod"></div><div><label for="anmdo">Do datuma</label><input type="date" id="anmdo"></div></div><label for="anmfs">Gradilište</label><select id="anmfs"></select><label for="anmw">Naručio</label><select id="anmw"></select><div id="anmsw" class="hide"><label for="anmp">Primatelj</label><select id="anmp"><option value="">Meni</option><option value="svi">Svi primatelji</option></select></div><button class="sm" id="anmfx" style="margin-top:8px">Poništi filtere</button></details>
+   <div class="fl" style="margin:8px 0"><button class="sm" id="anmtot">Ukupna lista materijala</button></div><div id="anmtv" class="hide"></div>
+   <div class="mu" id="anmn" style="margin-bottom:6px"></div><div id="anml"></div>
+  </div>
   <div id="p-aal" class="pg hide"><div class="card" style="border-top:5px solid var(--gy)"><b>ALAT</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
   <div id="af" class="pg hide">
   <div class="card"><label for="rm">Mjesec</label><input type="month" id="rm">
@@ -333,7 +371,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h3>Početna stranica</h3>
    <ul><li>Na vrhu su <b>zahtjevi na čekanju</b>: slobodan dan, godišnji odmor, ponovno otvaranje mjeseca i novo gradilište. Svaki prihvatite ili odbijte, po želji s napomenom. Radnik odluku odmah vidi na svojoj početnoj stranici i u pošti.</li>
    <li>Zahtjev za novo gradilište možete prije prihvaćanja urediti (naziv). Prihvaćeno gradilište dolazi na popis za sve radnike, a radnici dobiju obavijest.</li>
-   <li>Tri glavna dijela: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b> i <b>ALAT</b> (u izradi).</li>
+   <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUDŽBE MATERIJALA</b> i <b>ALAT</b> (u izradi).</li>
    <li>Gumbi gore: <b>zvono</b> (aktivnosti radnika i obavijesti u Windowsima), <b>Postavke</b>, <b>Lozinka</b> i <b>Odjava</b>.</li>
    <li>Radnik kojem ste dali prava za pojedine grupe (Postavke → Izmijeni) ovdje vidi samo te grupe i nema zvono ni Postavke. Gumbom <b>Radnički dio</b> vraća se na svoj radnički dio.</li>
    <li>Plavi gumb <b>?</b> dolje desno na svakoj stranici otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>, a kućica vraća na stranicu s koje ste došli.</li>
@@ -353,6 +391,13 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h3>EVIDENCIJA RADNOG VREMENA</h3>
    <ul><li>Gumbi vode na stranice: <b>IZVJEŠTAJI</b>, <b>SLOBODNI DANI</b>, <b>GODIŠNJI ODMOR</b>, <b>GRADILIŠTA</b>, <b>OBAVIJESTI RADNICIMA</b>, <b>ODOBRENI ZAHTJEVI</b>, <b>STATISTIKA</b> i <b>TOPLI OBROK</b>. Svaka ima svoje upute pod gumbom <b>?</b>.</li>
    <li>Kućica s tih stranica vraća ovamo, a odavde na početnu.</li></ul>
+   </div>
+   <div class="uh" data-h="anm">
+   <h3>NARUDŽBE MATERIJALA</h3>
+   <ul><li>Ovdje su narudžbe materijala koje su radnici poslali <b>vama</b>, najnovije prvo, s rednim brojevima, količinama i mjerama. Istu narudžbu dobivate i e-mailom kao PDF (ako imate upisan e-mail u Postavkama).</li>
+   <li>Filteri: datum od–do, gradilište i radnik koji je naručio. Puni administrator može odabrati i <b>Primatelj: svi primatelji</b>.</li>
+   <li><b>Preuzmi PDF</b> sprema pojedinu narudžbu, a <b>Ukupna lista materijala</b> zbraja materijal iz svih prikazanih narudžbi (i nju možete preuzeti kao PDF).</li>
+   <li>Narudžbe mogu primati administratori i radnici kojima je u Postavkama → Izmijeni dano pravo <i>Narudžbe materijala (primanje)</i>.</li></ul>
    </div>
    <div class="uh" data-h="aal">
    <h3>ALAT</h3>
@@ -415,7 +460,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <ul><li><b>Gradilišta</b>: popis koji radnici biraju u šihterici. Novo gradilište radnici vide kao obavijest.</li>
    <li><b>Opcije toplog obroka</b>: nove opcije spremaju se velikim slovima.</li>
    <li><b>Korisnici</b>: dodavanje radnika i administratora (ime i prezime, korisničko ime, lozinka, uloga, e-mail). Uz svakog korisnika: <b>Izmijeni</b>, <b>Pošalji login podatke</b> (šalje novu lozinku e-mailom), <b>Onemogući prijavu</b> i <b>Izbriši</b>. Izbrisani korisnik se ne može prijaviti, ali njegovi podaci ostaju u izvještajima; pod <i>Izbrisani korisnici</i> može se trajno obrisati.</li>
-   <li><b>Administratorska prava po grupama</b>: kod radnika kliknite <b>Izmijeni</b> i označite <i>Otpremnice</i>, <i>Evidencija radnog vremena</i> i/ili <i>Alat</i>. Radnik tada dobiva gumb <b>Administracija</b> i u administratorskom dijelu vidi samo te grupe. Postavke, korisnici, e-mail i aktivnosti radnika ostaju samo vama. Grupa Evidencija uključuje i odlučivanje o zahtjevima, izvještaje i obavijesti radnicima.</li>
+   <li><b>Administratorska prava po grupama</b>: kod radnika kliknite <b>Izmijeni</b> i označite <i>Otpremnice</i>, <i>Evidencija radnog vremena</i>, <i>Alat</i> i/ili <i>Narudžbe materijala (primanje)</i>. Radnik tada dobiva gumb <b>Administracija</b> i u administratorskom dijelu vidi samo te grupe. Postavke, korisnici, e-mail i aktivnosti radnika ostaju samo vama. Grupa Evidencija uključuje i odlučivanje o zahtjevima, izvještaje i obavijesti radnicima.</li>
    <li><b>E-mail i adresa aplikacije</b>: adresa aplikacije (link u e-mailovima) i SMTP podaci pružatelja e-pošte. Spremite pa kliknite <b>Pošalji probni e-mail meni</b>.</li></ul>
    </div>
    <div class="uh" data-h="akt">
@@ -474,9 +519,9 @@ const cf=t=>dlgOpen(t,0),pr=(t,v)=>dlgOpen(t,1,v);
 const showLogin=()=>{$('login').classList.remove('hide');$('app').classList.add('hide');$('upb').classList.add('hide');snShow=[]};
 /* DJELOMIČNA ADMINISTRATORSKA PRAVA: radnik s pravima (me.prava) gumbom Administracija prelazi u administratorski dio,
    ali vidi samo svoje grupe (me.grp). Server svaku administratorsku radnju posebno provjerava. */
-const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena',al:'Alat'},admView=()=>{try{return sessionStorage.getItem('admView')==='1'}catch(e){return false}},setAdmView=v=>{try{sessionStorage.setItem('admView',v?'1':'0')}catch(e){}};
+const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena',al:'Alat',nm:'Narudžbe materijala (primanje)'},admView=()=>{try{return sessionStorage.getItem('admView')==='1'}catch(e){return false}},setAdmView=v=>{try{sessionStorage.setItem('admView',v?'1':'0')}catch(e){}};
 async function load(){
- try{me=await api('GET','me');me.full=me.role==='admin';me.prava=me.prava||[];if(!me.full&&me.prava.length&&admView())me.role='admin';me.pa=!me.full&&me.role==='admin';me.grp=me.full?['ot','ev','al']:me.pa?me.prava:[];
+ try{me=await api('GET','me');me.full=me.role==='admin';me.prava=me.prava||[];if(!me.full&&me.prava.length&&admView())me.role='admin';me.pa=!me.full&&me.role==='admin';me.grp=me.full?['ot','ev','al','nm']:me.pa?me.prava:[];
  const d=await api('GET','data'+(me.pa?'?adm=1':''));entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin')users=await api('GET','users');else inbox=await api('GET','inbox')}catch(e){return}
  $('login').classList.add('hide');$('app').classList.remove('hide');draw();
 }
@@ -531,21 +576,21 @@ function draw(){
  $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
  if(me.role==='admin'&&tab==='adm')drawAdm();
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
- drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='akt')drawAkt();applyPage();if(me.full&&akUid!==me.id)akCheck();
+ drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='akt')drawAkt();applyPage();if(me.full&&akUid!==me.id)akCheck();
 }
-let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika',aup:'Upute za administratore'};
+let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',nm:'Naruči materijal',anm:'Narudžbe materijala',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika',aup:'Upute za administratore'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
- if(adm&&!me.full){const need=['aev','aiz','asl','ago','agr','apo','azh','ast','aob'].includes(page)?'ev':page==='aot'?'ot':page==='aal'?'al':page==='aps'||page==='akt'?'x':'';if(need&&!me.grp.includes(need))page=home}
- if(adm)document.querySelectorAll('#ahm [data-pg]').forEach(b=>b.classList.toggle('hide',!me.grp.includes({aot:'ot',aev:'ev',aal:'al'}[b.dataset.pg])));
- const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt','aup']:['ev','ot','al','sh','go','sl','iz','up','pt'];
+ if(adm&&!me.full){const need=['aev','aiz','asl','ago','agr','apo','azh','ast','aob'].includes(page)?'ev':page==='aot'?'ot':page==='aal'?'al':page==='anm'?'nm':page==='aps'||page==='akt'?'x':'';if(need&&!me.grp.includes(need))page=home}
+ if(adm)document.querySelectorAll('#ahm [data-pg]').forEach(b=>b.classList.toggle('hide',!me.grp.includes({aot:'ot',aev:'ev',aal:'al',anm:'nm'}[b.dataset.pg])));
+ const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt','aup','anm']:['ev','ot','al','sh','go','sl','iz','up','pt','nm'];
  $('upb').classList.toggle('hide',page==='up'||page==='aup');
  {const U=adm?'aup':'up';if(page===U){const all=upFrom===U;document.querySelectorAll('#p-'+U+' .uh').forEach(d=>d.classList.toggle('hide',!all&&d.dataset.h!==(upFrom===home?home:upFrom)));$(U+'all').classList.toggle('hide',all)}}
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
  if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
- if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='akt'||page==='aup'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
+ if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='anm'||page==='akt'||page==='aup'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
  $('nav').classList.toggle('hide',page===home);$('navt').textContent=(page==='up'||page==='aup')&&upFrom!==page?'Upute: '+(upFrom===home?'Početna stranica':TIT[upFrom]):TIT[page]||'';
  $('hdr').classList.toggle('hide',page!==home);
  if(!adm){$('fond').classList.toggle('hide',page!=='ev');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
@@ -924,6 +969,81 @@ $('lu2').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.dataset.pw){const n=await pr('Nova lozinka (min. 6 znakova):');if(n){await api('PUT','users/'+b.dataset.pw,{password:n});toast('Lozinka je promijenjena.')}}
   else if(b.dataset.dis){const[id,d]=b.dataset.dis.split('|');if(d==='1'&&!await cf('Onemogućiti prijavu? Radnik se neće moći prijaviti ni unositi podatke, a svi dosadašnji podaci ostaju.'))return;await api('PUT','users/'+id,{disabled:d==='1'});toast(d==='1'?'Prijava je onemogućena.':'Prijava je omogućena.');await load()}
   else if(b.dataset.del&&await cf('Izbrisati korisnika iz aplikacije? Više se neće moći prijaviti ni unositi podatke. Svi dosad uneseni podaci ostaju u evidenciji i izvještajima.')){await api('DELETE','users/'+b.dataset.del);await load()}}catch(x){toast(x.message)}};
+/* NARUČI MATERIJAL: radnik slaže popis (nacrt se pamti u pregledniku dok ga ne pošalje ili odustane), zatim šalje odabranom primatelju.
+   Primatelj (administrator ili radnik s pravom 'nm') vidi poslane narudžbe u grupi NARUDŽBE MATERIJALA. */
+let nmD=null,nmEi=-1,nmRev=false,nmData={list:[],primatelji:[],jm:Core.NM_JM},nmTot={nm:false,anm:false};
+const nmKey=()=>'nmDraft-'+me.id,nmStore=()=>{try{localStorage.setItem(nmKey(),JSON.stringify(nmD))}catch(e){}};
+const nmNew=()=>({uid:me.id,id:'',adminId:'',site:'',items:[]});
+const nmDraft=()=>{if(nmD&&nmD.uid===me.id)return nmD;try{nmD=JSON.parse(localStorage.getItem(nmKey()))}catch(e){nmD=null}if(!nmD||nmD.uid!==me.id||!Array.isArray(nmD.items))nmD=nmNew();return nmD};
+const nmPl=(n,a,b,c)=>n+' '+(n%10===1&&n%100!==11?a:n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?b:c),nmSt=n=>nmPl(n,'stavka','stavke','stavki');
+const nmDt=t=>new Date(t).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+const nmRows=(items,edit)=>items.map((it,i)=>'<div class="nmr"><span class="rb">'+(i+1)+'.</span><span>'+E(it.naziv)+'</span><span class="fl" style="gap:6px;align-items:center;flex-wrap:nowrap"><span class="nmq">'+Core.nmNum(it.kol)+' '+E(it.jm)+'</span>'
+ +(edit?'<button class="x e" data-nme="'+i+'" aria-label="Uredi stavku" style="width:38px;height:38px;font-size:18px">✎</button><button class="x" data-nmx="'+i+'" aria-label="Ukloni stavku" style="width:38px;height:38px;font-size:18px">✕</button>':'')+'</span></div>').join('');
+const nmPrim=id=>(nmData.primatelji.find(p=>p.id===id)||{}).name||'';
+const nmDay=o=>new Date(o.sentTs||o.updated).toLocaleDateString('sv');
+function nmFilter(pre,extra){const od=$(pre+'od').value,dO=$(pre+'do').value,st=$(pre+'fs').value;
+ return nmData.list.filter(o=>(!od||nmDay(o)>=od)&&(!dO||nmDay(o)<=dO)&&(!st||o.site===st)&&extra(o))}
+function nmFillF(pre){const st=[...new Set(nmData.list.map(o=>o.site))].sort((a,b)=>a.localeCompare(b,'hr'));fill($(pre+'fs'),st.map(s=>[s,s]),'Sva gradilišta')}
+const nmCard=(o,adm)=>{const ok=o.status==='sent';
+ return '<div class="card" style="border-left:5px solid '+(ok?'#0d9488':'var(--er)')+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(o.site)+'</b>'+(adm?' · naručio '+E(o.name):' · za '+E(o.adminName))
+ +'<div class="mu">'+(ok?'poslano '+nmDt(o.sentTs):'spremljeno '+nmDt(o.updated))+' · '+nmSt(o.items.length)+(adm&&o.adminId!==me.id?' · primatelj '+E(o.adminName):'')+'</div></div><span class="badge '+(ok?'b-ok':'b-no')+'">'+(ok?'Poslano':'Nije poslano')+'</span></div>'
+ +'<details style="margin-top:6px"'+(adm?' open':'')+'><summary style="cursor:pointer">Popis materijala</summary>'+nmRows(o.items,false)+'</details>'
+ +'<div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm" data-nmp="'+E(o.id)+'">Preuzmi PDF</button>'+(!adm&&!ok?'<button class="sm" data-nmu="'+E(o.id)+'">Uredi</button><button class="sm pri" data-nmsd="'+E(o.id)+'">Pošalji</button>':'')+'</div></div>'};
+function nmTotHtml(pre,list){const t=Core.nmTotal(list);
+ return '<div class="card"><b>Ukupna lista materijala</b><div class="mu" style="margin:4px 0">'+nmPl(list.length,'narudžba','narudžbe','narudžbi')+' prema filterima, isti materijal u istoj mjeri je zbrojen.</div>'+(t.length?t.map((x,i)=>'<div class="nmr"><span class="rb">'+(i+1)+'.</span><span>'+E(x.naziv)+'</span><span class="nmq">'+Core.nmNum(x.kol)+' '+E(x.jm)+'</span></div>').join('')+'<button class="sm" data-nmtp="'+pre+'" style="margin-top:8px">Preuzmi PDF</button>':'<div class="mu">Nema materijala za odabrane filtere.</div>')+'</div>'}
+function nmTotPdf(pre){const adm=pre==='anm',list=adm?nmAList():nmHList(),t=Core.nmTotal(list),od=$(pre+'od').value,dO=$(pre+'do').value,dd=x=>x.split('-').reverse().join('.')+'.';
+ const info=['Razdoblje: '+(od||dO?(od?dd(od):'…')+' – '+(dO?dd(dO):'…'):'sve'),'Gradilište: '+($(pre+'fs').value||'sva'),'Narudžbi: '+list.length,'Izradio: '+me.name+', '+nmDt(Date.now())];
+ const d=Core.pdf({title:'Ukupna lista materijala',info,footer:'TiDy Connect – ukupna lista materijala',blocks:[{table:[{head:true,cells:[{t:'R. br.',right:true},{t:'Materijal'},{t:'Količina',right:true},{t:'Jed. mjera'}]}].concat(t.map((x,i)=>({cells:[{t:(i+1)+'.',right:true},{t:x.naziv},{t:Core.nmNum(x.kol),right:true},{t:x.jm}]})))}]});
+ saveFile('ukupna-lista-materijala.pdf',d,'application/pdf')}
+const nmHList=()=>nmFilter('nmh',o=>(!$('nmha').value||o.adminId===$('nmha').value)&&(!$('nmhs').value||o.status===$('nmhs').value));
+const nmAList=()=>nmFilter('anm',o=>!$('anmw').value||o.uid===$('anmw').value);
+async function drawNm(){const adm=me.role==='admin';
+ try{nmData=await api('GET','narudzbe'+(adm?'?adm=1'+($('anmp').value==='svi'?'&svi=1':''):''))}catch(e){return}
+ if(adm){nmFillF('anm');fill($('anmw'),[...new Map(nmData.list.map(o=>[o.uid,o.name]))].sort((a,b)=>a[1].localeCompare(b[1],'hr')),'Svi radnici');$('anmsw').classList.toggle('hide',!me.full);return nmARender()}
+ nmFillF('nmh');fill($('nmha'),nmData.primatelji.map(p=>[p.id,p.name]),'Svi administratori');nmRender()}
+function nmRender(){const d=nmDraft();
+ fill($('nma'),nmData.primatelji.map(p=>[p.id,p.name]),'– odaberite administratora –');$('nma').value=nmData.primatelji.some(p=>p.id===d.adminId)?d.adminId:'';
+ fill($('nms'),me.sites.map(s=>[s,s]),'– odaberite gradilište –');$('nms').value=me.sites.includes(d.site)?d.site:'';
+ if(!$('nmj').options.length)$('nmj').innerHTML=nmData.jm.map(j=>'<option>'+E(j)+'</option>').join('');
+ $('nmet').textContent=d.id?'Uređivanje neposlane narudžbe':'Nova narudžba';
+ $('nml').innerHTML=d.items.length?nmRows(d.items,true):'<div class="mu">Popis je prazan. Upišite naziv, odaberite mjeru, upišite količinu i kliknite Dodaj u popis.</div>';
+ $('nmadd').textContent=nmEi>=0?'Spremi izmjenu stavke '+(nmEi+1)+'.':'Dodaj u popis';$('nmaddx').classList.toggle('hide',nmEi<0);
+ $('nmed').classList.toggle('hide',nmRev);$('nmrev').classList.toggle('hide',!nmRev);
+ if(nmRev)$('nmrv').innerHTML='<div><b>Administrator:</b> '+E(nmPrim(d.adminId))+'</div><div><b>Gradilište:</b> '+E(d.site)+'</div><div class="mu" style="margin:4px 0 6px">'+nmSt(d.items.length)+'</div>'+nmRows(d.items,false);
+ const L=nmHList();$('nmtv').classList.toggle('hide',!nmTot.nm);if(nmTot.nm)$('nmtv').innerHTML=nmTotHtml('nmh',L);$('nmtot').textContent=nmTot.nm?'Sakrij ukupnu listu':'Ukupna lista materijala';
+ $('nmhl').innerHTML=L.length?L.map(o=>nmCard(o,false)).join(''):'<div class="card mu">Nema narudžbi'+(nmData.list.length?' za odabrane filtere':'')+'.</div>'}
+function nmARender(){const L=nmAList();$('anmn').textContent='Prikazano: '+L.length+' od '+nmData.list.length+' (poslane narudžbe, najnovije prvo).';
+ $('anmtv').classList.toggle('hide',!nmTot.anm);if(nmTot.anm)$('anmtv').innerHTML=nmTotHtml('anm',L);$('anmtot').textContent=nmTot.anm?'Sakrij ukupnu listu':'Ukupna lista materijala';
+ $('anml').innerHTML=L.length?L.map(o=>nmCard(o,true)).join(''):'<div class="card mu">Nema narudžbi materijala'+(nmData.list.length?' za odabrane filtere':'')+'.</div>'}
+$('nma').onchange=()=>{nmDraft().adminId=$('nma').value;nmStore()};$('nms').onchange=()=>{nmDraft().site=$('nms').value;nmStore()};
+$('nmadd').onclick=()=>{const d=nmDraft(),n=$('nmn').value.trim(),j=$('nmj').value,k=parseFloat($('nmk').value.replace(',','.'));
+ if(!n)return say('nmm','Upišite naziv materijala.');if(!isFinite(k)||k<=0)return say('nmm','Upišite količinu veću od nule.');
+ const it={naziv:n.slice(0,120),jm:j,kol:Math.round(k*1000)/1000};if(nmEi>=0)d.items[nmEi]=it;else d.items.push(it);nmEi=-1;$('nmn').value='';$('nmk').value='';nmStore();nmRender();$('nmn').focus()};
+$('nmk').onkeydown=e=>{if(e.key==='Enter')$('nmadd').onclick()};
+$('nmaddx').onclick=()=>{nmEi=-1;$('nmn').value='';$('nmk').value='';nmRender()};
+$('nml').onclick=e=>{const d=nmDraft(),a=e.target.closest('[data-nme]'),x=e.target.closest('[data-nmx]');
+ if(a){nmEi=+a.dataset.nme;const it=d.items[nmEi];$('nmn').value=it.naziv;$('nmj').value=it.jm;$('nmk').value=String(it.kol).replace('.',',');nmRender();$('nmn').focus()}
+ else if(x){d.items.splice(+x.dataset.nmx,1);nmEi=-1;nmStore();nmRender()}};
+$('nmdone').onclick=()=>{const d=nmDraft();if(!d.adminId)return say('nmm','Odaberite administratora.');if(!d.site)return say('nmm','Odaberite gradilište.');if(!d.items.length)return say('nmm','Dodajte barem jednu stavku.');
+ nmRev=true;nmRender();window.scrollTo(0,0)};
+$('nmedit').onclick=()=>{nmRev=false;nmRender()};
+async function nmPost(body,okMsg){const r=await api('POST','narudzbe',body);toast(okMsg+(r.mail?' '+r.mail:r.mailTo?' E-mail je poslan na '+r.mailTo+'.':''));return r}
+$('nmsend').onclick=async()=>{const d=nmDraft(),B=$('nmsend');B.disabled=true;
+ try{await nmPost({id:d.id,adminId:d.adminId,site:d.site,items:d.items,send:true},'Narudžba je poslana.');nmD=nmNew();nmStore();nmRev=false;await load()}catch(x){say('nmrm',x.message)}finally{B.disabled=false}};
+$('nmcancel').onclick=async()=>{const d=nmDraft();if(!await cf('Odustati od slanja? Popis ostaje u Mojim narudžbama označen kao nije poslan, pa ga kasnije možete urediti i poslati.'))return;
+ try{await nmPost({id:d.id,adminId:d.adminId,site:d.site,items:d.items,send:false},'Narudžba je spremljena kao nije poslana.');nmD=nmNew();nmStore();nmRev=false;await load()}catch(x){say('nmrm',x.message)}};
+const nmPdf=id=>{const o=nmData.list.find(x=>x.id===id);if(o)saveFile('narudzba-materijala-'+nmDay(o)+'.pdf',Core.pdf(Core.nmDoc(o)),'application/pdf')};
+$('nmhl').onclick=async e=>{const p=e.target.closest('[data-nmp]'),u=e.target.closest('[data-nmu]'),s=e.target.closest('[data-nmsd]');
+ if(p)return nmPdf(p.dataset.nmp);
+ if(u){const o=nmData.list.find(x=>x.id===u.dataset.nmu);if(!o)return;const d=nmDraft();if(d.items.length&&d.id!==o.id&&!await cf('U unosu već imate popis koji niste završili. Zamijeniti ga ovom narudžbom?'))return;
+  nmD={uid:me.id,id:o.id,adminId:o.adminId,site:o.site,items:o.items.map(x=>({...x}))};nmEi=-1;nmRev=false;nmStore();nmRender();window.scrollTo(0,0);return}
+ if(s){const o=nmData.list.find(x=>x.id===s.dataset.nmsd);if(!o||!await cf('Poslati narudžbu za '+o.site+' ('+nmSt(o.items.length)+') primatelju '+o.adminName+'?'))return;
+  try{await nmPost({id:o.id,adminId:o.adminId,site:o.site,items:o.items,send:true},'Narudžba je poslana.');if(nmDraft().id===o.id){nmD=nmNew();nmStore()}await load()}catch(x){toast(x.message)}}};
+$('anml').onclick=e=>{const p=e.target.closest('[data-nmp]');if(p)nmPdf(p.dataset.nmp)};
+$('nmtv').onclick=$('anmtv').onclick=e=>{const b=e.target.closest('[data-nmtp]');if(b)nmTotPdf(b.dataset.nmtp)};
+$('nmtot').onclick=()=>{nmTot.nm=!nmTot.nm;nmRender()};$('anmtot').onclick=()=>{nmTot.anm=!nmTot.anm;nmARender()};
+['nmhod','nmhdo','nmhfs','nmha','nmhs'].forEach(i=>$(i).onchange=nmRender);['anmod','anmdo','anmfs','anmw'].forEach(i=>$(i).onchange=nmARender);$('anmp').onchange=drawNm;
+$('nmhfx').onclick=()=>{['nmhod','nmhdo','nmhfs','nmha','nmhs'].forEach(i=>$(i).value='');nmRender()};$('anmfx').onclick=()=>{['anmod','anmdo','anmfs','anmw'].forEach(i=>$(i).value='');nmARender()};
 /* AKTIVNOSTI RADNIKA: administratorov preglednik svakih 10 s dohvaća nove radnje radnika i prikazuje ih kao skočnu obavijest
    u Windowsima (i kad je kartica u pozadini ili prozor smanjen). Uključuje se na stranici zvona; postavka vrijedi za taj preglednik. */
 let akB='',akS=0,akL=[],akU=0,akBusy=0,akUid='';
