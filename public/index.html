@@ -47,7 +47,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
 .offpg{display:none!important}
 #hm{padding-bottom:64px}
 #upb{position:fixed;right:calc(14px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));width:46px;height:46px;border-radius:50%;border:0;background:var(--sh);color:var(--shx);font-size:22px;font-weight:800;box-shadow:0 3px 10px rgba(0,0,0,.25);z-index:40;padding:0}
-.upute h3{margin:18px 0 6px;font-size:16px}.upute h3:first-of-type{margin-top:6px}.upute ul,.upute ol{margin:4px 0 4px 20px;padding:0}.upute li{margin:4px 0;line-height:1.45}.upute ul ul{margin-top:4px}
+.upute h3{margin:18px 0 6px;font-size:16px}.upute .uh:not(.hide) ~ .uh:not(.hide) h3{margin-top:18px}.upute h3{margin-top:6px}.upute ul,.upute ol{margin:4px 0 4px 20px;padding:0}.upute li{margin:4px 0;line-height:1.45}.upute ul ul{margin-top:4px}
 .ux{display:inline-block;position:relative;min-width:26px;padding:2px 4px;text-align:center;border:1px solid var(--bd);border-radius:6px;font-weight:700;font-size:13px;margin-right:2px}
 .cal{margin-top:4px}.calh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.calh button{padding:6px 14px;font-size:18px}
 .calg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.calg .wd{text-align:center;font-size:12px;color:var(--mu);font-weight:600}
@@ -141,30 +141,51 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
   </div>
   <div id="p-pt" class="pg hide"><div class="mu" style="margin-bottom:8px">Poruke i obavijesti koje ste primili te zahtjevi koje ste poslali, najnovije na vrhu. Na kraju mjeseca automatski ostaje samo 5 najnovijih.</div><div id="ptl"></div></div>
   <div id="p-up" class="pg hide"><div class="card upute">
-   <p class="mu">Upute za radnike · ažurirano 25.10.2026.</p>
+   <p class="mu">Upute za radnike · ažurirano 26.10.2026.</p>
+   <div class="uh" data-h="hm">
    <h3>Prijava</h3>
    <ul><li>Otvorite adresu aplikacije koju ste dobili e-mailom i upišite korisničko ime i lozinku.</li>
    <li>Nakon prve prijave promijenite lozinku: na početnoj stranici gumb <b>Lozinka</b>.</li>
    <li>Aplikaciju dodajte na početni zaslon mobitela: Chrome → izbornik ⋮ → <i>Dodaj na početni zaslon</i>; iPhone (Safari) → <i>Dijeli</i> → <i>Dodaj na početni zaslon</i>.</li>
    <li>Ako zaboravite lozinku, javite se administratoru – on vam može poslati nove podatke za prijavu.</li>
    <li>Aplikacija se <b>sama osvježava</b> (svakih desetak sekundi): odluke, poruke i obavijesti administratora pojavit će se bez odjave i ponovne prijave. Dok upisujete tekst, osvježavanje čeka da završite.</li></ul>
+   </div>
+   <div class="uh" data-h="hm">
    <h3>Početna stranica</h3>
    <ul><li><b>Obavijesti</b> – odluke administratora o vašim zahtjevima. Vide se do kraja dana na koji se odnose; administrator vidi da ste ih pročitali čim otvorite početnu stranicu.</li>
    <li><b>Novo gradilište</b> – kad administrator doda novo gradilište, obavijest se prikaže pri prvom sljedećem otvaranju aplikacije.</li>
    <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada.</li>
    <li><b>Gumb s pismom</b> (gore, uz Lozinka i Odjava) – sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište) s njihovim statusom, najnovije na vrhu. Crveni broj na gumbu je broj nepročitanih poruka. Svaku stavku možete obrisati gumbom ✕ (briše se samo iz vaše pošte). Na kraju mjeseca automatski ostaje samo 5 najnovijih.</li>
-   <li>Gumb <b>?</b> dolje desno otvara ove upute.</li>
+   <li>Plavi gumb <b>?</b> dolje desno postoji na svakoj stranici i otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>.</li>
    <li>Tri glavna dijela: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b> i <b>ALAT</b> (Alat je u izradi).</li></ul>
+   </div>
+   <div class="uh" data-h="pt">
+   <h3>Poruke i zahtjevi (gumb s pismom)</h3>
+   <ul><li>Gumb s pismom nalazi se gore na početnoj stranici, uz Lozinka i Odjava. Crveni broj na njemu je broj nepročitanih poruka.</li>
+   <li>Ovdje su sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište), najnovije na vrhu.</li>
+   <li>Uz svaki zahtjev piše njegov status: <b>čeka odgovor</b>, <b>prihvaćen</b> ili <b>odbijen</b>, a uz odluku i napomena administratora. Ako administrator izmijeni odluku, to također piše.</li>
+   <li>Svaku stavku možete obrisati gumbom ✕. Briše se samo iz vaše pošte, administratoru i u izvještajima ostaje zapisana.</li>
+   <li>Na kraju mjeseca automatski ostaje samo 5 najnovijih stavki.</li></ul>
+   </div>
+   <div class="uh" data-h="ot">
    <h3>OTPREMNICE – fotografiraj i pošalji</h3>
    <ol><li>Kliknite <b>FOTOGRAFIRAJ OTPREMNICU</b> – otvara se kamera mobitela. Fotografirajte otpremnicu ravno i čitljivo. Ako ima više stranica, fotografirajte svaku (najviše 10). Već snimljenu fotografiju možete odabrati gumbom <b>Odaberi iz galerije</b>.</li>
    <li>Pogrešnu fotografiju maknite gumbom ✕ na sličici.</li>
    <li>Odaberite <b>gradilište</b> i <b>datum otpremnice</b>, po želji upišite napomenu i kliknite <b>POŠALJI OTPREMNICU</b>. Ako ne znate na koje gradilište otpremnica ide, na kraju popisa odaberite <b>Odluka administratora</b>.</li>
    <li>Ispod su vaše poslane otpremnice. Klik na sličicu otvara fotografiju u A4 obliku (strelicama listate stranice, <b>Puna veličina</b> za povećanje). Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li>
    <li>Ako administrator zatraži <b>dodatno objašnjenje</b>, dobit ćete obavijest. Pitanje je ispod te otpremnice: upišite odgovor i kliknite <b>Pošalji odgovor</b>. Ako administrator promijeni gradilište, to piše uz otpremnicu.</li></ol>
+   </div>
+   <div class="uh" data-h="al">
+   <h3>ALAT</h3>
+   <ul><li>Ovaj dio je u izradi. Kad bude spreman, ovdje će biti upute za njegovo korištenje.</li></ul>
+   </div>
+   <div class="uh" data-h="ev">
    <h3>EVIDENCIJA RADNOG VREMENA</h3>
    <ul><li><b>Fond sati</b> – koliko sati treba odraditi u mjesecu (radni dani × 8 h) i koliko ste upisali.</li>
    <li><b>Sati za slobodan dan</b> – vaše trenutno stanje (vidi dio Slobodni dan).</li>
    <li>Četiri gumba vode na stranice <b>ŠIHTERICA</b>, <b>GODIŠNJI</b>, <b>SLOBODNI DAN</b> i <b>IZVJEŠTAJI</b>. Gumb s kućicom gore desno s tih stranica vraća vas na Evidenciju radnog vremena, a odatle na početnu stranicu.</li></ul>
+   </div>
+   <div class="uh" data-h="sh">
    <h3>ŠIHTERICA – dnevni unos</h3>
    <ol><li>U kalendaru odaberite dan.
      <ul><li><span class="ux" style="background:rgba(220,38,38,.16);border-color:var(--er);color:var(--er)">15</span> crveno – radni dan bez unosa (obavezno ga je upisati),</li>
@@ -183,21 +204,31 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li><b>Pregledaj izvještaj</b> – tablica sati po danima za odabrani mjesec.</li>
    <li><b>ZAVRŠI UNOS</b> – kad su upisani svi radni dani u mjesecu, završite mjesec. Ako neki dan nedostaje, aplikacija ga navodi. Nakon završetka unosi se više ne mogu mijenjati.</li>
    <li>Ako trebate ispraviti završeni mjesec, pošaljite <b>zahtjev za ponovno otvaranje</b>; dok administrator ne odgovori, možete od njega i odustati.</li></ul>
+   </div>
+   <div class="uh" data-h="go">
    <h3>GODIŠNJI</h3>
    <ul><li>Vidite ukupni broj dana godišnjeg odmora, iskorištene i preostale dane.</li>
    <li>Zahtjev: odaberite datum (ili označite <i>Više dana</i> i upišite datum do), po želji razlog, i kliknite <b>Pošalji zahtjev</b>. Računaju se samo radni dani.</li>
    <li>Kad administrator odobri, na te dane u šihterici odaberite vrstu <b>Godišnji odmor</b>.</li>
    <li>Dok zahtjev čeka odgovor, možete kliknuti <b>Odustani od zahtjeva</b>.</li></ul>
+   </div>
+   <div class="uh" data-h="sl">
    <h3>SLOBODNI DAN</h3>
    <ul><li>Svaki dan s 9 ili više sati rada donosi 1 sat za slobodan dan. Stanje kreće od nule svakog 1. u mjesecu; administrator može upisati prijenos iz prošlog mjeseca.</li>
    <li>S 8 ili više sati sami u šihterici odaberete vrstu <b>Slobodan dan</b> – oduzima se 8 sati.</li>
    <li>S manje od 8 sati pošaljite <b>Zahtjev za slobodan dan</b>. Ako ga administrator prihvati, za taj datum možete odabrati Slobodan dan (stanje sati tada može biti i negativno). Od zahtjeva možete odustati dok čeka odgovor.</li></ul>
+   </div>
+   <div class="uh" data-h="iz">
    <h3>IZVJEŠTAJI</h3>
    <ul><li>Odaberite razdoblje (mjesec ili cijela godina) i karticu: Radni sati, Slobodni dani, Bolovanje ili Godišnji odmor.</li>
    <li><b>Spremi kao PDF</b> sprema izvještaj za odabrano razdoblje na vaš uređaj (Android: Preuzimanja; iPhone: Dijeli → Spremi u Datoteke).</li></ul>
+   </div>
+   <div class="uh" data-h="hm">
    <h3>Odjava i pomoć</h3>
    <ul><li>Na početnoj stranici gumb <b>Odjava</b>. Na tuđem uređaju se uvijek odjavite.</li>
    <li>Za sve probleme s prijavom ili unosima javite se administratoru.</li></ul>
+   </div>
+   <div id="upall" style="margin-top:16px"><button class="sm" id="upa">Sve upute</button></div>
   </div></div>
   <div id="p-iz" class="pg hide">
   <div class="card gr" id="izc"><div class="grh">IZVJEŠTAJI</div>
@@ -395,17 +426,18 @@ function draw(){
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
  drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='akt')drawAkt();applyPage();if(me.role==='admin'&&akUid!==me.id)akCheck();
 }
-let page='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika'};
+let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
  const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt']:['ev','ot','al','sh','go','sl','iz','up','pt'];
- $('upb').classList.toggle('hide',adm||page!=='hm');
+ $('upb').classList.toggle('hide',adm||page==='up');
+ if(!adm&&page==='up'){const all=upFrom==='up';document.querySelectorAll('#p-up .uh').forEach(d=>d.classList.toggle('hide',!all&&d.dataset.h!==upFrom));$('upall').classList.toggle('hide',all)}
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
  if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
  if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='akt'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
- $('nav').classList.toggle('hide',page===home);$('navt').textContent=TIT[page]||'';
+ $('nav').classList.toggle('hide',page===home);$('navt').textContent=page==='up'&&upFrom!=='up'?'Upute: '+(upFrom==='hm'?'Početna stranica':TIT[upFrom]):TIT[page]||'';
  $('hdr').classList.toggle('hide',page!==home);
  if(!adm){$('fond').classList.toggle('hide',page!=='ev');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
 function setPage(p){page=p;try{if(p==='hm'||p==='ahm'){if(location.hash)history.pushState(null,'',location.pathname+location.search)}else location.hash=p}catch(e){}draw();window.scrollTo(0,0)}
@@ -492,8 +524,8 @@ $('ptb').onclick=()=>setPage('pt');
 $('ptl').onclick=async e=>{const b=e.target.closest('[data-ptd]');if(!b)return;const[k,id]=b.dataset.ptd.split('|');
  if(!await cf('Obrisati ovu stavku iz vaše pošte? Administratoru i u izvještajima ostaje zapisana.'))return;try{await api('DELETE','inbox/'+k+'/'+id);await load()}catch(x){toast(x.message)}};
 /* kućica: iz ŠIHTERICE, GODIŠNJEG, SLOBODNOG DANA i IZVJEŠTAJA natrag na Evidenciju radnog vremena, inače na početnu */
-$('home').onclick=()=>setPage(['sh','go','sl','iz'].includes(page)?'ev':['aiz','asl','ago','agr','apo','azh','ast','aob'].includes(page)?'aev':me.role==='admin'?'ahm':'hm');
-$('psb').onclick=()=>setPage('aps');$('upb').onclick=()=>setPage('up');
+$('home').onclick=()=>setPage(page==='up'?upBack:['sh','go','sl','iz'].includes(page)?'ev':['aiz','asl','ago','agr','apo','azh','ast','aob'].includes(page)?'aev':me.role==='admin'?'ahm':'hm');
+$('psb').onclick=()=>setPage('aps');$('upb').onclick=()=>{upFrom=upBack=page;setPage('up')};$('upa').onclick=()=>{upFrom='up';draw();window.scrollTo(0,0)};
 window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);page=TIT[p]?p:'hm';if(me)draw()});
 const isHol=d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Core.holidays(+d.slice(0,4)).has(d);
 const slOk=d=>slreq.some(r=>r.uid===me.id&&r.status==='approved'&&r.date===d&&(!r.entryId||r.entryId===editId));
