@@ -132,7 +132,7 @@
     const cat = add(''), pgs = add(''), f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding ' + enc + ' >>'), f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding ' + enc + ' >>');
     const kids = pages.map((p, i) => { const foot = '0.42 g BT /F1 8 Tf ' + M + ' 22 Td ' + pStr((doc.footer || '') + '   Stranica ' + (i + 1) + ' / ' + N) + ' Tj ET'; const body = p.concat([foot]).join('\n'); const st = add('<< /Length ' + body.length + ' >>\nstream\n' + body + '\nendstream'); return add('<< /Type /Page /Parent ' + pgs + ' 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >> >> /Contents ' + st + ' 0 R >>'); });
     objs[cat - 1] = '<< /Type /Catalog /Pages ' + pgs + ' 0 R >>'; objs[pgs - 1] = '<< /Type /Pages /Kids [' + kids.map(k => k + ' 0 R').join(' ') + '] /Count ' + N + ' >>';
-    const info = add('<< /Title ' + pStr(doc.title || '') + ' /Producer (Evidencija radnog vremena) >>');
+    const info = add('<< /Title ' + pStr(doc.title || '') + ' /Producer (TiDy Connect) >>');
     let out = '%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'; const off = [];
     objs.forEach((o, i) => { off.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
     const xr = out.length; out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + off.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');

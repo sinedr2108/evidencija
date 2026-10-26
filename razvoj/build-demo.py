@@ -37,7 +37,7 @@ style=re.sub(r'(#note\{[^}]*?)left:14px;right:14px',r'\1left:max(16px,env(safe-a
 
 # HTML
 html=re.sub(r'<!--LOGIN-->.*?<!--/LOGIN-->','''<section id="login" class="card hide who" style="margin-top:24px">
- <h1>Evidencija radnog vremena</h1>
+ <h1><span style="color:#e84645">TiD</span>y Connect</h1>
  <div class="demo">Demo za isprobavanje. Nema pravog servera ni e-maila, a podaci se spremaju samo u ovom pregledniku. Primjerni unosi su izmišljeni.</div>
  <div class="mu">Uđite kao:</div>
  <button class="sm" data-u="ivan">Radnik: Ivan Horvat</button>
@@ -201,6 +201,6 @@ script=script[:m.start()]+script[m.end():]
 import base64
 html=html.replace('src="/logo.png"','src="data:image/png;base64,'+base64.b64encode(open(P+'public/logo.png','rb').read()).decode()+'"')
 script+="\nsaveFile=async(name,data)=>{try{const d=await claude.use('downloads');if(!d){toast('Preuzimanje nije dostupno u ovom prikazu.');return}await d.save({filename:name,data})}catch(e){toast('Preuzimanje nije uspjelo.')}};\n"
-out='<meta charset="utf-8">\n<title>Evidencija sati demo</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>'+style+'</style>\n<main>'+html+'</main>\n<script>'+core+'</script>\n<script>'+script+'</script>\n'
+out='<meta charset="utf-8">\n<title>TiDy Connect demo</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>'+style+'</style>\n<main>'+html+'</main>\n<script>'+core+'</script>\n<script>'+script+'</script>\n'
 open(sys.argv[2] if len(sys.argv)>2 else 'evidencija-demo.html','w',encoding='utf-8').write(out)
 print(len(out))

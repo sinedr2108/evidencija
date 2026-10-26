@@ -1,4 +1,4 @@
-# Evidencija radnog vremena – stanje projekta (23.10.2026.)
+# TiDy Connect (ranije Evidencija radnog vremena) – stanje projekta (23.10.2026., naziv 26.10.2026.)
 
 Sažetak za nastavak rada u novom razgovoru. Uz ovu datoteku priložiti **evidencija-razvoj.zip** (aplikacija + skripta za demo).
 

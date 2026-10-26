@@ -60,7 +60,7 @@ function mailer(){let nm;try{nm=require('nodemailer')}catch(e){return{err:'Nije 
   const c=smtpCfg();if(!c)return{err:'E-mail (SMTP) nije podešen. Administrator ga upisuje u Postavkama.'};
   /* Pošiljatelj je obavezan: bez zaglavlja From poruka stiže "bez pošiljatelja", a Gmail i drugi vanjski poslužitelji je odbijaju. */
   const f=String(c.from||c.user||'').trim();if(!/@/.test(f))return{err:'Upišite Pošiljatelja (npr. sihterica@tid-intel.hr) u Postavkama → E-mail.'};
-  const from=/</.test(f)?f:{name:'Evidencija radnog vremena',address:f};
+  const from=/</.test(f)?f:{name:'TiDy Connect',address:f};
   const t=nm.createTransport({host:c.host,port:c.port,secure:c.secure,auth:c.user?{user:c.user,pass:c.pass}:undefined});
   /* Ako poslužitelj odbije primatelja, javi grešku umjesto "poslano". */
   const send=async m=>{const i=await t.sendMail(m);if(i&&i.rejected&&i.rejected.length)throw new Error('Poslužitelj je odbio primatelja '+i.rejected.join(', ')+(i.response?' ('+i.response+')':''));return i};
@@ -280,14 +280,14 @@ R('PUT','/api/smtp',2,c=>{const b=c.b,m=db.smtp=db.smtp||{},str=v=>String(v==nul
   m.host=str(b.host);m.port=parseInt(b.port)||587;m.secure=!!b.secure;m.user=str(b.user);m.from=str(b.from);if(b.pass)m.pass=String(b.pass).slice(0,200);if(b.clearPass)m.pass='';
   const u=str(b.appUrl);if(u&&!/^https?:\/\/[^\s]+$/i.test(u))return c.send(400,{e:'Adresa aplikacije mora počinjati s https:// (npr. https://sati.vasadomena.hr).'});db.appUrl=u;save();c.send(200,{ok:1})});
 R('POST','/api/smtp/test',2,async c=>{const M=mailer();if(M.err)return c.send(400,{e:M.err});if(!c.u.email)return c.send(400,{e:'Upišite svoj e-mail u popisu korisnika (gumb E-mail).'});
-  try{await M.t.sendMail({from:M.from,to:c.u.email,subject:'Probna poruka – Evidencija radnog vremena',text:'E-mail iz aplikacije radi.\n\nAdresa aplikacije: '+appUrl(c)});c.send(200,{ok:1,to:c.u.email})}catch(e){c.send(400,{e:'Slanje nije uspjelo: '+e.message})}});
+  try{await M.t.sendMail({from:M.from,to:c.u.email,subject:'Probna poruka – TiDy Connect',text:'E-mail iz aplikacije radi.\n\nAdresa aplikacije: '+appUrl(c)});c.send(200,{ok:1,to:c.u.email})}catch(e){c.send(400,{e:'Slanje nije uspjelo: '+e.message})}});
 R('POST','/api/users/:id/sendlogin',2,async c=>{const u=db.users.find(x=>x.id===c.p[0]&&!x.deleted);if(!u)return c.send(404,{e:'Korisnik nije pronađen.'});
   if(u.disabled)return c.send(400,{e:'Prijava ovog korisnika je onemogućena. Prvo je omogućite.'});
   if(!u.email)return c.send(400,{e:'Korisnik nema upisan e-mail.'});
   const M=mailer();if(M.err)return c.send(400,{e:M.err});
   const pw=genPw(),url=appUrl(c);
-  const text='Poštovani/a '+u.name+',\n\nevo vaših podataka za prijavu u aplikaciju za evidenciju radnog vremena:\n\nAdresa: '+url+'\nKorisničko ime: '+u.username+'\nLozinka: '+pw+'\n\nNakon prve prijave promijenite lozinku (gumb „Lozinka“ na početnoj stranici).\nNa mobitelu adresu možete dodati na početni zaslon (Chrome: izbornik → Dodaj na početni zaslon; iPhone: Dijeli → Dodaj na početni zaslon).\n\nOva poruka je poslana automatski. Ako je niste očekivali, javite se administratoru.';
-  try{await M.t.sendMail({from:M.from,to:u.email,subject:'Pristup aplikaciji Evidencija radnog vremena',text})}catch(e){return c.send(400,{e:'Slanje nije uspjelo, lozinka nije promijenjena: '+e.message})}
+  const text='Poštovani/a '+u.name+',\n\nevo vaših podataka za prijavu u aplikaciju TiDy Connect:\n\nAdresa: '+url+'\nKorisničko ime: '+u.username+'\nLozinka: '+pw+'\n\nNakon prve prijave promijenite lozinku (gumb „Lozinka“ na početnoj stranici).\nNa mobitelu adresu možete dodati na početni zaslon (Chrome: izbornik → Dodaj na početni zaslon; iPhone: Dijeli → Dodaj na početni zaslon).\n\nOva poruka je poslana automatski. Ako je niste očekivali, javite se administratoru.';
+  try{await M.t.sendMail({from:M.from,to:u.email,subject:'Pristup aplikaciji TiDy Connect',text})}catch(e){return c.send(400,{e:'Slanje nije uspjelo, lozinka nije promijenjena: '+e.message})}
   u.salt=crypto.randomBytes(16).toString('hex');u.hash=hash(pw,u.salt);u.loginSent=Date.now();save();c.send(200,{ok:1,to:u.email})});
 R('POST','/api/users/:id/purge',2,c=>{const u=db.users.find(x=>x.id===c.p[0]);
   if(!u||u.purged)return c.send(404,{e:'Nije pronađeno.'});if(!u.deleted)return c.send(400,{e:'Trajno se može obrisati samo prethodno izbrisan korisnik.'});

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="hr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#d97706"><title>Evidencija sati</title>
+<meta name="theme-color" content="#d97706"><title>TiDy Connect</title><meta name="application-name" content="TiDy Connect"><meta name="apple-mobile-web-app-title" content="TiDy Connect">
 <style>
 :root{--pu:#7c3aed;--gy:#52525b;--rd:#dc2626;--rdx:#fff;--yl:#eab308;--gr:#16a34a;--grx:#fff;--sh:#2563eb;--shx:#fff;--bg:#f5f5f2;--card:#fff;--tx:#1d1d1b;--mu:#6b6b66;--ac:#d97706;--bd:#dcdcd6;--ok:#15803d;--er:#b91c1c;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--pu:#8b5cf6;--gy:#71717a;--rd:#f87171;--rdx:#2a0a0a;--yl:#facc15;--gr:#4ade80;--grx:#052e16;--sh:#60a5fa;--shx:#0b1220;--bg:#171716;--card:#242422;--tx:#f0f0ec;--mu:#a3a39c;--bd:#3a3a37;--ok:#4ade80;--er:#f87171;color-scheme:dark}}
@@ -65,13 +65,13 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
 </style></head><body><main>
 <img class="logo" src="/logo.png" alt="Logo tvrtke">
 <!--LOGIN--><section id="login" class="card hide" style="margin-top:40px">
- <h1>Evidencija radnog vremena</h1><div class="mu">Prijavite se svojim korisničkim imenom.</div>
+ <h1><span style="color:#e84645">TiD</span>y Connect</h1><div class="mu">Prijavite se svojim korisničkim imenom.</div>
  <label for="lu">Korisničko ime</label><input id="lu" autocomplete="username" autocapitalize="none">
  <label for="lp">Lozinka</label><input id="lp" type="password" autocomplete="current-password">
  <button class="big" id="lb">Prijava</button><div class="msg" id="lm" style="color:var(--er)"></div>
 </section><!--/LOGIN-->
 <div id="app" class="hide">
- <div class="fl" id="hdr" style="justify-content:space-between;align-items:flex-start"><div><h1>Evidencija radnog vremena</h1><div class="mu" id="who"></div></div><span class="fl"><button class="sm hide" id="ptb" aria-label="Poruke i zahtjevi" title="Poruke i zahtjevi" style="position:relative;padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span id="ptn" class="hide" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--er);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center"></span></button><button class="sm hide" id="akb" aria-label="Aktivnosti radnika" title="Aktivnosti radnika" style="position:relative;padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span id="akn" class="hide" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--er);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center"></span></button><button class="sm hide" id="psb">Postavke</button><button class="sm" id="pw">Lozinka</button><button class="sm" id="out">Odjava</button></span></div>
+ <div class="fl" id="hdr" style="justify-content:space-between;align-items:flex-start"><div><h1><span style="color:#e84645">TiD</span>y Connect</h1><div class="mu" id="who"></div></div><span class="fl"><button class="sm hide" id="ptb" aria-label="Poruke i zahtjevi" title="Poruke i zahtjevi" style="position:relative;padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span id="ptn" class="hide" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--er);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center"></span></button><button class="sm hide" id="akb" aria-label="Aktivnosti radnika" title="Aktivnosti radnika" style="position:relative;padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span id="akn" class="hide" style="position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--er);color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center"></span></button><button class="sm hide" id="psb">Postavke</button><button class="sm" id="pw">Lozinka</button><button class="sm" id="out">Odjava</button></span></div>
  <div class="fl hide" id="nav" style="justify-content:space-between;align-items:center;margin-bottom:10px"><h1 id="navt" style="margin:0"></h1><button class="sm" id="home" aria-label="Početna stranica" title="Početna" style="padding:8px 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button></div>
  <div class="card" id="fond" style="margin-top:10px"></div>
  <div id="odl"></div>
@@ -345,7 +345,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <label style="display:flex;align-items:center;gap:8px;color:var(--tx);margin-top:8px"><input type="checkbox" id="ss" style="width:auto"> SSL od početka (port 465)</label>
    <label for="su">Korisničko ime (e-mail adresa)</label><input id="su" autocapitalize="none">
    <label for="sw">Lozinka</label><input id="sw" type="password" autocomplete="new-password">
-   <label for="sf">Pošiljatelj (ako je drugačiji)</label><input id="sf" autocapitalize="none" placeholder="Evidencija sati <sati@vasadomena.hr>">
+   <label for="sf">Pošiljatelj (ako je drugačiji)</label><input id="sf" autocapitalize="none" placeholder="TiDy Connect <sati@vasadomena.hr>">
    <div class="fl" style="margin-top:12px;flex-wrap:wrap"><button class="sm pri" id="sv">Spremi</button><button class="sm" id="st2">Pošalji probni e-mail meni</button></div><div class="msg" id="sm"></div></div>
   </div>
  </section>
@@ -599,7 +599,7 @@ function htmlBlocks(html){const box=document.createElement('div');box.innerHTML=
 function saveFile(name,data,mime){const b=new Blob([data],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000)}
 $('izpdf').onclick=()=>{const mode=$('izp').value,m=$('izm').value;if(!m)return toast('Odaberite mjesec.');
  const lab=mode==='y'?m.slice(0,4)+'.':m.slice(5)+'.'+m.slice(0,4)+'.',blocks=[];['h','s','b','g'].forEach(t=>blocks.push(...htmlBlocks(izHtml(t))));
- const d=Core.pdf({title:'Izvještaj – '+me.name,info:['Razdoblje: '+(mode==='y'?'cijela godina ':'')+lab,'Izrađeno: '+new Date().toLocaleString('hr-HR')],footer:'Evidencija radnog vremena – '+me.name,blocks});
+ const d=Core.pdf({title:'Izvještaj – '+me.name,info:['Razdoblje: '+(mode==='y'?'cijela godina ':'')+lab,'Izrađeno: '+new Date().toLocaleString('hr-HR')],footer:'TiDy Connect – '+me.name,blocks});
  const nm='izvjestaj-'+me.name.toLowerCase().replace(/[čć]/g,'c').replace(/đ/g,'d').replace(/š/g,'s').replace(/ž/g,'z').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+(mode==='y'?m.slice(0,4):m)+'.pdf';
  try{saveFile(nm,d,'application/pdf');toast('PDF je spremljen: '+nm)}catch(e){toast('Spremanje nije uspjelo: '+e.message)}};
 $('izt').onclick=e=>{const b=e.target.closest('button');if(!b)return;izTab=b.dataset.t;drawIzvj()};

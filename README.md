@@ -1,4 +1,6 @@
-# Evidencija radnog vremena – instalacija na Windows serveru
+# TiDy Connect – instalacija na Windows serveru
+
+Aplikacija se do 26.10.2026. zvala „Evidencija radnog vremena“. Mapa `C:\evidencija` i zadatak `EvidencijaSati` na serveru zadržavaju stara imena.
 
 ## 1. Instalacija (jednokratno)
 1. Instalirajte **Node.js LTS** (https://nodejs.org), verzija 18 ili novija.
@@ -32,6 +34,7 @@ Lozinke putuju mrežom, zato koristite HTTPS: IIS s *URL Rewrite + ARR* kao reve
 Svi podaci su u jednoj datoteci: `data\db.json`. Kopirajte je redovito (npr. Task Scheduler jednom dnevno).
 
 ## 6. Novosti u izvještajima
+- **Novi naziv: TiDy Connect** (26.10.2026.): u zaglavlju, na prijavi, u kartici preglednika, kao ime ikone na mobitelu, u e-mailovima (ime pošiljatelja, naslovi) i u PDF izvještajima. Grupa EVIDENCIJA RADNOG VREMENA zadržava ime.
 - **Upute po stranicama** (26.10.2026.): plavi gumb **?** dolje desno sada je na svakoj stranici radnika (Početna, Otpremnice, Alat, Evidencija, Šihterica, Godišnji, Slobodni dan, Izvještaji, Poruke i zahtjevi) i otvara upute samo za tu stranicu. Gumb **Sve upute** prikazuje cijele upute, a kućica vraća na stranicu s koje su upute otvorene.
 - **Obavijesti administratoru o aktivnostima radnika** (25.10.2026.): gumb sa zvonom u zaglavlju administratora otvara popis radnji radnika (prijava, unosi, izmjene i brisanja, zahtjevi, završen mjesec, otpremnice, odgovori, pročitane poruke, promjena lozinke) s detaljima, najnovije na vrhu. Gumb **Uključi obavijesti u Windowsima** dopušta pregledniku skočne obavijesti: svaka nova radnja prikaže se kao obavijest u Windowsima (do 4 pojedinačno, više njih zajedno u jednoj). Radi dok je aplikacija otvorena u pregledniku (smije biti u pozadini ili smanjena) i samo preko https adrese (Cloudflare) ili http://localhost:3000 na serveru, ne preko http://IP-adrese u mreži. Popis se drži samo u memoriji servera (zadnjih 300, briše se ponovnim pokretanjem). Obavijesti o prijavama mogu se isključiti.
 - **Otpremnice – administrator** (25.10.2026., verzija podataka 8): svaka fotografija prikazuje se zasebno u A4 okviru (portret), ispod pošiljatelj i vrijeme slanja, gradilište, datum otpremnice i napomena. Filteri: datum otpremnice od–do te višestruki odabir gradilišta i pošiljatelja. Po fotografiji: **Promijeni gradilište** (s popisa ili ručni upis – ručno upisana gradilišta spremaju se u `otpSites` i vrijede samo u Otpremnicama), **Zatraži objašnjenje** (radnik dobiva obavijest i odgovara ispod otpremnice), Preuzmi, Obriši otpremnicu. Radnik pri slanju na kraju popisa gradilišta ima **Odluka administratora**. Radnik i kasnije u Poslanim otpremnicama klikom na sličicu otvara fotografiju u A4 portret prikazu (strelice za sljedeću/prethodnu, Puna veličina).

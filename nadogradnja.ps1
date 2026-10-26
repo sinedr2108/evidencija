@@ -1,4 +1,4 @@
-﻿# Nadogradnja aplikacije Evidencija radnog vremena - podaci (mapa data) se NIKAD ne diraju.
+﻿# Nadogradnja aplikacije TiDy Connect (evidencija radnog vremena) - podaci (mapa data) se NIKAD ne diraju.
 # Upotreba (PowerShell kao administrator):
 #   powershell -ExecutionPolicy Bypass -File C:\evidencija\nadogradnja.ps1 -Zip "C:\Users\Administrator\Downloads\evidencija.zip"
 param(
