@@ -217,7 +217,7 @@
        a ručno upisana gradilišta vrijede samo u Otpremnicama (db.otpSites), ne i u ostatku aplikacije */
     const OTP_ADMIN = '__admin__';
     const otpSite = (o, f) => ((o.adminSite || {})[f]) || o.site || '';
-    const otpList = (u, od, dO) => db.otpremnice.filter(o => (u.role === 'admin' ? ((!od || o.date >= od) && (!dO || o.date <= dO)) : o.uid === u.id)).sort((x, y) => y.ts - x.ts).slice(0, u.role === 'admin' ? 5000 : 30)
+    const otpList = (u, od, dO, adm = u.role === 'admin') => db.otpremnice.filter(o => (adm ? ((!od || o.date >= od) && (!dO || o.date <= dO)) : o.uid === u.id)).sort((x, y) => y.ts - x.ts).slice(0, adm ? 5000 : 30)
       .map(o => ({ ...o, adminSite: o.adminSite || {}, pitanja: o.pitanja || [], name: nameOf(o.uid) }));
     /* otpremnice se zajedno s fotografijama brišu OTP_DANA dana nakon slanja; vraća datoteke za brisanje */
     const OTP_DANA = 60;
@@ -242,9 +242,9 @@
       q.answer = text; q.answerTs = Date.now(); return o;
     }
     /* brisanje: administrator uvijek, radnik svoju otpremnicu samo na dan slanja; vraća datoteke za brisanje */
-    function otpDelete(u, id) {
+    function otpDelete(u, id, adm = u.role === 'admin') {
       const i = db.otpremnice.findIndex(o => o.id === id); if (i < 0) return 'Otpremnica nije pronađena.';
-      const o = db.otpremnice[i]; if (u.role !== 'admin' && (o.uid !== u.id || ymdOf(o.ts) !== todayIso())) return 'Otpremnicu možete obrisati samo na dan slanja. Javite se administratoru.';
+      const o = db.otpremnice[i]; if (!adm && (o.uid !== u.id || ymdOf(o.ts) !== todayIso())) return 'Otpremnicu možete obrisati samo na dan slanja. Javite se administratoru.';
       db.otpremnice.splice(i, 1); return o.files;
     }
     /* Ručno brisanje iz pošte: skriva se samo radniku; nepročitana poruka/obavijest time se smatra pročitanom */
