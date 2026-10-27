@@ -233,7 +233,7 @@
     function otpExpire(now) { const old = db.otpremnice.filter(o => now - o.ts > OTP_DANA * 864e5); if (!old.length) return []; db.otpremnice = db.otpremnice.filter(o => !old.includes(o)); return old.flatMap(o => o.files); }
     const otpSitesAll = () => [...new Set((db.sites || []).concat(db.otpSites))].sort((a, b) => a.localeCompare(b, 'hr'));
     /* NARUČI MATERIJAL: radnik šalje popis materijala odabranom primatelju (administrator ili radnik s pravom 'nm') */
-    const canG = (u, g) => !!u && (u.role === 'admin' || (u.role === 'user' && !u.disabled && !u.deleted && Array.isArray(u.prava) && u.prava.includes(g)));
+    const canG = (u, g) => !!u && (u.role === 'admin' || ((u.role === 'user' || u.role === 'vod') && !u.disabled && !u.deleted && Array.isArray(u.prava) && u.prava.includes(g)));
     const nmPrimatelji = () => db.users.filter(u => !u.deleted && !u.disabled && !u.purged && canG(u, 'nm')).map(u => ({ id: u.id, name: u.name })).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
     function nmSave(u, b) {
       const adminId = String(b.adminId || ''), site = String(b.site || '').trim(), items = Array.isArray(b.items) ? b.items : [];
