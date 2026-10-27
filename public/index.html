@@ -366,7 +366,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h2>Poslane poruke</h2><div id="pl"></div>
   </div>
   <div id="p-aup" class="pg hide"><div class="card upute">
-   <p class="mu">Upute za administratore · ažurirano 26.10.2026.</p>
+   <p class="mu">Upute za administratore · ažurirano 27.10.2026.</p>
    <div class="uh" data-h="ahm">
    <h3>Početna stranica</h3>
    <ul><li>Na vrhu su <b>zahtjevi na čekanju</b>: slobodan dan, godišnji odmor, ponovno otvaranje mjeseca i novo gradilište. Svaki prihvatite ili odbijte, po želji s napomenom. Radnik odluku odmah vidi na svojoj početnoj stranici i u pošti.</li>
@@ -374,6 +374,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUDŽBE MATERIJALA</b> i <b>ALAT</b> (u izradi).</li>
    <li>Gumbi gore: <b>zvono</b> (aktivnosti radnika i obavijesti u Windowsima), <b>Postavke</b>, <b>Lozinka</b> i <b>Odjava</b>.</li>
    <li>Radnik kojem ste dali prava za pojedine grupe (Postavke → Izmijeni) ovdje vidi samo te grupe i nema zvono ni Postavke. Gumbom <b>Radnički dio</b> vraća se na svoj radnički dio.</li>
+   <li><b>Voditelj radova</b> nakon prijave ulazi ravno ovdje i vidi samo funkcije koje ste mu odabrali (npr. samo Izvještaje i Godišnji odmor unutar Evidencije). Zahtjeve na vrhu vidi samo za odabrane funkcije, a zvono samo ako ima funkciju Aktivnosti radnika.</li>
    <li>Plavi gumb <b>?</b> dolje desno na svakoj stranici otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>, a kućica vraća na stranicu s koje ste došli.</li>
    <li>Aplikacija se sama osvježava svakih desetak sekundi, pa se novi unosi i zahtjevi radnika pojavljuju bez ponovne prijave.</li></ul>
    </div>
@@ -461,6 +462,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li><b>Opcije toplog obroka</b>: nove opcije spremaju se velikim slovima.</li>
    <li><b>Korisnici</b>: dodavanje radnika i administratora (ime i prezime, korisničko ime, lozinka, uloga, e-mail). Uz svakog korisnika: <b>Izmijeni</b>, <b>Pošalji login podatke</b> (šalje novu lozinku e-mailom), <b>Onemogući prijavu</b> i <b>Izbriši</b>. Izbrisani korisnik se ne može prijaviti, ali njegovi podaci ostaju u izvještajima; pod <i>Izbrisani korisnici</i> može se trajno obrisati.</li>
    <li><b>Administratorska prava po grupama</b>: kod radnika kliknite <b>Izmijeni</b> i označite <i>Otpremnice</i>, <i>Evidencija radnog vremena</i>, <i>Alat</i> i/ili <i>Narudžbe materijala (primanje)</i>. Radnik tada dobiva gumb <b>Administracija</b> i u administratorskom dijelu vidi samo te grupe. Postavke, korisnici, e-mail i aktivnosti radnika ostaju samo vama. Grupa Evidencija uključuje i odlučivanje o zahtjevima, izvještaje i obavijesti radnicima.</li>
+   <li><b>Voditelj radova</b>: pri dodavanju ili kod <b>Izmijeni</b> odaberite ulogu <i>Voditelj radova</i> i označite pojedine funkcije koje smije vidjeti i koristiti: Otpremnice, Narudžbe materijala (primanje), Alat, unutar Evidencije posebno Izvještaje (i otvaranje mjeseca), Slobodne dane, Godišnji odmor, Gradilišta, Statistiku, Topli obrok, Obavijesti radnicima i Odobrene zahtjeve, te Aktivnosti radnika. Voditelj radova je i dalje radnik: gumbom <b>Radnički dio</b> unosi svoje radno vrijeme i nalazi se u izvještajima. Postavke ostaju samo vama. Server svaku radnju provjerava, pa voditelj ne može koristiti funkciju koja mu nije odabrana.</li>
    <li><b>E-mail i adresa aplikacije</b>: adresa aplikacije (link u e-mailovima) i SMTP podaci pružatelja e-pošte. Spremite pa kliknite <b>Pošalji probni e-mail meni</b>.</li></ul>
    </div>
    <div class="uh" data-h="akt">
@@ -483,7 +485,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
   <h2>Opcije toplog obroka</h2><div class="card"><div class="fl"><input id="nm" placeholder="NAZIV OPCIJE (NPR. RESTORAN 4)" autocapitalize="characters" style="text-transform:uppercase"><button class="sm" id="am2">Dodaj</button></div><div id="lm2"></div></div>
   <h2>Korisnici</h2><div class="card"><div id="lu2"></div><details id="lu3w" class="hide" style="margin-top:12px"><summary style="cursor:pointer;font-weight:600" id="lu3s"></summary><div class="mu" style="margin:6px 0">Izbrisani korisnici se ne mogu prijaviti, ali se još nude u filterima uz izbor „svi radnici (i izbrisani)“. Trajno obrisan korisnik više se ne nudi ni u jednom filteru; njegovi uneseni podaci ostaju u evidenciji i izvještajima.</div><div id="lu3"></div></details>
    <label for="un">Ime i prezime</label><input id="un"><label for="uu">Korisničko ime</label><input id="uu" autocapitalize="none"><label for="up">Lozinka (min. 6 znakova)</label><input id="up">
-   <label for="ur">Uloga</label><select id="ur"><option value="user">Korisnik</option><option value="admin">Administrator</option></select>
+   <label for="ur">Uloga</label><select id="ur"><option value="user">Korisnik</option><option value="vod">Voditelj radova</option><option value="admin">Administrator</option></select><div class="mu">Voditelju radova funkcije administratorskog dijela odaberite nakon dodavanja, gumbom Izmijeni.</div>
    <label for="ue">E-mail (za slanje login podataka; administratorima i za izvještaje)</label><input id="ue" type="email" autocapitalize="none"><button class="big" id="ua">Dodaj korisnika</button><div class="msg" id="um"></div></div>
   <h2>E-mail i adresa aplikacije</h2><div class="card">
    <div class="mu">Potrebno za gumb „Pošalji login podatke“ i mjesečni izvještaj e-mailom. Podaci su kod vašeg pružatelja e-pošte (npr. Microsoft 365: smtp.office365.com, port 587; Gmail: smtp.gmail.com, port 587 uz lozinku za aplikacije).</div>
@@ -519,9 +521,16 @@ const cf=t=>dlgOpen(t,0),pr=(t,v)=>dlgOpen(t,1,v);
 const showLogin=()=>{$('login').classList.remove('hide');$('app').classList.add('hide');$('upb').classList.add('hide');snShow=[]};
 /* DJELOMIČNA ADMINISTRATORSKA PRAVA: radnik s pravima (me.prava) gumbom Administracija prelazi u administratorski dio,
    ali vidi samo svoje grupe (me.grp). Server svaku administratorsku radnju posebno provjerava. */
-const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena',al:'Alat',nm:'Narudžbe materijala (primanje)'},admView=()=>{try{return sessionStorage.getItem('admView')==='1'}catch(e){return false}},setAdmView=v=>{try{sessionStorage.setItem('admView',v?'1':'0')}catch(e){}};
+/* VODITELJ RADOVA (me.vod): administrator mu bira pojedine funkcije (FN); prijavom ulazi ravno u administratorski dio.
+   me.evf = dopuštene funkcije Evidencije, me.ak = Aktivnosti radnika. */
+const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena',al:'Alat',nm:'Narudžbe materijala (primanje)'},EVF=['iz','sl','go','gr','st','ob','po','zh'],
+ FN={ot:'Otpremnice',nm:'Narudžbe materijala (primanje)',al:'Alat',iz:'Evidencija: Izvještaji (i otvaranje mjeseca)',sl:'Evidencija: Slobodni dani',go:'Evidencija: Godišnji odmor',gr:'Evidencija: Gradilišta (sati i zahtjevi za novo gradilište)',st:'Evidencija: Statistika',ob:'Evidencija: Topli obrok',po:'Evidencija: Obavijesti radnicima',zh:'Evidencija: Odobreni zahtjevi',ak:'Aktivnosti radnika (i obavijesti u Windowsima)'},
+ PGF={aiz:'iz',asl:'sl',ago:'go',agr:'gr',ast:'st',aob:'ob',apo:'po',azh:'zh',aev:'ev',aot:'ot',aal:'al',anm:'nm',akt:'ak',aps:'x'},
+ admView=d=>{try{const v=sessionStorage.getItem('admView');return v===null?!!d:v==='1'}catch(e){return !!d}},setAdmView=v=>{try{sessionStorage.setItem('admView',v?'1':'0')}catch(e){}};
 async function load(){
- try{me=await api('GET','me');me.full=me.role==='admin';me.prava=me.prava||[];if(!me.full&&me.prava.length&&admView())me.role='admin';me.pa=!me.full&&me.role==='admin';me.grp=me.full?['ot','ev','al','nm']:me.pa?me.prava:[];
+ try{me=await api('GET','me');me.full=me.role==='admin';me.prava=me.prava||[];if(!me.full&&me.prava.length&&admView(me.vod))me.role='admin';me.pa=!me.full&&me.role==='admin';
+ me.evf=me.full||me.prava.includes('ev')?EVF:me.pa?EVF.filter(g=>me.prava.includes(g)):[];me.ak=me.full||(me.pa&&me.prava.includes('ak'));
+ me.grp=me.full?['ot','ev','al','nm']:me.pa?['ot','ev','al','nm'].filter(g=>g==='ev'?me.evf.length:me.prava.includes(g)):[];
  const d=await api('GET','data'+(me.pa?'?adm=1':''));entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin')users=await api('GET','users');else inbox=await api('GET','inbox')}catch(e){return}
  $('login').classList.add('hide');$('app').classList.remove('hide');draw();
 }
@@ -537,7 +546,7 @@ const DI=(r,t,k,extra)=>'<div class="dr"><div class="dt"><b>'+E(r.name)+'</b> ·
 const DR=(l,k,t)=>'<div class="mu" style="margin-top:10px">Riješeno (prikazuje se do dana na koji se odnosi):</div>'+l.map(r=>DI(r,t(r),k,r.changed?' <span class="mu">(odluka izmijenjena)</span>':'')).join('');
 const NERAD=Core.NERAD,rd=n=>Math.round(n*100)/100,dm=d=>d.slice(8,10)+'.'+d.slice(5,7)+'.';
 function draw(){
- $('who').textContent=me.name+(me.full?' · administrator':me.pa?' · administracija: '+me.grp.map(g=>GRN[g]).join(', '):'');
+ $('who').textContent=me.name+(me.full?' · administrator':me.vod?' · voditelj radova':me.pa?' · administracija: '+me.grp.map(g=>GRN[g]).join(', '):'');
  $('avb').classList.toggle('hide',!me.prava.length);$('avb').textContent=me.pa?'Radnički dio':'Administracija';
  tab=me.role==='admin'?'adm':'unos';$('tabs').innerHTML='';
  $('v-unos').classList.toggle('hide',tab!=='unos');$('v-adm').classList.toggle('hide',tab!=='adm');
@@ -576,19 +585,20 @@ function draw(){
  $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
  if(me.role==='admin'&&tab==='adm')drawAdm();
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
- drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='akt')drawAkt();applyPage();if(me.full&&akUid!==me.id)akCheck();
+ drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='akt')drawAkt();applyPage();if(me.ak&&akUid!==me.id)akCheck();
 }
 let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',nm:'Naruči materijal',anm:'Narudžbe materijala',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika',aup:'Upute za administratore'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
- if(adm&&!me.full){const need=['aev','aiz','asl','ago','agr','apo','azh','ast','aob'].includes(page)?'ev':page==='aot'?'ot':page==='aal'?'al':page==='anm'?'nm':page==='aps'||page==='akt'?'x':'';if(need&&!me.grp.includes(need))page=home}
+ if(adm&&!me.full){const need=PGF[page];if(need&&!(need==='ak'?me.ak:EVF.includes(need)?me.evf.includes(need):me.grp.includes(need)))page=home}
  if(adm)document.querySelectorAll('#ahm [data-pg]').forEach(b=>b.classList.toggle('hide',!me.grp.includes({aot:'ot',aev:'ev',aal:'al',anm:'nm'}[b.dataset.pg])));
  const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt','aup','anm']:['ev','ot','al','sh','go','sl','iz','up','pt','nm'];
  $('upb').classList.toggle('hide',page==='up'||page==='aup');
  {const U=adm?'aup':'up';if(page===U){const all=upFrom===U;document.querySelectorAll('#p-'+U+' .uh').forEach(d=>d.classList.toggle('hide',!all&&d.dataset.h!==(upFrom===home?home:upFrom)));$(U+'all').classList.toggle('hide',all)}}
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
- if(adm)['sqw','gqw','rqw','srw'].forEach(i=>$(i).classList.toggle('offpg',page!==home));
+ if(adm)[['sqw','sl'],['gqw','go'],['rqw','iz'],['srw','gr']].forEach(([i,g])=>$(i).classList.toggle('offpg',page!==home||!me.evf.includes(g)));
+ if(adm)document.querySelectorAll('#p-aev [data-pg]').forEach(b=>b.classList.toggle('hide',!me.evf.includes(PGF[b.dataset.pg])));
  if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
  if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='anm'||page==='akt'||page==='aup'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
  $('nav').classList.toggle('hide',page===home);$('navt').textContent=(page==='up'||page==='aup')&&upFrom!==page?'Upute: '+(upFrom===home?'Početna stranica':TIT[upFrom]):TIT[page]||'';
@@ -668,7 +678,7 @@ $('aol').onchange=e=>{if(e.target.id==='oes')$('oen').classList.toggle('hide',e.
 $('aosl').onchange=e=>{const v=e.target.value;e.target.checked?otFs.add(v):otFs.delete(v);drawOt()};$('aowl').onchange=e=>{const v=e.target.value;e.target.checked?otFw.add(v):otFw.delete(v);drawOt()};
 $('aod1').onchange=drawOt;$('aod2').onchange=drawOt;$('aox').onclick=()=>{otFs.clear();otFw.clear();$('aod1').value='';$('aod2').value='';drawOt()};
 /* Pošta radnika: gumb s pismom (broj = nepročitane poruke i obavijesti) */
-function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',adm);$('psb').classList.toggle('hide',!me.full);$('akb').classList.toggle('hide',!me.full);if(adm)return;
+function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',adm);$('psb').classList.toggle('hide',!me.full);$('akb').classList.toggle('hide',!me.ak);if(adm)return;
  $('ptn').classList.toggle('hide',!inbox.unread);$('ptn').textContent=inbox.unread;
  const ts=t=>new Date(t).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),C={po:'#db2777',ob:'var(--ac)',sl:'var(--yl)',go:'var(--pu)',mj:'var(--sh)',gr:'var(--gr)'};
  $('ptl').innerHTML=inbox.items.length?inbox.items.map(x=>{const req=x.status!==undefined;
@@ -774,7 +784,7 @@ $('zah').onclick=async()=>{const m=$('zmj').value,r=await pr('Razlog zahtjeva (n
  try{await api('POST','requests',{month:m,reason:r});toast('Zahtjev je poslan administratoru.');await load()}catch(e){toast(e.message)}};
 /*LOGIN*/$('lb').onclick=async()=>{try{await api('POST','login',{username:$('lu').value,password:$('lp').value});$('lp').value='';await load()}catch(e){say('lm',e.message)}};
 $('lp').onkeydown=e=>{if(e.key==='Enter')$('lb').click()};/*/LOGIN*/
-$('out').onclick=async()=>{await api('POST','logout').catch(()=>{});showLogin()};
+$('out').onclick=async()=>{await api('POST','logout').catch(()=>{});try{sessionStorage.removeItem('admView')}catch(e){}showLogin()};
 $('pw').onclick=async()=>{const o=await pr('Stara lozinka:');if(o===null)return;const n=await pr('Nova lozinka (min. 6 znakova):');if(!n)return;
  try{await api('POST','password',{old:o,new:n});toast('Lozinka je promijenjena.')}catch(e){toast(e.message)}};
 
@@ -903,7 +913,7 @@ async function drawAdm(){
   (done.length?DR(done,'mj',r=>E(r.month)):'');
  {const op=sitereq.filter(r=>r.status==='open').sort((a,b)=>a.ts-b.ts);$('srw').classList.toggle('hide',!op.length);$('srh').textContent='Zahtjevi za novo gradilište ('+op.length+')';
   $('sr').innerHTML=op.map(r=>'<div class="dr"><div class="dt"><b>'+E(r.name)+'</b> · '+new Date(r.ts).toLocaleDateString('hr-HR')+'<div>„'+E(r.text)+'“</div></div><div class="ds"><button class="sm pri" data-sra="'+E(r.id)+'">Dodaj gradilište</button><button class="sm" data-srn="'+E(r.id)+'">Odbij</button></div></div>').join('')}
- drawStats();drawSh();drawGo();drawOb();drawSlRep();drawZh();drawPo();
+ {const F=g=>me.evf.includes(g);if(F('st'))drawStats();if(F('gr'))drawSh();if(F('go'))drawGo();if(F('ob'))drawOb();if(F('sl'))drawSlRep();if(F('zh'))drawZh();if(F('po'))drawPo()}
  try{rep=await api('GET','report?'+qf())}catch(e){return}
  const c=rep.cols,tot={h:0,ot:0,pr2:0,t:0,n:0,rz:0,b:0,p:0,m:{},v:{}},N=rep.norma;
  $('nn').textContent=(N.applies?'Fond sati: '+N.dani+' radnih dana (pon–pet, praznici uključeni) × '+String(N.dnevna).replace('.',',')+' h = '+String(N.sati).replace('.',',')+' h. Razlika = upisani sati − fond (+ višak, − manjak).':'Fond i razlika prikazuju se samo bez filtera po gradilištu i vrsti.')+' Prekovremeni = sati rada iznad 9 h dnevno (pon–čet), iznad 8 h (petak) te svi sati rada subotom i nedjeljom, a svi sati Rada na praznik uvijek su prekovremeni. Ako radnik za završen ili prošli mjesec nema ispunjen fond sati, manjak se prenosi iz prekovremenih sati u redovan rad (stupac Preneseno u redovan rad) i oduzima od prekovremenih.';
@@ -918,7 +928,7 @@ async function drawAdm(){
  $('sit').innerHTML=rep.sites.length?'<table><tr><th>Gradilište</th><th class="n">Sati</th><th class="n">Prekovremeni</th><th class="n">Radnika</th><th>Radnici</th></tr>'+rep.sites.map(r=>'<tr><td>'+E(r.site)+'</td><td class="n"><b>'+r.h+'</b></td><td class="n">'+(r.ot||0)+'</td><td class="n">'+r.radnika+'</td><td>'+E(r.radnici.map(w=>w.name+' '+w.h+' h'+(w.ot?' (prekovremeno '+w.ot+' h)':'')).join('; '))+'</td></tr>').join('')+'<tr><th>Ukupno</th><th class="n">'+sum(rep.sites,'h')+'</th><th class="n">'+sum(rep.sites,'ot')+'</th><th></th><th></th></tr></table>':'<span class="mu">Nema unosa s gradilištem.</span>';
  const ed=(el,list)=>{$(el).innerHTML=list.length?list.map((s,k)=>'<div class="row"><span>'+E(s)+'</span><button class="x" data-k="'+k+'" aria-label="Ukloni">✕</button></div>').join(''):'<div class="mu" style="margin-top:8px">Popis je prazan.</div>'};
  ed('ls',me.sites);ed('lm2',me.meals);
- $('lu2').innerHTML=users.filter(u=>!u.deleted).map(u=>u.id===window.uEdit?'<div class="dr" style="background:var(--bg);padding:10px;border-radius:10px"><b>Izmjena korisnika</b><label for="xe1">Ime i prezime</label><input id="xe1" value="'+E(u.name)+'"><label for="xe2">Korisničko ime</label><input id="xe2" autocapitalize="none" value="'+E(u.username)+'"><label for="xe3">Uloga</label><select id="xe3"'+(u.id===me.id?' disabled':'')+'><option value="user"'+(u.role==='user'?' selected':'')+'>Korisnik</option><option value="admin"'+(u.role==='admin'?' selected':'')+'>Administrator</option></select>'+(u.id===me.id?'<div class="mu">Vlastitu ulogu ne možete mijenjati.</div>':'')+(u.role==='user'?'<label>Administratorska prava (samo za odabrane grupe)</label>'+Object.entries(GRN).map(([g,t])=>'<label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" class="xpr" value="'+g+'" style="width:auto"'+((u.prava||[]).includes(g)?' checked':'')+'> '+t+'</label>').join('')+'<div class="mu">Radnik tada ima gumb Administracija i vidi samo odabrane grupe administratorskog dijela.</div>':'')+'<label for="xe4">E-mail</label><input id="xe4" type="email" autocapitalize="none" value="'+E(u.email||'')+'"><label for="xe5">Nova lozinka (ostavite prazno ako se ne mijenja)</label><input id="xe5" type="password" autocomplete="new-password"><div class="fl" style="margin-top:10px"><button class="sm pri" data-xs="'+E(u.id)+'">Spremi</button><button class="sm" data-xc="1">Odustani</button></div></div>':'<div class="dr"><div class="dt"><b>'+E(u.name)+'</b>'+(u.disabled?' <b style="color:var(--er)">· prijava onemogućena</b>':'')+'<div class="mu">'+E(u.username)+' · '+(u.role==='admin'?'administrator':'korisnik'+((u.prava||[]).length?' (administracija: '+u.prava.map(g=>GRN[g]).join(', ')+')':''))+' · '+(u.email?E(u.email):'<span style="color:var(--er)">nema e-maila</span>')+(u.loginSent?' · login poslan '+new Date(u.loginSent).toLocaleDateString('hr-HR'):'')+'</div></div><div class="ds"><button class="sm" data-ed="'+E(u.id)+'">Izmijeni</button><button class="sm pri" data-sl="'+E(u.id)+'">Pošalji login podatke</button>'+(u.id===me.id?'':'<button class="sm" data-dis="'+E(u.id)+'|'+(u.disabled?'0':'1')+'">'+(u.disabled?'Omogući prijavu':'Onemogući prijavu')+'</button><button class="sm" data-del="'+E(u.id)+'" aria-label="Izbriši radnika">Izbriši</button>')+'</div></div>').join('');
+ $('lu2').innerHTML=users.filter(u=>!u.deleted).map(u=>u.id===window.uEdit?'<div class="dr" style="background:var(--bg);padding:10px;border-radius:10px"><b>Izmjena korisnika</b><label for="xe1">Ime i prezime</label><input id="xe1" value="'+E(u.name)+'"><label for="xe2">Korisničko ime</label><input id="xe2" autocapitalize="none" value="'+E(u.username)+'"><label for="xe3">Uloga</label><select id="xe3"'+(u.id===me.id?' disabled':'')+'><option value="user"'+(u.role==='user'&&!u.vod?' selected':'')+'>Korisnik</option><option value="vod"'+(u.role==='user'&&u.vod?' selected':'')+'>Voditelj radova</option><option value="admin"'+(u.role==='admin'?' selected':'')+'>Administrator</option></select>'+(u.id===me.id?'<div class="mu">Vlastitu ulogu ne možete mijenjati.</div>':'')+(u.role==='user'||u.id!==me.id?xprBox('user',GRN,u,'Administratorska prava (samo za odabrane grupe)','Radnik tada ima gumb Administracija i vidi samo odabrane grupe administratorskog dijela.')+xprBox('vod',FN,u,'Funkcije administratorskog dijela koje voditelj radova vidi i koristi','Voditelj radova nakon prijave ulazi ravno u administratorski dio i vidi samo odabrane funkcije. Gumbom Radnički dio unosi svoje radno vrijeme. Postavke (korisnici, gradilišta, e-mail) ostaju samo administratorima.'):'')+'<label for="xe4">E-mail</label><input id="xe4" type="email" autocapitalize="none" value="'+E(u.email||'')+'"><label for="xe5">Nova lozinka (ostavite prazno ako se ne mijenja)</label><input id="xe5" type="password" autocomplete="new-password"><div class="fl" style="margin-top:10px"><button class="sm pri" data-xs="'+E(u.id)+'">Spremi</button><button class="sm" data-xc="1">Odustani</button></div></div>':'<div class="dr"><div class="dt"><b>'+E(u.name)+'</b>'+(u.disabled?' <b style="color:var(--er)">· prijava onemogućena</b>':'')+'<div class="mu">'+E(u.username)+' · '+(u.role==='admin'?'administrator':u.vod?'voditelj radova'+((u.prava||[]).length?' (funkcije: '+u.prava.map(g=>FN[g]).join(', ')+')':' (još nema odabranih funkcija)'):'korisnik'+((u.prava||[]).length?' (administracija: '+u.prava.map(g=>GRN[g]).join(', ')+')':''))+' · '+(u.email?E(u.email):'<span style="color:var(--er)">nema e-maila</span>')+(u.loginSent?' · login poslan '+new Date(u.loginSent).toLocaleDateString('hr-HR'):'')+'</div></div><div class="ds"><button class="sm" data-ed="'+E(u.id)+'">Izmijeni</button><button class="sm pri" data-sl="'+E(u.id)+'">Pošalji login podatke</button>'+(u.id===me.id?'':'<button class="sm" data-dis="'+E(u.id)+'|'+(u.disabled?'0':'1')+'">'+(u.disabled?'Omogući prijavu':'Onemogući prijavu')+'</button><button class="sm" data-del="'+E(u.id)+'" aria-label="Izbriši radnika">Izbriši</button>')+'</div></div>').join('');
  {const dl=users.filter(u=>u.deleted);$('lu3w').classList.toggle('hide',!dl.length);$('lu3s').textContent='Izbrisani korisnici ('+dl.length+')';
   $('lu3').innerHTML=dl.map(u=>'<div class="dr"><div class="dt"><b>'+E(u.name)+'</b><div class="mu">'+(u.role==='admin'?'administrator':'korisnik')+' · izbrisan '+new Date(u.deleted).toLocaleDateString('hr-HR')+'</div></div><div class="ds"><button class="sm" data-pg2="'+E(u.id)+'" style="color:var(--er);border-color:var(--er)">Trajno obriši</button></div></div>').join('')}
 }
@@ -957,10 +967,13 @@ $('sv').onclick=async()=>{try{await api('PUT','smtp',{appUrl:$('sa').value,host:
 $('st2').onclick=async()=>{say('sm','Šaljem…',1);try{const r=await api('POST','smtp/test');say('sm','Probni e-mail poslan na '+r.to+' ✓',1)}catch(e){say('sm',e.message)}};
 $('lu3').onclick=async e=>{const b=e.target.closest('[data-pg2]');if(!b)return;const U=users.find(x=>x.id===b.dataset.pg2);
  try{if(!await cf('Trajno obrisati korisnika '+U.name+'? Više se neće nuditi ni u jednom filteru i ne može se vratiti. Njegovi dosad uneseni podaci ostaju u evidenciji i izvještajima.'))return;await api('POST','users/'+U.id+'/purge');toast(U.name+' je trajno obrisan.');await load()}catch(x){toast(x.message)}};
+/* kvačice prava u obrascu korisnika: jedan blok za radnika (grupe), drugi za voditelja radova (funkcije); vidi se blok odabrane uloge */
+const xprBox=(r,L,u,h,n)=>{const cur=u.role==='user'&&(r==='vod')===!!u.vod;return '<div class="xprw" data-r="'+r+'"'+((u.role==='admin'?'admin':u.vod?'vod':'user')===r?'':' style="display:none"')+'><label>'+h+'</label>'+Object.entries(L).map(([g,t])=>'<label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" class="xpr" data-r="'+r+'" value="'+g+'" style="width:auto"'+(cur&&(u.prava||[]).includes(g)?' checked':'')+'> '+t+'</label>').join('')+'<div class="mu">'+n+'</div></div>'};
+$('lu2').onchange=e=>{if(e.target.id==='xe3')document.querySelectorAll('#lu2 .xprw').forEach(d=>d.style.display=d.dataset.r===e.target.value?'':'none')};
 $('lu2').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
  try{if(b.dataset.ed){window.uEdit=b.dataset.ed;drawAdm();setTimeout(()=>{const f=$('xe1');if(f){f.focus();f.scrollIntoView({block:'center'})}},50);return}
   if(b.dataset.xc){window.uEdit=null;drawAdm();return}
-  if(b.dataset.xs){const body={name:$('xe1').value,username:$('xe2').value,email:$('xe4').value};if(!$('xe3').disabled)body.role=$('xe3').value;if(document.querySelector('.xpr'))body.prava=[...document.querySelectorAll('.xpr:checked')].map(i=>i.value);if($('xe5').value)body.password=$('xe5').value;await api('PUT','users/'+b.dataset.xs,body);window.uEdit=null;toast('Podaci korisnika su spremljeni.');await load();return}
+  if(b.dataset.xs){const body={name:$('xe1').value,username:$('xe2').value,email:$('xe4').value};if(!$('xe3').disabled)body.role=$('xe3').value;{const rl=$('xe3').value;if(rl!=='admin'&&document.querySelector('.xpr[data-r="'+rl+'"]'))body.prava=[...document.querySelectorAll('.xpr[data-r="'+rl+'"]:checked')].map(i=>i.value)}if($('xe5').value)body.password=$('xe5').value;await api('PUT','users/'+b.dataset.xs,body);window.uEdit=null;toast('Podaci korisnika su spremljeni.');await load();return}
   const U=users.find(x=>x.id===(b.dataset.sl||b.dataset.em));
   if(b.dataset.em){const n=await pr('E-mail adresa za '+U.name+':',U.email||'');if(n===null)return;await api('PUT','users/'+U.id,{email:n.trim()});toast('E-mail je spremljen.');await load();return}
   if(b.dataset.sl){let em=U.email;if(!em){em=await pr(U.name+' nema upisan e-mail. Upišite e-mail adresu:');if(!em)return;await api('PUT','users/'+U.id,{email:em.trim()})}
@@ -1055,7 +1068,7 @@ function akShow(t,b,tag){try{const n=new Notification(t,{body:b,icon:'/icon-192.
 function akNotify(l){if(lsG('akOn')!=='1'||!akOk()||Notification.permission!=='granted')return;l=l.filter(a=>!a.login||lsG('akPr')!=='0');if(!l.length)return;
  if(l.length>4)akShow(l.length+' novih aktivnosti radnika',l.slice(-6).reverse().map(a=>akTm(a.ts)+' '+a.name+': '+a.t+(a.d?' ('+a.d.split('\n')[0]+')':'')).join('\n'),'akt-g'+l[l.length-1].id);
  else l.forEach(a=>akShow(a.name+': '+a.t,(a.d?a.d+'\n':'')+'Vrijeme: '+akTm(a.ts),'akt'+a.id))}
-async function akCheck(){if(!me||!me.full||akBusy)return;if(akUid!==me.id){akUid=me.id;akB='';akS=0;akL=[];akU=0}
+async function akCheck(){if(!me||!me.ak||akBusy)return;if(akUid!==me.id){akUid=me.id;akB='';akS=0;akL=[];akU=0}
  akBusy=1;try{const first=!akB,r=await api('GET','aktivnost?b='+akB+'&s='+akS),nw=first?[]:r.list;
   akL=(r.boot===akB?akL.concat(r.list):r.list).slice(-300);akB=r.boot;akS=r.seq;
   if(nw.length){akNotify(nw);if(page!=='akt')akU+=nw.length}$('akn').classList.toggle('hide',!akU);$('akn').textContent=akU>99?'99+':akU;
