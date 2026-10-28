@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=11;
+const DATA_VERSION=12;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -33,7 +33,9 @@ const MIGRATIONS={
   8:d=>{ /* otpremnice: gradilišta koja je administrator ručno upisao (vrijede samo u Otpremnicama) */ if(!Array.isArray(d.otpSites))d.otpSites=[]; },
   9:d=>{ /* djelomična administratorska prava radnika po grupama: 'ot' Otpremnice, 'ev' Evidencija radnog vremena, 'al' Alat */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) },
   10:d=>{ /* NARUČI MATERIJAL: narudžbe materijala radnika */ if(!Array.isArray(d.narudzbe))d.narudzbe=[]; },
-  11:d=>{ /* VODITELJ RADOVA: nova uloga role:'vod' (samo administratorski dio, odabrane funkcije u u.prava); postojeći korisnici se ne mijenjaju */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) }
+  11:d=>{ /* VODITELJ RADOVA: nova uloga role:'vod' (samo administratorski dio, odabrane funkcije u u.prava); postojeći korisnici se ne mijenjaju */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) },
+  12:d=>{ /* OBRAĐENO: narudžbe imaju status obrade (obr: null = neobrađeno) i povijest prosljeđivanja (fwd); otpSeen = kad je korisnik zadnji put otvorio Otpremnice u administraciji (značka) */
+    (d.narudzbe||[]).forEach(o=>{if(o.obr===undefined)o.obr=null;if(!Array.isArray(o.fwd))o.fwd=[]});const n=Date.now();(d.users||[]).forEach(u=>{if(!u.otpSeen)u.otpSeen=n}) }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -284,15 +286,29 @@ R('POST','/api/sitenews/seen',1,c=>{c.u.siteSeen=Date.now();save();c.send(200,{o
    Poslana narudžba vidi se u primateljevoj grupi NARUDŽBE MATERIJALA i šalje mu se e-mailom s PDF-om. Neposlana ostaje radniku označena kao nije poslana. */
 R('GET','/api/narudzbe/nazivi',1,c=>c.send(200,core.nmNazivi(c.q.q)));
 R('GET','/api/narudzbe',1,c=>{const adm=!!c.q.adm&&can(c.u,'nm');c.send(200,{list:core.nmList(c.u,adm,!!c.q.svi),primatelji:core.nmPrimatelji(),jm:Core.NM_JM})});
-R('POST','/api/narudzbe',1,async c=>{if(noAdm(c))return;const o=core.nmSave(c.u,c.b);if(typeof o==='string')return c.send(400,{e:o});save();
+/* e-mail primatelju narudžbe s PDF-om (pri slanju i pri prosljeđivanju); vraća poruku o grešci ili '' */
+async function nmMail(o,subject,text){const a=db.users.find(x=>x.id===o.adminId),v=core.nmView(o);
+  if(!a||!a.email)return{mail:'Primatelj nema upisan e-mail, narudžba je vidljiva samo u aplikaciji.'};
+  const M=mailer();if(M.err)return{mail:'E-mail nije poslan: '+M.err};
+  try{await M.t.sendMail({from:M.from,to:a.email,subject,text,
+      attachments:[{filename:'narudzba-materijala-'+o.site.replace(/[^\wÀ-ɏ-]+/g,'_').slice(0,60)+'.pdf',content:Buffer.from(Core.pdf(Core.nmDoc(v)))}]});o.mailTs=Date.now();delete o.mailErr;save();return{mail:'',mailTo:a.email}}
+  catch(e){o.mailErr=String(e.message).slice(0,200);save();return{mail:'E-mail nije poslan: '+e.message}}}
+R('POST','/api/narudzbe',1,async c=>{if(noAdm(c))return;const o=core.nmSave(c.u,c.b);if(typeof o==='string')return c.send(400,{e:o});if(o.status==='sent'){o.obr=null;o.fwd=[]}save();
   if(o.status!=='sent')return c.send(200,{ok:1,id:o.id});
-  const a=db.users.find(x=>x.id===o.adminId),v=core.nmView(o);let mail;
-  if(!a||!a.email)mail='Primatelj nema upisan e-mail, narudžba je vidljiva samo u aplikaciji.';
-  else{const M=mailer();if(M.err)mail='E-mail nije poslan: '+M.err;
-    else try{await M.t.sendMail({from:M.from,to:a.email,subject:'Narudžba materijala za '+o.site,text:c.u.name+' Vam šalje narudžbu materijala za '+o.site+'.',
-      attachments:[{filename:'narudzba-materijala-'+o.site.replace(/[^\wÀ-ɏ-]+/g,'_').slice(0,60)+'.pdf',content:Buffer.from(Core.pdf(Core.nmDoc(v)))}]});o.mailTs=Date.now();delete o.mailErr;save()}
-    catch(e){mail='E-mail nije poslan: '+e.message;o.mailErr=String(e.message).slice(0,200);save()}}
-  c.send(200,{ok:1,id:o.id,mail:mail||'',mailTo:mail?'':a.email})});
+  const r=await nmMail(o,'Narudžba materijala za '+o.site,c.u.name+' Vam šalje narudžbu materijala za '+o.site+'.');
+  c.send(200,{ok:1,id:o.id,mail:r.mail,mailTo:r.mailTo||''})});
+R('POST','/api/narudzbe/:id/obradi','nm',c=>{const o=core.nmObradi(c.u,c.p[0],!!c.b.obr);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1})});
+R('POST','/api/narudzbe/:id/proslijedi','nm',async c=>{const o=core.nmProslijedi(c.u,c.p[0],String(c.b.to||''));if(typeof o==='string')return c.send(400,{e:o});save();
+  const n=core.nameOf(o.uid),r=await nmMail(o,'Proslijeđena narudžba materijala za '+o.site,c.u.name+' Vam prosljeđuje narudžbu materijala za '+o.site+' (naručio: '+n+').');
+  c.send(200,{ok:1,mail:r.mail,mailTo:r.mailTo||'',toName:core.nameOf(o.adminId)})});
+/* ZNAČKE na tipkama početne stranice administracije: broj primljenih, a neobrađenih stavki po grupi (samo ono što korisnik smije vidjeti) */
+R('GET','/api/znacke',1,c=>{const u=c.u,z={};
+  if(can(u,'ot'))z.aot=db.otpremnice.filter(o=>o.ts>(u.otpSeen||0)&&o.uid!==u.id).length;
+  if(can(u,'nm'))z.anm=core.nmNeobr(u);
+  const op=k=>db[k].filter(q=>q.status==='open').length;
+  if(can(u,'sl'))z.asl=op('slreq');if(can(u,'go'))z.ago=op('gorq');if(can(u,'iz'))z.aiz=op('requests');if(can(u,'gr'))z.agr=op('sitereq');
+  z.aev=(z.asl||0)+(z.ago||0)+(z.aiz||0)+(z.agr||0);c.send(200,z)});
+R('POST','/api/otpremnice/seen','ot',c=>{c.u.otpSeen=Date.now();save();c.send(200,{ok:1})});
 R('DELETE','/api/narudzbe/:id',1,c=>{if(noAdm(c))return;const r=core.nmDelete(c.u,c.p[0]);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
 /* Zahtjev radnika za novo gradilište */
 R('POST','/api/sitereq',1,c=>{if(noAdm(c))return;const t=String(c.b.text||'').trim().slice(0,200);if(!t)return c.send(400,{e:'Upišite opisni naziv gradilišta.'});

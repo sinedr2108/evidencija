@@ -168,6 +168,10 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='DELETE users'){adm();if(s[1]===U.id)fail('Ne možete obrisati sami sebe.');const x=db.users.find(z=>z.id===s[1]);if(!x||x.deleted)fail('Nije pronađeno.');x.deleted=Date.now();x.disabled=true;x.username='~'+x.id;x.email='';for(const k of ['slreq','gorq','requests'])db[k]=db[k].filter(r=>!(r.uid===x.id&&r.status==='open'));db.obav=db.obav.filter(o=>o.uid!==x.id)}
  else if(key==='POST password'){fail('U demu se lozinka ne mijenja.')}
  else if(key==='GET rev'){out={rev:liveRev}}
+ else if(key==='GET znacke'){const cg=g=>U.role==='admin'||PR0.includes(g)||(EVF.includes(g)&&PR0.includes('ev')),z={},op=k=>db[k].filter(q=>q.status==='open').length;if(cg('ot'))z.aot=db.otpremnice.filter(o=>o.ts>(U.otpSeen||0)&&o.uid!==U.id).length;if(cg('nm'))z.anm=C.nmNeobr(U);if(cg('sl'))z.asl=op('slreq');if(cg('go'))z.ago=op('gorq');if(cg('iz'))z.aiz=op('requests');if(cg('gr'))z.agr=op('sitereq');z.aev=(z.asl||0)+(z.ago||0)+(z.aiz||0)+(z.agr||0);out=z}
+ else if(key==='POST otpremnice'&&s[1]==='seen'){U.otpSeen=Date.now()}
+ else if(key==='POST narudzbe'&&s[2]==='obradi'){const r=C.nmObradi(U,s[1],!!b.obr);if(typeof r==='string')fail(r)}
+ else if(key==='POST narudzbe'&&s[2]==='proslijedi'){const r=C.nmProslijedi(U,s[1],String(b.to||''));if(typeof r==='string')fail(r);out={ok:1,mail:'Demo: e-mail se ovdje ne šalje.',toName:C.nameOf(r.adminId)}}
  else if(key==='POST otpremnice'&&s[1]==='foto'){noAdm();const f='u-'+C.otpKey(U.id)+'-'+uid().replace(/[^0-9a-z]/g,'')+'.jpg';DF[f]=String(b.data||'');out={f}}
  else if(key==='PUT otpremnice'&&s[2]==='site'){adm();const r=C.otpSetSite(U,s[1],String(b.f||''),b.site);if(typeof r==='string')fail(r)}
  else if(key==='POST otpremnice'&&s[2]==='pitanje'){adm();const r=C.otpAsk(U,s[1],String(b.f||''),b.text);if(typeof r==='string')fail(r)}
@@ -177,7 +181,7 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='DELETE otpremnice'){const r=C.otpDelete(U,s[1]);if(typeof r==='string')fail(r);r.forEach(f=>delete DF[f])}
  else if(key==='GET narudzbe'&&s[1]==='nazivi'){out=C.nmNazivi(Q.q)}
  else if(key==='GET narudzbe'){out={list:C.nmList(U,!!Q.adm&&C.canG(U,'nm'),!!Q.svi),primatelji:C.nmPrimatelji(),jm:Core.NM_JM}}
- else if(key==='POST narudzbe'){noAdm();const o=C.nmSave(U,b);if(typeof o==='string')fail(o);out={ok:1,id:o.id,mail:o.status==='sent'?'Demo: e-mail se ovdje ne šalje; na pravom serveru primatelj dobiva e-mail s PDF-om.':''}}
+ else if(key==='POST narudzbe'){noAdm();const o=C.nmSave(U,b);if(typeof o==='string')fail(o);if(o.status==='sent'){o.obr=null;o.fwd=[]}out={ok:1,id:o.id,mail:o.status==='sent'?'Demo: e-mail se ovdje ne šalje; na pravom serveru primatelj dobiva e-mail s PDF-om.':''}}
  else if(key==='DELETE narudzbe'){noAdm();const r=C.nmDelete(U,s[1]);if(typeof r==='string')fail(r);out={ok:1}}
  else if(key==='GET inbox'){out=core().inbox(U.id)}
  else if(key==='DELETE inbox'){if(!core().inboxHide(U.id,s[1],s[2]))fail('Stavka nije pronađena.');out={ok:1}}

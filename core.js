@@ -270,7 +270,24 @@
       return o;
     }
     function nmDelete(u, id) { const i = db.narudzbe.findIndex(x => x.id === id && x.uid === u.id); if (i < 0) return 'Narudžba nije pronađena.'; if (db.narudzbe[i].status === 'sent') return 'Poslana narudžba se ne može obrisati.'; return db.narudzbe.splice(i, 1)[0]; }
-    const nmView = o => ({ ...o, name: nameOf(o.uid), adminName: nameOf(o.adminId) });
+    /* obrada narudžbe: primatelj (ili puni administrator) označi Obrađeno / vrati u Neobrađeno, ili je proslijedi drugom primatelju (tada je opet neobrađena) */
+    const nmMoze = (u, o) => o && o.status === 'sent' && (o.adminId === u.id || u.role === 'admin');
+    function nmObradi(u, id, val) {
+      const o = db.narudzbe.find(x => x.id === id); if (!o || o.status !== 'sent') return 'Narudžba nije pronađena.';
+      if (!nmMoze(u, o)) return 'Narudžbu može obraditi samo njezin primatelj.';
+      o.obr = val ? { ts: Date.now(), by: u.id } : null; return o;
+    }
+    function nmProslijedi(u, id, to) {
+      const o = db.narudzbe.find(x => x.id === id); if (!o || o.status !== 'sent') return 'Narudžba nije pronađena.';
+      if (!nmMoze(u, o)) return 'Narudžbu može proslijediti samo njezin primatelj.';
+      if (!nmPrimatelji().some(x => x.id === to)) return 'Odaberite administratora kojem prosljeđujete narudžbu.';
+      if (to === o.adminId) return 'Narudžba je već kod tog administratora.';
+      if (!Array.isArray(o.fwd)) o.fwd = [];
+      o.fwd.push({ from: o.adminId, to, by: u.id, ts: Date.now() }); o.adminId = to; o.obr = null; return o;
+    }
+    const nmNeobr = u => db.narudzbe.filter(o => o.status === 'sent' && o.adminId === u.id && !o.obr).length;
+    const nmView = o => ({ ...o, name: nameOf(o.uid), adminName: nameOf(o.adminId), obr: o.obr ? { ...o.obr, name: nameOf(o.obr.by) } : null,
+      fwd: (o.fwd || []).map(f => ({ ...f, fromName: nameOf(f.from), toName: nameOf(f.to), byName: nameOf(f.by) })) });
     /* radnik: svoje narudžbe; primatelj (adm): poslane njemu, a puni administrator uz svi=1 sve poslane */
     const nmList = (u, adm, svi) => db.narudzbe.filter(o => adm ? o.status === 'sent' && (o.adminId === u.id || (svi && u.role === 'admin')) : o.uid === u.id).sort((a, b) => (b.sentTs || b.updated) - (a.sentTs || a.updated)).slice(0, 2000).map(nmView);
     function otpSetSite(u, id, f, site) {
@@ -498,7 +515,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, nameOf, nmNazivi, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { VRSTE, NERAD, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
