@@ -282,6 +282,7 @@ R('POST','/api/sitenews/seen',1,c=>{c.u.siteSeen=Date.now();save();c.send(200,{o
 /* ===== NARUČI MATERIJAL =====
    Radnik sastavlja popis materijala za gradilište i šalje ga odabranom primatelju (administrator ili radnik s pravom 'nm').
    Poslana narudžba vidi se u primateljevoj grupi NARUDŽBE MATERIJALA i šalje mu se e-mailom s PDF-om. Neposlana ostaje radniku označena kao nije poslana. */
+R('GET','/api/narudzbe/nazivi',1,c=>c.send(200,core.nmNazivi(c.q.q)));
 R('GET','/api/narudzbe',1,c=>{const adm=!!c.q.adm&&can(c.u,'nm');c.send(200,{list:core.nmList(c.u,adm,!!c.q.svi),primatelji:core.nmPrimatelji(),jm:Core.NM_JM})});
 R('POST','/api/narudzbe',1,async c=>{if(noAdm(c))return;const o=core.nmSave(c.u,c.b);if(typeof o==='string')return c.send(400,{e:o});save();
   if(o.status!=='sent')return c.send(200,{ok:1,id:o.id});

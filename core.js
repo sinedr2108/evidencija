@@ -235,6 +235,19 @@
     /* NARUČI MATERIJAL: radnik šalje popis materijala odabranom primatelju (administrator ili radnik s pravom 'nm') */
     const canG = (u, g) => !!u && (u.role === 'admin' || ((u.role === 'user' || u.role === 'vod') && !u.disabled && !u.deleted && Array.isArray(u.prava) && u.prava.includes(g)));
     const nmPrimatelji = () => db.users.filter(u => !u.deleted && !u.disabled && !u.purged && canG(u, 'nm')).map(u => ({ id: u.id, name: u.name })).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
+    /* prijedlozi naziva materijala iz svih narudžbi (samo naziv i najčešća jedinična mjera, bez ostalih podataka o narudžbama);
+       bez obzira na velika/mala slova, bez duplikata, prvo nazivi koji počinju upisanim tekstom, zatim ostali, svaka skupina abecedno */
+    function nmNazivi(q, max = 12) {
+      const t = String(q || '').trim().toLocaleLowerCase('hr'); if (t.length < 3) return [];
+      const m = new Map();
+      for (const o of db.narudzbe) for (const it of o.items || []) {
+        const n = String(it.naziv || '').trim(), k = n.toLocaleLowerCase('hr'); if (!n || !k.includes(t)) continue;
+        const r = m.get(k) || { k, n: new Map(), j: new Map() }; r.n.set(n, (r.n.get(n) || 0) + 1); if (it.jm) r.j.set(it.jm, (r.j.get(it.jm) || 0) + 1); m.set(k, r);
+      }
+      const top = mp => [...mp].sort((a, b) => b[1] - a[1])[0];
+      return [...m.values()].map(r => ({ naziv: top(r.n)[0], jm: r.j.size ? top(r.j)[0] : '', p: r.k.startsWith(t) ? 0 : 1 }))
+        .sort((a, b) => a.p - b.p || a.naziv.localeCompare(b.naziv, 'hr', { sensitivity: 'base', numeric: true })).slice(0, max).map(({ naziv, jm }) => ({ naziv, jm }));
+    }
     function nmSave(u, b) {
       const adminId = String(b.adminId || ''), site = String(b.site || '').trim(), items = Array.isArray(b.items) ? b.items : [];
       if (!nmPrimatelji().some(x => x.id === adminId)) return 'Odaberite administratora kojem šaljete narudžbu.';
@@ -485,7 +498,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, nameOf, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { VRSTE, NERAD, nameOf, nmNazivi, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

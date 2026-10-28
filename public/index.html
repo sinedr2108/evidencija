@@ -41,7 +41,8 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
 .a4grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.a4grid>.card{margin:0;padding:10px}.a4{display:block;aspect-ratio:210/297;background:#fff;border:1px solid var(--bd);border-radius:6px;overflow:hidden}.a4 img{width:100%;height:100%;object-fit:contain;display:block}
 .grp{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}.grp .tile{min-height:96px;font-size:19px}.t-ot{background:#ea580c;color:#fff}.t-al{background:var(--gy);color:#fff}.t-nm{background:#0d9488;color:#fff}
 .nmr{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)}.nmr .rb{color:var(--mu);font-weight:700;text-align:right}.nmq{white-space:nowrap;font-weight:700}
-.nmin{display:grid;grid-template-columns:1fr 110px 100px;gap:8px}@media(max-width:520px){.nmin{grid-template-columns:1fr 1fr}.nmin #nmn{grid-column:1/-1}}
+.nmin{display:grid;grid-template-columns:1fr 110px 100px;gap:8px}@media(max-width:520px){.nmin{grid-template-columns:1fr 1fr}.nmin .nmnw{grid-column:1/-1}}
+.nmnw{position:relative}#nmsug{position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:30;background:var(--card);border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);max-height:260px;overflow:auto}#nmsug button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:11px 12px;border:0;border-bottom:1px solid var(--bd);background:none;color:var(--tx);font:inherit}#nmsug button:last-child{border:0}#nmsug button.on,#nmsug button:hover{background:var(--bg)}#nmsug .mu{flex-shrink:0}
 .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}.b-ok{background:rgba(21,128,61,.12);color:var(--ok)}.b-no{background:rgba(185,28,28,.1);color:var(--er)}
 .tile{min-height:110px;border:0;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:.04em;padding:12px;line-height:1.2;box-shadow:0 2px 0 rgba(0,0,0,.12)}
 .t-sh{background:var(--sh);color:var(--shx)}.t-go{background:var(--pu);color:#fff}.t-go2{background:var(--rd);color:var(--rdx)}.t-sl{background:var(--yl);color:#1a1500}.t-iz{background:var(--gr);color:var(--grx)}
@@ -112,7 +113,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
     <label for="nma">Administrator (kome šaljete)</label><select id="nma"></select>
     <label for="nms">Gradilište</label><select id="nms"></select>
     <label>Stavka materijala</label>
-    <div class="nmin"><input id="nmn" maxlength="120" placeholder="Naziv materijala"><select id="nmj" aria-label="Jedinična mjera"></select><input id="nmk" inputmode="decimal" placeholder="Količina" aria-label="Količina"></div>
+    <div class="nmin"><div class="nmnw"><input id="nmn" maxlength="120" placeholder="Naziv materijala" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="nmsug" aria-expanded="false"><div id="nmsug" class="hide" role="listbox"></div></div><select id="nmj" aria-label="Jedinična mjera"></select><input id="nmk" inputmode="decimal" placeholder="Količina" aria-label="Količina"></div>
     <div class="fl" style="margin-top:8px"><button class="sm pri" id="nmadd">Dodaj u popis</button><button class="sm hide" id="nmaddx">Odustani od izmjene</button></div>
     <div id="nml" style="margin-top:10px"></div>
     <div class="msg" id="nmm"></div>
@@ -163,7 +164,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
   </div>
   <div id="p-pt" class="pg hide"><div class="mu" style="margin-bottom:8px">Poruke i obavijesti koje ste primili te zahtjevi koje ste poslali, najnovije na vrhu. Na kraju mjeseca automatski ostaje samo 5 najnovijih.</div><div id="ptl"></div></div>
   <div id="p-up" class="pg hide"><div class="card upute">
-   <p class="mu">Upute za radnike · ažurirano 26.10.2026.</p>
+   <p class="mu">Upute za radnike · ažurirano 28.10.2026.</p>
    <div class="uh" data-h="hm">
    <h3>Prijava</h3>
    <ul><li>Otvorite adresu aplikacije koju ste dobili e-mailom i upišite korisničko ime i lozinku.</li>
@@ -203,6 +204,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h3>NARUČI MATERIJAL</h3>
    <ol><li>Odaberite <b>administratora</b> kojem šaljete narudžbu i <b>gradilište</b>.</li>
    <li>Upišite <b>naziv materijala</b>, odaberite <b>jediničnu mjeru</b> (kom, m, m², m³, kg, t, l, …), upišite <b>količinu</b> i kliknite <b>Dodaj u popis</b> (ili Enter u polju količine). Svaka stavka dobiva redni broj.</li>
+   <li>Nakon trećeg upisanog slova naziva aplikacija <b>predlaže nazive</b> materijala koje je netko već naručivao. Dodirnite prijedlog (ili strelicama odaberite i Enter) i upisat će se naziv i uobičajena jedinična mjera; ostaje vam upisati količinu.</li>
    <li>Stavku ispravljate olovkom ✎ (pa <b>Spremi izmjenu stavke</b>), a brišete gumbom ✕. Nedovršen popis ostaje spremljen na ovom uređaju i kad zatvorite aplikaciju.</li>
    <li>Kad ste gotovi, kliknite <b>ZAVRŠI UNOS</b>. Prikazat će se cijeli popis i tri gumba: <b>Pošalji</b>, <b>Uredi</b> (natrag na unos) i <b>Odustani od slanja</b>.</li>
    <li>Poslana narudžba stiže administratoru u aplikaciju i na njegov e-mail kao PDF. Ako odustanete, popis ostaje u <b>Mojim narudžbama</b> označen kao <b>Nije poslano</b>; kasnije ga možete <b>Urediti</b>, <b>Poslati</b> ili trajno <b>Obrisati</b>. Poslana narudžba se ne može obrisati.</li></ol>
@@ -1037,6 +1039,20 @@ $('nmadd').onclick=()=>{const d=nmDraft(),n=$('nmn').value.trim(),j=$('nmj').val
  if(!n)return say('nmm','Upišite naziv materijala.');if(!isFinite(k)||k<=0)return say('nmm','Upišite količinu veću od nule.');
  const it={naziv:n.slice(0,120),jm:j,kol:Math.round(k*1000)/1000};if(nmEi>=0)d.items[nmEi]=it;else d.items.push(it);nmEi=-1;$('nmn').value='';$('nmk').value='';nmStore();nmRender();$('nmn').focus()};
 $('nmk').onkeydown=e=>{if(e.key==='Enter')$('nmadd').onclick()};
+/* prijedlozi naziva materijala (od 3. slova) iz svih dosadašnjih narudžbi; odabir upisuje naziv i najčešću jediničnu mjeru */
+let nmSg=[],nmSi=-1,nmSgT=0,nmSq='';
+const nmSHide=()=>{$('nmsug').classList.add('hide');$('nmn').setAttribute('aria-expanded','false');nmSg=[];nmSi=-1};
+const nmSDraw=()=>{if(!nmSg.length)return nmSHide();$('nmsug').innerHTML=nmSg.map((x,i)=>'<button type="button" role="option" data-nsg="'+i+'"'+(i===nmSi?' class="on" aria-selected="true"':'')+'><span>'+E(x.naziv)+'</span><span class="mu">'+E(x.jm)+'</span></button>').join('');$('nmsug').classList.remove('hide');$('nmn').setAttribute('aria-expanded','true')};
+const nmSPick=i=>{const x=nmSg[i];if(!x)return;$('nmn').value=x.naziv;if(x.jm&&[...$('nmj').options].some(o=>o.value===x.jm))$('nmj').value=x.jm;nmSHide();$('nmk').focus()};
+$('nmn').oninput=()=>{clearTimeout(nmSgT);const q=$('nmn').value.trim();if(q.length<3)return nmSHide();
+ nmSgT=setTimeout(async()=>{nmSq=q;try{const l=await api('GET','narudzbe/nazivi?q='+encodeURIComponent(q));if(nmSq!==q||$('nmn').value.trim()!==q)return;
+  nmSg=l.filter(x=>x.naziv.toLocaleLowerCase('hr')!==q.toLocaleLowerCase('hr')||l.length>1);nmSi=-1;nmSDraw()}catch(e){nmSHide()}},150)};
+$('nmn').onkeydown=e=>{if($('nmsug').classList.contains('hide'))return;
+ if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();nmSi=(nmSi+(e.key==='ArrowDown'?1:-1)+nmSg.length)%nmSg.length;nmSDraw()}
+ else if(e.key==='Enter'&&nmSi>=0){e.preventDefault();nmSPick(nmSi)}else if(e.key==='Escape')nmSHide()};
+$('nmn').onblur=()=>setTimeout(nmSHide,150);
+$('nmsug').onmousedown=e=>e.preventDefault();
+$('nmsug').onclick=e=>{const b=e.target.closest('[data-nsg]');if(b)nmSPick(+b.dataset.nsg)};
 $('nmaddx').onclick=()=>{nmEi=-1;$('nmn').value='';$('nmk').value='';nmRender()};
 $('nml').onclick=e=>{const d=nmDraft(),a=e.target.closest('[data-nme]'),x=e.target.closest('[data-nmx]');
  if(a){nmEi=+a.dataset.nme;const it=d.items[nmEi];$('nmn').value=it.naziv;$('nmj').value=it.jm;$('nmk').value=String(it.kol).replace('.',',');nmRender();$('nmn').focus()}
