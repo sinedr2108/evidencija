@@ -528,15 +528,17 @@ const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena',al:'Alat',nm:'Narudžb
  PGF={aiz:'iz',asl:'sl',ago:'go',agr:'gr',ast:'st',aob:'ob',apo:'po',azh:'zh',aev:'ev',aot:'ot',aal:'al',anm:'nm',akt:'ak',aps:'x'},
  admView=()=>{try{return sessionStorage.getItem('admView')==='1'}catch(e){return false}},setAdmView=v=>{try{sessionStorage.setItem('admView',v?'1':'0')}catch(e){}};
 async function load(){
- try{me=await api('GET','me');me.full=me.role==='admin';me.vod=me.role==='vod';me.prava=me.prava||[];if(me.vod||(!me.full&&me.prava.length&&admView()))me.role='admin';me.pa=!me.full&&me.role==='admin';
+ try{me=await api('GET','me');me.full=me.role==='admin';me.vod=me.role==='vod';['sites','meals','vrste'].forEach(k=>(me[k]||[]).sort(abc));me.prava=me.prava||[];if(me.vod||(!me.full&&me.prava.length&&admView()))me.role='admin';me.pa=!me.full&&me.role==='admin';
  me.evf=me.full||me.prava.includes('ev')?EVF:me.pa?EVF.filter(g=>me.prava.includes(g)):[];me.ak=me.full||(me.pa&&me.prava.includes('ak'));
  me.grp=me.full?['ot','ev','al','nm']:me.pa?['ot','ev','al','nm'].filter(g=>g==='ev'?me.evf.length:me.prava.includes(g)):[];
- const d=await api('GET','data'+(me.pa?'?adm=1':''));entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin')users=await api('GET','users');else inbox=await api('GET','inbox')}catch(e){return}
+ const d=await api('GET','data'+(me.pa?'?adm=1':''));entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin')users=(await api('GET','users')).sort((a,b)=>abc(a.name,b.name));else inbox=await api('GET','inbox')}catch(e){return}
  $('login').classList.add('hide');$('app').classList.remove('hide');draw();
 }
 const mine=()=>entries.filter(e=>e.uid===me.id);
 const mealTaken=(d,x)=>mine().some(e=>e.date===d&&e.meal&&e.id!==x);
-function opts(sel,list,first,last,extra){const v=sel.value,l=list.slice();if(extra&&!l.includes(extra))l.push(extra);
+/* ABECEDNO: svi popisi izbora slažu se po hrvatskoj abecedi (č, ć, đ, š, ž na svom mjestu); posebne stavke (– odaberite –, Svi…, Odluka administratora) ostaju na vrhu ili na kraju */
+const abc=(a,b)=>String(a).localeCompare(String(b),'hr',{sensitivity:'base',numeric:true}),abcSel=sel=>{const o=[...sel.options],v=sel.value,f=o.filter(x=>x.value===''),rest=o.filter(x=>x.value!=='').sort((a,b)=>abc(a.text,b.text));f.concat(rest).forEach(x=>sel.appendChild(x));sel.value=v};
+function opts(sel,list,first,last,extra){const v=sel.value,l=list.slice();if(extra&&!l.includes(extra))l.push(extra);l.sort(abc);
  sel.innerHTML=(first||'')+l.map(o=>'<option>'+E(o)+'</option>').join('')+(last||'');if([...sel.options].some(o=>o.value===v))sel.value=v}
 const sn=r=>r.status==='open'?'':r.seen?'viđeno '+new Date(r.seen).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'nije viđeno';
 const chBtn=(r,k)=>{if(k==='gr')return '';const ev=k==='sl'?r.date:k==='go'?r.dates[0]:'';if(ev&&today()>ev)return '<span class="mu">odluka se više ne može mijenjati (datum je prošao)</span>';return '<button class="sm" data-ch="'+k+'|'+E(r.id)+'|'+(r.status==='approved'?'0':'1')+'">Promijeni u '+(r.status==='approved'?'odbijeno':'prihvaćeno')+'</button>'};
@@ -625,6 +627,7 @@ const otCard=o=>{const ch=o.files.map((f,i)=>o.adminSite[f]?'<div class="mu">Fot
 /* administrator: svaka fotografija zasebno u A4 okviru (portret), ispod pošiljatelj i datum slanja; višestruki filteri */
 let otSites=[],otFs=new Set(),otFw=new Set(),otEdit='';
 const otMs=(el,sum,vals,set,all)=>{for(const v of [...set])if(!vals.some(x=>x[0]===v))set.delete(v);
+ vals=vals.slice().sort((a,b)=>(a[0]==='')-(b[0]==='')||abc(a[1],b[1]));
  $(el).innerHTML=vals.map(([v,t])=>'<label><input type="checkbox" value="'+E(v)+'"'+(set.has(v)?' checked':'')+'> '+t+'</label>').join('')||'<div class="mu">Nema podataka.</div>';
  $(sum).textContent=set.size?vals.filter(x=>set.has(x[0])).map(x=>x[0]?x[0]:'Odluka administratora').join(', '):all};
 const otItem=x=>{const o=x.o,f=x.f,qs=o.pitanja.filter(q=>q.f===f),k=o.id+'|'+f,ed=otEdit===k;
@@ -697,7 +700,7 @@ const isHol=d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Core.holidays(+d.slice(0,4)).has(d
 const slOk=d=>slreq.some(r=>r.uid===me.id&&r.status==='approved'&&r.date===d&&(!r.entryId||r.entryId===editId));
 const bankFor=m=>Core.bank(mine(),m,prij[me.id+'|'+m]||0);
 function fillVrste(keep){const h=isHol($('datum').value),cur=keep||$('vrsta').value,ok=me.vrste.filter(v=>((($('datum').value||today())<=today())||NERAD.includes(v)||v===keep)&&(h||!Core.PRAZNIK_VRSTE.includes(v)||v===keep)&&(v!=='Godišnji odmor'||v===keep||godatumi.includes($('datum').value))&&(v!=='Slobodan dan'||v===keep||slOk($('datum').value)||bankFor(($('datum').value||today()).slice(0,7))>=8));
- opts($('vrsta'),ok,'','');$('vrsta').value=ok.includes(cur)?cur:ok[0];$('vn').textContent=h?'Taj je datum državni praznik u RH.':'Praznik i Rad na praznik moguće je odabrati samo na dan državnog praznika.';updVrsta()}
+ opts($('vrsta'),ok,'','');$('vrsta').value=ok.includes(cur)?cur:ok.includes('Redovan rad')?'Redovan rad':ok[0];$('vn').textContent=h?'Taj je datum državni praznik u RH.':'Praznik i Rad na praznik moguće je odabrati samo na dan državnog praznika.';updVrsta()}
 function updVrsta(){const n=NERAD.includes($('vrsta').value),s=$('sati');$('grw').classList.toggle('hide',n);$('wrk').classList.toggle('hide',n);
  if(n){s.value=$('vrsta').value==='Slobodan dan'?0:8;s.disabled=true}else{if(s.disabled)s.value='0';s.disabled=false}
  $('sl').textContent=n?'Sati (određeni automatski)':'Odrađeni sati'}
@@ -808,7 +811,7 @@ $('pvd').onclick=()=>{pv=pv==='dan'?'':'dan';drawPv()};$('pvs').onclick=()=>{pv=
 ['pv1','pv2','pvr','pvg','pvv','pvo'].forEach(i=>$(i).onchange=drawPv);
 $('pvx').onclick=()=>{['pv1','pv2','pvr','pvg','pvv','pvo'].forEach(i=>$(i).value='');drawPv()};
 const qf=()=>'month='+$('rm').value+'&uid='+encodeURIComponent($('fw').value)+'&site='+encodeURIComponent($('fs').value)+'&vrsta='+encodeURIComponent($('fv').value);
-function fill(sel,items,first){const v=sel.value;sel.innerHTML='<option value="">'+first+'</option>'+items.map(i=>'<option value="'+E(i[0])+'">'+E(i[1])+'</option>').join('');if(items.some(i=>i[0]===v))sel.value=v}
+function fill(sel,items,first){const v=sel.value;sel.innerHTML='<option value="">'+first+'</option>'+items.slice().sort((a,b)=>abc(a[1],b[1])).map(i=>'<option value="'+E(i[0])+'">'+E(i[1])+'</option>').join('');if(items.some(i=>i[0]===v))sel.value=v}
 const sg=n=>(n>0?'+':'')+String(n).replace('.',',');
 const f1=n=>String(n).replace('.',',');
 async function drawStats(){const m=$('rm').value;if(!m)return;const per=$('stm').value==='y'?m.slice(0,4):m;
@@ -969,7 +972,7 @@ $('st2').onclick=async()=>{say('sm','Šaljem…',1);try{const r=await api('POST'
 $('lu3').onclick=async e=>{const b=e.target.closest('[data-pg2]');if(!b)return;const U=users.find(x=>x.id===b.dataset.pg2);
  try{if(!await cf('Trajno obrisati korisnika '+U.name+'? Više se neće nuditi ni u jednom filteru i ne može se vratiti. Njegovi dosad uneseni podaci ostaju u evidenciji i izvještajima.'))return;await api('POST','users/'+U.id+'/purge');toast(U.name+' je trajno obrisan.');await load()}catch(x){toast(x.message)}};
 /* kvačice prava u obrascu korisnika: jedan blok za radnika (grupe), drugi za voditelja radova (funkcije); vidi se blok odabrane uloge */
-const xprBox=(r,L,u,h,n)=>{const cur=u.role===r;return '<div class="xprw" data-r="'+r+'"'+(cur?'':' style="display:none"')+'><label>'+h+'</label>'+Object.entries(L).map(([g,t])=>'<label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" class="xpr" data-r="'+r+'" value="'+g+'" style="width:auto"'+(cur&&(u.prava||[]).includes(g)?' checked':'')+'> '+t+'</label>').join('')+'<div class="mu">'+n+'</div></div>'};
+const xprBox=(r,L,u,h,n)=>{const cur=u.role===r;return '<div class="xprw" data-r="'+r+'"'+(cur?'':' style="display:none"')+'><label>'+h+'</label>'+Object.entries(L).sort((a,b)=>abc(a[1],b[1])).map(([g,t])=>'<label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="checkbox" class="xpr" data-r="'+r+'" value="'+g+'" style="width:auto"'+(cur&&(u.prava||[]).includes(g)?' checked':'')+'> '+t+'</label>').join('')+'<div class="mu">'+n+'</div></div>'};
 $('lu2').onchange=e=>{if(e.target.id==='xe3')document.querySelectorAll('#lu2 .xprw').forEach(d=>d.style.display=d.dataset.r===e.target.value?'':'none')};
 $('lu2').onclick=async e=>{const b=e.target.closest('button');if(!b)return;
  try{if(b.dataset.ed){window.uEdit=b.dataset.ed;drawAdm();setTimeout(()=>{const f=$('xe1');if(f){f.focus();f.scrollIntoView({block:'center'})}},50);return}
@@ -1018,7 +1021,7 @@ async function drawNm(){const adm=me.role==='admin';
 function nmRender(){const d=nmDraft();
  fill($('nma'),nmData.primatelji.map(p=>[p.id,p.name]),'– odaberite administratora –');$('nma').value=nmData.primatelji.some(p=>p.id===d.adminId)?d.adminId:'';
  fill($('nms'),me.sites.map(s=>[s,s]),'– odaberite gradilište –');$('nms').value=me.sites.includes(d.site)?d.site:'';
- if(!$('nmj').options.length)$('nmj').innerHTML=nmData.jm.map(j=>'<option>'+E(j)+'</option>').join('');
+ if(!$('nmj').options.length)$('nmj').innerHTML=nmData.jm.slice().sort(abc).map(j=>'<option>'+E(j)+'</option>').join('');
  $('nmet').textContent=d.id?'Uređivanje neposlane narudžbe':'Nova narudžba';
  $('nml').innerHTML=d.items.length?nmRows(d.items,true):'<div class="mu">Popis je prazan. Upišite naziv, odaberite mjeru, upišite količinu i kliknite Dodaj u popis.</div>';
  $('nmadd').textContent=nmEi>=0?'Spremi izmjenu stavke '+(nmEi+1)+'.':'Dodaj u popis';$('nmaddx').classList.toggle('hide',nmEi<0);
@@ -1087,7 +1090,7 @@ $('aks').onclick=async e=>{const id=e.target.id;
  if(id==='ak1'){const r=await Notification.requestPermission();if(r==='granted'){lsS('akOn','1');akShow('Evidencija: obavijesti su uključene','Ovako će izgledati obavijest o aktivnosti radnika.','akt-test')}drawAkt()}
  else if(id==='ak0'){lsS('akOn','0');drawAkt()}else if(id==='akt1')akShow('Evidencija: probna obavijest','Obavijesti o aktivnostima radnika rade.','akt-test')};
 $('aks').onchange=e=>{if(e.target.id==='akpr')lsS('akPr',e.target.checked?'1':'0')};
-setInterval(akCheck,10000);
+setInterval(akCheck,10000);['zt','zs','nmhs'].forEach(i=>abcSel($(i)));
 /* Automatsko osvježavanje: svakih 10 s (i pri povratku u aplikaciju) provjeri je li itko promijenio podatke; ako jest, učitaj ih ponovno.
    Ne osvježava dok korisnik upisuje u polje ili je otvoren dijalog – tada se osvježi čim završi. */
 let liveRev=null,liveBusy=0;
