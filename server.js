@@ -133,20 +133,31 @@ const AKT={
   'DELETE /api/narudzbe/:id':{pre:c=>db.narudzbe.find(x=>x.id===c.p[0]&&x.uid===c.u.id),f:(c,o)=>['Obrisana neposlana narudžba materijala',o?o.site+' · stavki: '+o.items.length:'']},
   'POST /api/password':{f:()=>['Promjena lozinke','']}
 };
-function aktAdd(u,t,d){const a={id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'};akt.push(a);if(akt.length>300)akt.shift();pushAkt(a)}
-/* push obavijest o aktivnosti radnika svima koji smiju vidjeti Aktivnosti radnika i uključili su push na nekom uređaju */
+/* push osim onima s Aktivnostima ide i administratorima te grupe (g) i primatelju narudžbe (to) */
+const AKG={'POST /api/slreq':'sl','POST /api/gorq':'go','POST /api/requests':'iz','POST /api/sitereq':'gr','POST /api/otpremnice':'ot','POST /api/otpremnice/:id/odgovor':'ot'};
+function aktAdd(u,t,d,x){const a={id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'};akt.push(a);if(akt.length>300)akt.shift();pushAkt(a,x||{})}
+/* PUSH obavijesti na sve uređaje na kojima je korisnik uključio obavijesti (računalo, Android, iPhone).
+   pushAkt: radnja radnika → svima koji vide Aktivnosti radnika, administratorima te grupe i primatelju narudžbe.
+   pushU: obavijest određenim korisnicima (radniku odluka, poruka, obrađena narudžba…; administratoru proslijeđena narudžba). */
 const pushSubj=()=>'mailto:'+(String((db.smtp||{}).from||'').match(/[^<\s]+@[^>\s]+/)||['obavijesti@tid-intel.hr'])[0];
 async function pushTo(list,data){for(const s of list){const st=await Push.send(db.vapid,s,data,pushSubj());if(st===404||st===410){db.push=db.push.filter(x=>x!==s);save()}}}
-function pushAkt(a){const hm=new Date(a.ts).toLocaleTimeString('hr-HR',{hour:'2-digit',minute:'2-digit'});
-  const l=(db.push||[]).filter(s=>s.uid!==a.uid&&(!a.login||s.prijava)&&can(db.users.find(u=>u.id===s.uid),'ak'));
-  if(l.length)pushTo(l,{title:a.name+': '+a.t,body:(a.d?a.d+'\n':'')+'Vrijeme: '+hm,tag:'akt'+a.id,url:'/#akt'}).catch(e=>console.error(e))}
-R('GET','/api/push/key','ak',c=>c.send(200,{key:db.vapid.pub}));
-R('POST','/api/push/sub','ak',c=>{const s=c.b.sub||{},ep=String(s.endpoint||''),k=s.keys||{};
+const pushUser=s=>{const u=db.users.find(x=>x.id===s.uid);return u&&!u.deleted&&!u.disabled?u:null};
+function pushAkt(a,x){const hm=new Date(a.ts).toLocaleTimeString('hr-HR',{hour:'2-digit',minute:'2-digit'}),d={title:a.name+': '+a.t,body:(a.d?a.d+'\n':'')+'Vrijeme: '+hm,tag:'akt'+a.id};
+  const ak=[],gr=[];(db.push||[]).forEach(s=>{const u=s.uid!==a.uid&&pushUser(s);if(!u)return;
+    if(can(u,'ak')){if(!a.login||s.prijava)ak.push(s)}else if(!a.login&&((x.g&&can(u,x.g))||x.to===u.id))gr.push(s)});
+  if(ak.length)pushTo(ak,{...d,url:'/#akt'}).catch(e=>console.error(e));
+  if(gr.length)pushTo(gr,{...d,url:'/'}).catch(e=>console.error(e))}
+function pushU(ids,title,body,url){ids=[].concat(ids);const l=(db.push||[]).filter(s=>ids.includes(s.uid)&&pushUser(s));
+  if(l.length)pushTo(l,{title,body:String(body||'').slice(0,400),tag:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),url:url||'/'}).catch(e=>console.error(e))}
+/* svaka obavijest koju radnik dobije u aplikaciji (core.notify) stiže i kao push */
+Core.onNotify=(uid,text)=>pushU(uid,'TiDy Connect: obavijest',text,'/#pt');
+R('GET','/api/push/key',1,c=>c.send(200,{key:db.vapid.pub}));
+R('POST','/api/push/sub',1,c=>{const s=c.b.sub||{},ep=String(s.endpoint||''),k=s.keys||{};
   if(!/^https:\/\//.test(ep)||ep.length>1000||!k.p256dh||!k.auth)return c.send(400,{e:'Neispravna pretplata preglednika.'});
   db.push=db.push.filter(x=>x.endpoint!==ep);db.push.push({uid:c.u.id,endpoint:ep,keys:{p256dh:String(k.p256dh).slice(0,200),auth:String(k.auth).slice(0,100)},prijava:c.b.prijava!==false,ts:Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/push/unsub',1,c=>{const ep=String(c.b.endpoint||'');db.push=db.push.filter(x=>!(x.endpoint===ep&&x.uid===c.u.id));save();c.send(200,{ok:1})});
-R('POST','/api/push/test','ak',async c=>{const l=db.push.filter(x=>x.uid===c.u.id&&x.endpoint===String(c.b.endpoint||''));if(!l.length)return c.send(400,{e:'Na ovom uređaju push obavijesti nisu uključene.'});
-  await pushTo(l,{title:'TiDy Connect: probna obavijest',body:'Push obavijesti rade i kad je aplikacija zatvorena.',tag:'akt-test',url:'/#akt'});c.send(200,{ok:1})});
+R('POST','/api/push/test',1,async c=>{const l=db.push.filter(x=>x.uid===c.u.id&&x.endpoint===String(c.b.endpoint||''));if(!l.length)return c.send(400,{e:'Na ovom uređaju push obavijesti nisu uključene.'});
+  await pushTo(l,{title:'TiDy Connect: probna obavijest',body:'Push obavijesti rade i kad je aplikacija zatvorena.',tag:'akt-test',url:can(c.u,'ak')?'/#akt':'/'});c.send(200,{ok:1})});
 R('GET','/api/aktivnost','ak',c=>{const s=c.q.b===BOOT?+c.q.s||0:0;c.send(200,{boot:BOOT,seq:aktSeq,list:akt.filter(a=>a.id>s)})});
 R('POST','/api/login',0,c=>{
   const un=String(c.b.username||'').trim().toLowerCase(),key=c.ip+'|'+un,f=fails[key];
@@ -186,7 +197,8 @@ R('POST','/api/slreq',1,c=>{if(noAdm(c))return;const d=String(c.b.date||''),m=d.
   if(db.slreq.some(q=>q.uid===c.u.id&&q.date===d&&(q.status==='open'||(q.status==='approved'&&!q.entryId))))return c.send(400,{e:'Za taj datum već postoji zahtjev.'});
   db.slreq.push({id:crypto.randomUUID(),uid:c.u.id,date:d,reason:String(c.b.reason||'').trim().slice(0,200),ts:Date.now(),status:'open',entryId:null});save();c.send(200,{ok:1})});
 R('POST','/api/slreq/:id/decide','sl',c=>{const q=db.slreq.find(x=>x.id===c.p[0]);if(!q||q.status!=='open')return c.send(404,{e:'Zahtjev nije pronađen ili je već riješen.'});
-  q.status=c.b.approve?'approved':'rejected';q.note=String(c.b.note||'').trim().slice(0,200);q.decided=Date.now();q.decidedBy=c.u.id;save();c.send(200,{ok:1})});
+  q.status=c.b.approve?'approved':'rejected';q.note=String(c.b.note||'').trim().slice(0,200);q.decided=Date.now();q.decidedBy=c.u.id;save();c.send(200,{ok:1});
+  pushU(q.uid,'Zahtjev za slobodan dan '+(c.b.approve?'prihvaćen':'odbijen'),aktD(q.date)+(q.note?' ('+q.note+')':''),'/#pt')});
 R('PUT','/api/prijenos','iz',c=>{const u=db.users.find(x=>x.id===c.b.uid&&x.role==='user'&&!x.deleted),v=parseFloat(String(c.b.value).replace(',','.'));
   if(!u)return c.send(404,{e:'Radnik nije pronađen.'});if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});
@@ -247,7 +259,8 @@ R('POST','/api/poruke','po',c=>{const t=String(c.b.text||'').trim().slice(0,2000
   const act=db.users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled).map(u=>u.id);
   const to=c.b.all?act:[...new Set(Array.isArray(c.b.uids)?c.b.uids:[])].filter(id=>act.includes(id));
   if(!to.length)return c.send(400,{e:'Odaberite barem jednog radnika.'});
-  db.poruke.push({id:crypto.randomUUID(),from:c.u.id,text:t,ts:Date.now(),to,all:!!c.b.all,reads:{}});save();c.send(200,{ok:1,n:to.length})});
+  db.poruke.push({id:crypto.randomUUID(),from:c.u.id,text:t,ts:Date.now(),to,all:!!c.b.all,reads:{}});save();c.send(200,{ok:1,n:to.length});
+  pushU(to,'Nova poruka: '+c.u.name,t,'/')});
 R('POST','/api/poruke/:id/read',1,c=>{const p=db.poruke.find(x=>x.id===c.p[0]&&x.to.includes(c.u.id));if(!p)return c.send(404,{e:'Poruka nije pronađena.'});
   if(!p.reads[c.u.id])p.reads[c.u.id]=Date.now();save();c.send(200,{ok:1})});
 R('DELETE','/api/poruke/:id','po',c=>{const i=db.poruke.findIndex(x=>x.id===c.p[0]);if(i<0)return c.send(404,{e:'Poruka nije pronađena.'});db.poruke.splice(i,1);save();c.send(200,{ok:1})});
@@ -289,11 +302,13 @@ R('POST','/api/requests',1,c=>{if(noAdm(c))return;const m=String(c.b.month||'');
   db.requests.push({id:crypto.randomUUID(),uid:c.u.id,month:m,reason:String(c.b.reason||'').trim().slice(0,200),ts:Date.now(),status:'open'});save();c.send(200,{ok:1})});
 R('POST','/api/requests/:id/decide','iz',c=>{const r=db.requests.find(x=>x.id===c.p[0]);if(!r||r.status!=='open')return c.send(404,{e:'Zahtjev nije pronađen ili je već riješen.'});
   r.status=c.b.approve?'approved':'rejected';r.note=String(c.b.note||'').trim().slice(0,200);r.decided=Date.now();r.decidedBy=c.u.id;
-  if(c.b.approve)db.closed=db.closed.filter(k=>k!==r.uid+'|'+r.month);save();c.send(200,{ok:1})});
+  if(c.b.approve)db.closed=db.closed.filter(k=>k!==r.uid+'|'+r.month);save();c.send(200,{ok:1});
+  pushU(r.uid,'Zahtjev za ponovno otvaranje mjeseca '+(c.b.approve?'prihvaćen':'odbijen'),'Mjesec '+aktM(r.month)+(r.note?' ('+r.note+')':''),'/#pt')});
 R('PUT','/api/config',2,c=>{const s=strs(c.b.sites),m=[...new Set(strs(c.b.meals).map(x=>db.meals.includes(x)?x:x.toLocaleUpperCase('hr-HR')))]; /* nove opcije toplog obroka velikim slovima */if(!m.length)return c.send(400,{e:'Mora ostati barem jedna opcija obroka.'});
   addNews(s.filter(x=>!db.sites.includes(x)));db.sites=s;db.meals=m;save();c.send(200,{ok:1})});
 /* Novo gradilište: radnici ga vide kao obavijest pri prvom otvaranju aplikacije nakon dodavanja */
-function addNews(list){const t=Date.now();list.forEach(x=>db.siteNews.push({site:x,ts:t}));if(db.siteNews.length>200)db.siteNews=db.siteNews.slice(-200)}
+function addNews(list,bez){const t=Date.now();list.forEach(x=>db.siteNews.push({site:x,ts:t}));if(db.siteNews.length>200)db.siteNews=db.siteNews.slice(-200);
+  if(list.length)pushU(db.users.filter(u=>u.role==='user'&&u.id!==bez).map(u=>u.id),list.length===1?'Novo gradilište: '+list[0]:'Nova gradilišta',list.join(', '),'/')}
 R('POST','/api/sitenews/seen',1,c=>{c.u.siteSeen=Date.now();save();c.send(200,{ok:1})});
 /* ===== NARUČI MATERIJAL =====
    Radnik sastavlja popis materijala za gradilište i šalje ga odabranom primatelju (administrator ili radnik s pravom 'nm').
@@ -311,9 +326,10 @@ R('POST','/api/narudzbe',1,async c=>{if(noAdm(c))return;const o=core.nmSave(c.u,
   if(o.status!=='sent')return c.send(200,{ok:1,id:o.id});
   const r=await nmMail(o,'Narudžba materijala za '+o.site,c.u.name+' Vam šalje narudžbu materijala za '+o.site+'.');
   c.send(200,{ok:1,id:o.id,mail:r.mail,mailTo:r.mailTo||''})});
-R('POST','/api/narudzbe/:id/obradi','nm',c=>{const o=core.nmObradi(c.u,c.p[0],!!c.b.obr);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1})});
+R('POST','/api/narudzbe/:id/obradi','nm',c=>{const o=core.nmObradi(c.u,c.p[0],!!c.b.obr);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});
+  if(c.b.obr)pushU(o.uid,'Narudžba materijala obrađena',o.site+' · obradio: '+c.u.name,'/#nm')});
 R('POST','/api/narudzbe/:id/proslijedi','nm',async c=>{const o=core.nmProslijedi(c.u,c.p[0],String(c.b.to||''));if(typeof o==='string')return c.send(400,{e:o});save();
-  const n=core.nameOf(o.uid),r=await nmMail(o,'Proslijeđena narudžba materijala za '+o.site,c.u.name+' Vam prosljeđuje narudžbu materijala za '+o.site+' (naručio: '+n+').');
+  const n=core.nameOf(o.uid);if(o.adminId!==c.u.id)pushU(o.adminId,c.u.name+': proslijeđena narudžba materijala',o.site+' · naručio: '+n,'/#anm');const r=await nmMail(o,'Proslijeđena narudžba materijala za '+o.site,c.u.name+' Vam prosljeđuje narudžbu materijala za '+o.site+' (naručio: '+n+').');
   c.send(200,{ok:1,mail:r.mail,mailTo:r.mailTo||'',toName:core.nameOf(o.adminId)})});
 /* ZNAČKE na tipkama početne stranice administracije: broj primljenih, a neobrađenih stavki po grupi (samo ono što korisnik smije vidjeti) */
 R('GET','/api/znacke',1,c=>{const u=c.u,z={};
@@ -331,7 +347,7 @@ R('DELETE','/api/sitereq/:id',1,c=>wd(c,'sitereq'));
 R('POST','/api/sitereq/:id/decide','gr',c=>{const r=db.sitereq.find(x=>x.id===c.p[0]);if(!r||r.status!=='open')return c.send(404,{e:'Zahtjev nije pronađen ili je već riješen.'});
   r.decided=Date.now();r.decidedBy=c.u.id;
   if(c.b.approve){const nm=String(c.b.name||'').trim().slice(0,100);if(!nm)return c.send(400,{e:'Upišite naziv gradilišta.'});
-    if(!db.sites.includes(nm)){db.sites.push(nm);addNews([nm])}r.status='approved';r.site=nm}
+    if(!db.sites.includes(nm)){db.sites.push(nm);addNews([nm],r.uid)}r.status='approved';r.site=nm;pushU(r.uid,'Zahtjev za novo gradilište prihvaćen',nm,'/')}
   else{r.status='rejected';r.note=String(c.b.note||'').trim().slice(0,200);core.notify(r.uid,'Zahtjev za novo gradilište „'+r.text+'“ je odbijen'+(r.note?' ('+r.note+')':'')+'.','')}
   save();c.send(200,{ok:1})});
 const appUrl=c=>{if(db.appUrl)return db.appUrl.replace(/\/+$/,'');const h=String(c.h.host||'localhost');const pr=String(c.h['x-forwarded-proto']||'').split(',')[0]||(/"scheme":"https"/.test(String(c.h['cf-visitor']||''))?'https':'http');return pr+'://'+h};
@@ -429,7 +445,7 @@ http.createServer((req,res)=>{
         if((typeof auth==='string'||Array.isArray(auth))&&!can(c.u,auth))return send(403,{e:'Nemate pravo pristupa ovom dijelu.'})}
       const ak=req.method!=='GET'&&AKT[key];
       if(ak){let u=c.u,pre;try{if(!u)u=db.users.find(x=>x.username===String(b.username||'').trim().toLowerCase());if(u&&u.role==='user'&&ak.pre)pre=ak.pre(c)}catch(e){}
-        if(u&&u.role==='user')c.send=(code,o,h)=>{if(code===200)try{const[t,d]=ak.f(c,pre,o);aktAdd(u,t,d)}catch(e){console.error(e)}send(code,o,h)}}
+        if(u&&u.role==='user')c.send=(code,o,h)=>{if(code===200)try{const[t,d]=ak.f(c,pre,o);const n=key==='POST /api/narudzbe'&&o&&db.narudzbe.find(x=>x.id===o.id&&x.status==='sent');aktAdd(u,t,d,{g:AKG[key],to:n?n.adminId:''})}catch(e){console.error(e)}send(code,o,h)}}
       return Promise.resolve(fn(c)).catch(e=>{console.error(e);send(500,{e:'Greška na serveru.'})});
     }
     send(404,{e:'Nije pronađeno.'});

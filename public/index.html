@@ -86,7 +86,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
  <div id="snw"></div>
  <div class="tabs" id="tabs"></div>
  <section id="v-unos">
-  <div id="hm" class="pg">
+  <div id="hm" class="pg"><div class="card hide pub" id="pub"></div>
    <div class="grp">
     <button class="tile t-ot" data-pg="ot">OTPREMNICE</button>
     <button class="tile t-sh" data-pg="ev">EVIDENCIJA RADNOG VREMENA</button>
@@ -164,15 +164,16 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <div id="szf"><label for="szd">Datum slobodnog dana</label><input type="date" id="szd"><label for="szr">Razlog (neobavezno)</label><input id="szr" maxlength="200"><button class="sm pri" id="szb" style="margin-top:10px">Pošalji zahtjev</button></div>
    <div id="szs" style="margin-top:8px"></div></div>
   </div>
-  <div id="p-pt" class="pg hide"><div class="mu" style="margin-bottom:8px">Poruke i obavijesti koje ste primili te zahtjevi koje ste poslali, najnovije na vrhu. Na kraju mjeseca automatski ostaje samo 5 najnovijih.</div><div id="ptl"></div></div>
+  <div id="p-pt" class="pg hide"><div class="card pub" id="ptpub"></div><div class="mu" style="margin-bottom:8px">Poruke i obavijesti koje ste primili te zahtjevi koje ste poslali, najnovije na vrhu. Na kraju mjeseca automatski ostaje samo 5 najnovijih.</div><div id="ptl"></div></div>
   <div id="p-up" class="pg hide"><div class="card upute">
-   <p class="mu">Upute za radnike · ažurirano 28.10.2026.</p>
+   <p class="mu">Upute za radnike · ažurirano 29.10.2026.</p>
    <div class="uh" data-h="hm">
    <h3>Prijava</h3>
    <ul><li>Otvorite adresu aplikacije koju ste dobili e-mailom i upišite korisničko ime i lozinku.</li>
    <li>Nakon prve prijave promijenite lozinku: na početnoj stranici gumb <b>Lozinka</b>.</li>
    <li>Aplikaciju dodajte na početni zaslon mobitela: Chrome → izbornik ⋮ → <i>Dodaj na početni zaslon</i>; iPhone (Safari) → <i>Dijeli</i> → <i>Dodaj na početni zaslon</i>. Ikona ima logo tvrtke i naziv TiDy Connect; ako imate stari prečac, obrišite ga i dodajte ponovno.</li>
    <li>Ako zaboravite lozinku, javite se administratoru – on vam može poslati nove podatke za prijavu.</li>
+   <li><b>Obavijesti na mobitelu:</b> na početnoj stranici dodirnite <b>Uključi obavijesti</b> i dopustite ih. Mobitel vam tada javi novu poruku administratora, odluku o zahtjevu, obrađenu narudžbu materijala, pitanje o otpremnici i novo gradilište i kad je aplikacija zatvorena. Na <b>Androidu</b> radi u Chromeu, a na <b>iPhoneu</b> (iOS 16.4 ili noviji) samo kad aplikaciju otvorite s ikone na početnom zaslonu. Uključuje se posebno na svakom uređaju, a isključuje u dijelu <b>Poruke i obavijesti</b>; odjavom se obavijesti na tom uređaju zaustave do sljedeće prijave.</li>
    <li>Aplikacija se <b>sama osvježava</b> (svakih desetak sekundi): odluke, poruke i obavijesti administratora pojavit će se bez odjave i ponovne prijave. Dok upisujete tekst, osvježavanje čeka da završite.</li></ul>
    </div>
    <div class="uh" data-h="hm">
@@ -283,7 +284,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
   <div id="sqw" class="hide"><h2 id="sqh">Zahtjevi za slobodan dan</h2><div class="card" id="sq"></div></div>
   <div id="gqw" class="hide"><h2 id="gqh">Zahtjevi za godišnji odmor</h2><div class="card" id="gq"></div></div>
   <div id="rqw" class="hide"><h2 id="rqh">Zahtjevi za otvaranje mjeseca</h2><div class="card" id="rq"></div></div>
-  <div id="ahm" class="pg"><div class="card hide" id="vod0">Administrator vam još nije odabrao nijednu funkciju. Javite mu se.</div><div class="grp">
+  <div id="ahm" class="pg"><div class="card hide" id="vod0">Administrator vam još nije odabrao nijednu funkciju. Javite mu se.</div><div class="card hide pub" id="apub"></div><div class="grp">
    <button class="tile t-ot" data-pg="aot">OTPREMNICE</button>
    <button class="tile t-sh" data-pg="aev">EVIDENCIJA RADNOG VREMENA</button>
    <button class="tile t-nm" data-pg="anm">NARUDŽBE MATERIJALA</button>
@@ -378,6 +379,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li>Zahtjev za novo gradilište možete prije prihvaćanja urediti (naziv). Prihvaćeno gradilište dolazi na popis za sve radnike, a radnici dobiju obavijest.</li>
    <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUDŽBE MATERIJALA</b> i <b>ALAT</b> (u izradi).</li>
    <li><b>Zvono s crvenim brojem</b> u gornjem desnom kutu tipke pokazuje koliko u toj grupi ima primljenih, a neobrađenih stavki: kod Otpremnica nove otpremnice od vašeg zadnjeg otvaranja Otpremnica, kod Narudžbi materijala vaše neobrađene narudžbe, a kod Evidencije zahtjevi na čekanju (broj je i na tipkama Slobodni dani, Godišnji odmor, Izvještaji i Gradilišta). Svatko vidi samo brojeve za dijelove kojima ima pristup.</li>
+   <li><b>Obavijesti na ovom uređaju:</b> dok nisu uključene, na vrhu stoji gumb <b>Uključi obavijesti</b> (<b>Ne sada</b> ga skriva na 7 dana). Računalo ili mobitel tada javi i kad je aplikacija zatvorena: administratoru s Aktivnostima svaku radnju radnika, a voditelju radova i radniku s pravima nove zahtjeve, otpremnice i narudžbe iz njegovih grupa te narudžbu koja mu je poslana ili proslijeđena.</li>
    <li>Gumbi gore: <b>zvono</b> (aktivnosti radnika i obavijesti u Windowsima), <b>Postavke</b>, <b>Lozinka</b> i <b>Odjava</b>.</li>
    <li>Radnik kojem ste dali prava za pojedine grupe (Postavke → Izmijeni) ovdje vidi samo te grupe i nema zvono ni Postavke. Gumbom <b>Radnički dio</b> vraća se na svoj radnički dio.</li>
    <li><b>Voditelj radova</b> nakon prijave ulazi ravno ovdje (nema radnički dio) i vidi samo funkcije koje ste mu odabrali (npr. samo Izvještaje i Godišnji odmor unutar Evidencije). Zahtjeve na vrhu vidi samo za odabrane funkcije, a zvono samo ako ima funkciju Aktivnosti radnika.</li>
@@ -476,7 +478,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <div class="uh" data-h="akt">
    <h3>Aktivnosti radnika (zvono)</h3>
    <ul><li>Popis radnji radnika s detaljima, najnovije na vrhu: prijava, unosi i izmjene sati, zahtjevi, završen mjesec, otpremnice, odgovori, pročitane poruke. Crveni broj na zvonu su nove radnje.</li>
-   <li><b>Uključi obavijesti i kad je aplikacija zatvorena</b> i dopustite obavijesti u pregledniku: svaka nova radnja radnika pojavi se kao obavijest u Windowsima i kad prozor aplikacije nije otvoren, dok god preglednik radi u pozadini. Radi u Chromeu i u Microsoft Edgeu: Chrome → Postavke → Sustav → <i>Nastavi izvoditi pozadinske aplikacije kad se Google Chrome zatvori</i>; Edge → Postavke → Sustav i performanse → <i>Nastavi pokretati pozadinska proširenja i aplikacije kada je Microsoft Edge zatvoren</i>. Isto radi i na mobitelu: na <b>Androidu</b> u Chromeu, a na <b>iPhoneu</b> (iOS 16.4 ili noviji) samo kad je aplikacija dodana na početni zaslon (Safari → Dijeli → Dodaj na početni zaslon) i otvorena s te ikone. Uključuje se posebno na svakom uređaju; odjavom se obavijesti na tom računalu zaustavljaju do sljedeće prijave. <b>Probna obavijest</b> provjerava radi li.</li>
+   <li><b>Uključi obavijesti</b> i dopustite obavijesti u pregledniku: svaka nova radnja radnika pojavi se kao obavijest u Windowsima i kad prozor aplikacije nije otvoren, dok god preglednik radi u pozadini. Radi u Chromeu i u Microsoft Edgeu: Chrome → Postavke → Sustav → <i>Nastavi izvoditi pozadinske aplikacije kad se Google Chrome zatvori</i>; Edge → Postavke → Sustav i performanse → <i>Nastavi pokretati pozadinska proširenja i aplikacije kada je Microsoft Edge zatvoren</i>. Isto radi i na mobitelu: na <b>Androidu</b> u Chromeu, a na <b>iPhoneu</b> (iOS 16.4 ili noviji) samo kad je aplikacija dodana na početni zaslon (Safari → Dijeli → Dodaj na početni zaslon) i otvorena s te ikone. Uključuje se posebno na svakom uređaju; odjavom se obavijesti na tom računalu zaustavljaju do sljedeće prijave. <b>Probna obavijest</b> provjerava radi li.</li>
    <li>Ako to ne želite, možete uključiti samo <b>obavijesti dok je aplikacija otvorena</b> (aplikacija smije biti u pozadini). Obje vrste rade samo preko https adrese.</li>
    <li>Kvačicom birate želite li obavijesti i o prijavama. Popis se briše ponovnim pokretanjem servera.</li></ul>
    </div>
@@ -600,7 +602,7 @@ function draw(){
  $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
  if(me.role==='admin'&&tab==='adm')drawAdm();
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
- drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='akt')drawAkt();applyPage();drawZn();if(page==='aot'&&zn.aot){zn.aot=0;api('POST','otpremnice/seen').catch(()=>{})}if(me.ak&&akUid!==me.id)akCheck();if(me.ak)pushInit();
+ drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='akt')drawAkt();applyPage();drawZn();if(page==='aot'&&zn.aot){zn.aot=0;api('POST','otpremnice/seen').catch(()=>{})}if(me.ak&&akUid!==me.id)akCheck();pushInit();pushDraw();
 }
 let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',nm:'Naruči materijal',anm:'Narudžbe materijala',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika',aup:'Upute za administratore'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
@@ -1114,12 +1116,27 @@ let pushReg=null,pushSub=null,pushIni=0;const pushOk=()=>'serviceWorker' in navi
 const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),isStandalone=()=>navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
 const pushKey=s=>{const b=atob(s.replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))};
 const pushSave=()=>pushSub?api('POST','push/sub',{sub:pushSub.toJSON(),prijava:lsG('akPr')!=='0'}):Promise.resolve();
-async function pushInit(){if(pushIni||!pushOk()||!me||!me.ak)return;pushIni=1;try{pushReg=await navigator.serviceWorker.register('/sw.js');pushSub=await pushReg.pushManager.getSubscription();if(pushSub)await pushSave()}catch(e){}if(page==='akt')drawAkt()}
-async function pushOn(){if(Notification.permission!=='granted'&&await Notification.requestPermission()!=='granted')return drawAkt();
+async function pushInit(){if(pushIni||!pushOk()||!me)return;pushIni=1;try{pushReg=await navigator.serviceWorker.register('/sw.js');pushSub=await pushReg.pushManager.getSubscription();if(pushSub)await pushSave()}catch(e){}pushDraw()}
+async function pushOn(){if(Notification.permission!=='granted'&&await Notification.requestPermission()!=='granted')return pushDraw();
  try{if(!pushReg)pushReg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;const k=await api('GET','push/key');
   pushSub=await pushReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pushKey(k.key)});await pushSave();await api('POST','push/test',{endpoint:pushSub.endpoint});toast('Push obavijesti su uključene na ovom uređaju.')}
- catch(e){toast('Uključivanje nije uspjelo: '+e.message)}drawAkt()}
-async function pushOff(){try{if(pushSub){await api('POST','push/unsub',{endpoint:pushSub.endpoint}).catch(()=>{});await pushSub.unsubscribe()}}catch(e){}pushSub=null;drawAkt()}
+ catch(e){toast('Uključivanje nije uspjelo: '+e.message)}pushDraw()}
+async function pushOff(){try{if(pushSub){await api('POST','push/unsub',{endpoint:pushSub.endpoint}).catch(()=>{});await pushSub.unsubscribe()}}catch(e){}pushSub=null;pushDraw()}
+/* stanje push obavijesti na ovom uređaju; full=1 s gumbima Probna/Isključi, inače poziv za uključivanje (početna stranica) */
+function pushHtml(full){const pm=akOk()?Notification.permission:'',ios=isIOS()&&!isStandalone();
+ const sto=me&&me.ak?'o svakoj radnji radnika':me&&me.role==='user'?'o novoj poruci, odluci o zahtjevu, obrađenoj narudžbi, pitanju o otpremnici i novom gradilištu':'o novim zahtjevima, otpremnicama i narudžbama iz vaših grupa';
+ return '<b>Obavijesti na ovom uređaju</b><div style="margin:6px 0">'+(ios?'<span style="color:var(--er)">Na iPhoneu obavijesti rade samo iz aplikacije dodane na početni zaslon.</span> U Safariju dodirnite <b>Dijeli</b> → <b>Dodaj na početni zaslon</b>, otvorite TiDy Connect s nove ikone, prijavite se i ovdje uključite obavijesti (potreban je iOS 16.4 ili noviji).</div>'+(full?'':'<button class="sm" id="pux">Ne sada</button>')
+  :!pushOk()?'<span class="mu">Ovaj preglednik ili adresa ne podržava obavijesti (potrebna je sigurna adresa https://…'+(isIOS()?' i iOS 16.4 ili noviji':'')+').</span></div>'
+  :pm==='denied'?'<span style="color:var(--er)">Preglednik je blokirao obavijesti za ovu stranicu.</span> Na računalu kliknite ikonu lijevo od adrese (lokot), a na mobitelu otvorite postavke stranice ili aplikacije; kod <b>Obavijesti</b> odaberite <b>Dopusti</b> i osvježite stranicu.</div>'
+  :pushSub?'<b style="color:var(--ok)">Uključeno na ovom uređaju.</b> Obavijest '+sto+' stiže i kad je aplikacija zatvorena.</div>'+(full?'<button class="sm" id="pu2">Probna obavijest</button> <button class="sm" id="pu0">Isključi</button>':'')
+  :'Uključite obavijesti i aplikacija će vam javiti '+sto+' čak i kad je zatvorena.</div><button id="pu1">Uključi obavijesti</button>'+(full?'':' <button class="sm" id="pux">Ne sada</button>'))}
+/* poziv na početnoj stranici: dok obavijesti nisu uključene, a mogu se uključiti (ili treba uputa za iPhone); „Ne sada” skriva ga 7 dana */
+function pushDraw(){if(!me)return;const later=+(lsG('pubX')||0)>Date.now(),show=!pushSub&&!later&&((isIOS()&&!isStandalone())||(pushOk()&&akOk()&&Notification.permission!=='denied'));
+ const adm=me.role==='admin',b=$(adm?'apub':'pub');b.innerHTML=show?pushHtml(0):'';b.classList.toggle('hide',!show);
+ if(!adm)$('ptpub').innerHTML=pushHtml(1);if(page==='akt')drawAkt()}
+document.addEventListener('click',e=>{const id=e.target.id;if(!e.target.closest('.pub'))return;
+ if(id==='pu1')pushOn();else if(id==='pu0')pushOff();else if(id==='pu2')api('POST','push/test',{endpoint:pushSub.endpoint}).then(()=>toast('Probna obavijest je poslana.')).catch(x=>toast(x.message));
+ else if(id==='pux'){lsS('pubX',String(Date.now()+7*864e5));pushDraw()}});
 function akNotify(l){if(pushSub)return;if(lsG('akOn')!=='1'||!akOk()||Notification.permission!=='granted')return;l=l.filter(a=>!a.login||lsG('akPr')!=='0');if(!l.length)return;
  if(l.length>4)akShow(l.length+' novih aktivnosti radnika',l.slice(-6).reverse().map(a=>akTm(a.ts)+' '+a.name+': '+a.t+(a.d?' ('+a.d.split('\n')[0]+')':'')).join('\n'),'akt-g'+l[l.length-1].id);
  else l.forEach(a=>akShow(a.name+': '+a.t,(a.d?a.d+'\n':'')+'Vrijeme: '+akTm(a.ts),'akt'+a.id))}
@@ -1129,12 +1146,7 @@ async function akCheck(){if(!me||!me.ak||akBusy)return;if(akUid!==me.id){akUid=m
   if(nw.length){akNotify(nw);if(page!=='akt')akU+=nw.length}$('akn').classList.toggle('hide',!akU);$('akn').textContent=akU>99?'99+':akU;
   if(page==='akt')drawAkt()}catch(e){}finally{akBusy=0}}
 function drawAkt(){akU=0;$('akn').classList.add('hide');const on=lsG('akOn')==='1',pm=akOk()?Notification.permission:'';
- const push='<b>Obavijesti i kad je aplikacija zatvorena</b><div style="margin:6px 0">'+(isIOS()&&!isStandalone()?'<span style="color:var(--er)">Na iPhoneu obavijesti rade samo iz aplikacije dodane na početni zaslon.</span> U Safariju dodirnite <b>Dijeli</b> → <b>Dodaj na početni zaslon</b>, otvorite TiDy Connect s nove ikone, prijavite se i ovdje uključite obavijesti (potreban je iOS 16.4 ili noviji).</div>'
-  :!pushOk()?'<span class="mu">Ovaj preglednik ili adresa ne podržava ove obavijesti (potrebna je sigurna adresa https://…'+(isIOS()?' i iOS 16.4 ili noviji':'')+').</span></div>'
-  :pm==='denied'?'<span style="color:var(--er)">Preglednik je blokirao obavijesti za ovu stranicu.</span> Kliknite ikonu lijevo od adrese (lokot), kod <b>Obavijesti</b> odaberite <b>Dopusti</b> i osvježite stranicu.</div>'
-  :pushSub?'<b style="color:var(--ok)">Uključeno na ovom uređaju.</b> Obavijest o svakoj radnji radnika stiže u Windows i kad je prozor aplikacije zatvoren, dok god preglednik (Chrome ili Edge) radi u pozadini.</div><button class="sm" id="pu2">Probna obavijest</button> <button class="sm" id="pu0">Isključi</button>'
-  :'Isključeno.</div><button id="pu1">Uključi obavijesti i kad je aplikacija zatvorena</button>')
-  +'<div class="mu" style="margin-top:6px">Uključuje se posebno na svakom uređaju: računalu (Chrome ili Microsoft Edge), Android mobitelu (Chrome) i iPhoneu (aplikacija s početnog zaslona). Preglednik mora smjeti raditi u pozadini (u Windowsima je to obično uključeno): <b>Chrome</b> → Postavke → Sustav → <i>Nastavi izvoditi pozadinske aplikacije kad se Google Chrome zatvori</i>; <b>Edge</b> → Postavke → Sustav i performanse → <i>Nastavi pokretati pozadinska proširenja i aplikacije kada je Microsoft Edge zatvoren</i>. Klik na obavijest otvara ovu stranicu.</div>';
+ const push=pushHtml(1)+'<div class="mu" style="margin-top:6px">Uključuje se posebno na svakom uređaju: računalu (Chrome ili Microsoft Edge), Android mobitelu (Chrome) i iPhoneu (aplikacija s početnog zaslona). Na računalu preglednik mora smjeti raditi u pozadini (u Windowsima je to obično uključeno): <b>Chrome</b> → Postavke → Sustav → <i>Nastavi izvoditi pozadinske aplikacije kad se Google Chrome zatvori</i>; <b>Edge</b> → Postavke → Sustav i performanse → <i>Nastavi pokretati pozadinska proširenja i aplikacije kada je Microsoft Edge zatvoren</i>. Klik na obavijest otvara ovu stranicu.</div>';
  const page_='<b>Obavijesti dok je aplikacija otvorena</b><div style="margin:6px 0">'+(!akOk()?'<span style="color:var(--er)">Ovaj preglednik ne može prikazati obavijesti na ovoj adresi.</span> Obavijesti rade kad je aplikacija otvorena preko sigurne adrese (https://…) ili na samom serveru preko http://localhost:3000. Preko http://IP-adrese u lokalnoj mreži preglednik ih ne dopušta.'
   :pm==='denied'?'<span style="color:var(--er)">Preglednik je blokirao obavijesti za ovu stranicu.</span>'
   :on&&pm==='granted'?'<b style="color:var(--ok)">Uključeno.</b> Svaka nova radnja radnika prikazuje se kao skočna obavijest u Windowsima.':'Isključeno.')+'</div>'

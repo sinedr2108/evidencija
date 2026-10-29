@@ -184,7 +184,7 @@
     }
     const missingDays = (uid, month) => { const have = new Set(db.entries.filter(e => e.uid === uid && e.date.startsWith(month)).map(e => e.date)); return weekdays(month).filter(d => !have.has(d)); };
     /* until: zadnji datum na koji se obavijest odnosi; dan poslije više se ne prikazuje na početnoj stranici */
-    const notify = (uid, text, until) => db.obav.push({ id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid, text, ts: Date.now(), read: false, until: until || '' });
+    const notify = (uid, text, until) => { db.obav.push({ id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid, text, ts: Date.now(), read: false, until: until || '' }); if (Core.onNotify) Core.onNotify(uid, text); };
     const approval = (uid, date, ex) => db.slreq.find(q => q.uid === uid && q.status === 'approved' && q.date === date && (!q.entryId || q.entryId === ex));
     const pr = (uid, m) => +db.prijenos[uid + '|' + m] || 0;
     const nameOf = id => (db.users.find(u => u.id === id) || {}).name || '?';

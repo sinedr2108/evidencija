@@ -72,6 +72,10 @@ blk('EXPORT',"""async function doExport(kind){const m=$('rm').value;if(!/^\\d{4}
  try{const d=await claude.use('downloads');if(!d){toast('Preuzimanje nije dostupno u ovom prikazu.');return}
   await d.save({filename:nm,data:kind==='xlsx'?core().xlsx(m,f,t):core().csv(m,kind,f,t)})}catch(e){toast('Preuzimanje nije uspjelo.')}}""")
 blk('BOOT',"showLogin();")
+# demo nema servera ni service workera: push obavijesti se ne nude
+rep("const pushOk=()=>'serviceWorker' in navigator","const pushOk=()=>false&&'serviceWorker' in navigator")
+rep("if(!adm)$('ptpub').innerHTML=pushHtml(1);","if(!adm)$('ptpub').classList.add('hide');")
+rep("show=!pushSub&&!later&&((isIOS()&&!isStandalone())||","show=false&&!pushSub&&!later&&((isIOS()&&!isStandalone())||")
 
 mock=r'''
 /* ===== Demo: lažni server u pregledniku ===== */
