@@ -371,7 +371,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h2>Poslane poruke</h2><div id="pl"></div>
   </div>
   <div id="p-aup" class="pg hide"><div class="card upute">
-   <p class="mu">Upute za administratore · ažurirano 28.10.2026.</p>
+   <p class="mu">Upute za administratore · ažurirano 29.10.2026.</p>
    <div class="uh" data-h="ahm">
    <h3>Početna stranica</h3>
    <ul><li>Na vrhu su <b>zahtjevi na čekanju</b>: slobodan dan, godišnji odmor, ponovno otvaranje mjeseca i novo gradilište. Svaki prihvatite ili odbijte, po želji s napomenom. Radnik odluku odmah vidi na svojoj početnoj stranici i u pošti.</li>
@@ -476,8 +476,8 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <div class="uh" data-h="akt">
    <h3>Aktivnosti radnika (zvono)</h3>
    <ul><li>Popis radnji radnika s detaljima, najnovije na vrhu: prijava, unosi i izmjene sati, zahtjevi, završen mjesec, otpremnice, odgovori, pročitane poruke. Crveni broj na zvonu su nove radnje.</li>
-   <li><b>Uključi obavijesti u Windowsima</b> i dopustite obavijesti u pregledniku: svaka nova radnja pojavi se kao skočni prozor. <b>Probna obavijest</b> provjerava radi li.</li>
-   <li>Obavijesti stižu dok je aplikacija otvorena u pregledniku (smije biti u pozadini) i samo preko https adrese ili na serveru preko localhost.</li>
+   <li><b>Uključi obavijesti i kad je aplikacija zatvorena</b> i dopustite obavijesti u pregledniku: svaka nova radnja radnika pojavi se kao obavijest u Windowsima i kad prozor aplikacije nije otvoren, dok god Chrome radi u pozadini (Chrome → Postavke → Sustav → <i>Nastavi izvoditi pozadinske aplikacije kad se Google Chrome zatvori</i>). Uključuje se posebno na svakom računalu; odjavom se obavijesti na tom računalu zaustavljaju do sljedeće prijave. <b>Probna obavijest</b> provjerava radi li.</li>
+   <li>Ako to ne želite, možete uključiti samo <b>obavijesti dok je aplikacija otvorena</b> (aplikacija smije biti u pozadini). Obje vrste rade samo preko https adrese.</li>
    <li>Kvačicom birate želite li obavijesti i o prijavama. Popis se briše ponovnim pokretanjem servera.</li></ul>
    </div>
    <div id="aupall" style="margin-top:16px"><button class="sm" id="aupa">Sve upute</button></div>
@@ -600,7 +600,7 @@ function draw(){
  $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
  if(me.role==='admin'&&tab==='adm')drawAdm();
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
- drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='akt')drawAkt();applyPage();drawZn();if(page==='aot'&&zn.aot){zn.aot=0;api('POST','otpremnice/seen').catch(()=>{})}if(me.ak&&akUid!==me.id)akCheck();
+ drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='akt')drawAkt();applyPage();drawZn();if(page==='aot'&&zn.aot){zn.aot=0;api('POST','otpremnice/seen').catch(()=>{})}if(me.ak&&akUid!==me.id)akCheck();if(me.ak)pushInit();
 }
 let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',nm:'Naruči materijal',anm:'Narudžbe materijala',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika',aup:'Upute za administratore'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
@@ -801,7 +801,7 @@ $('zah').onclick=async()=>{const m=$('zmj').value,r=await pr('Razlog zahtjeva (n
  try{await api('POST','requests',{month:m,reason:r});toast('Zahtjev je poslan administratoru.');await load()}catch(e){toast(e.message)}};
 /*LOGIN*/$('lb').onclick=async()=>{try{await api('POST','login',{username:$('lu').value,password:$('lp').value});$('lp').value='';await load()}catch(e){say('lm',e.message)}};
 $('lp').onkeydown=e=>{if(e.key==='Enter')$('lb').click()};/*/LOGIN*/
-$('out').onclick=async()=>{await api('POST','logout').catch(()=>{});try{sessionStorage.removeItem('admView')}catch(e){}showLogin()};
+$('out').onclick=async()=>{if(pushSub)await api('POST','push/unsub',{endpoint:pushSub.endpoint}).catch(()=>{});pushIni=0;pushSub=null;await api('POST','logout').catch(()=>{});try{sessionStorage.removeItem('admView')}catch(e){}showLogin()};
 $('pw').onclick=async()=>{const o=await pr('Stara lozinka:');if(o===null)return;const n=await pr('Nova lozinka (min. 6 znakova):');if(!n)return;
  try{await api('POST','password',{old:o,new:n});toast('Lozinka je promijenjena.')}catch(e){toast(e.message)}};
 
@@ -1108,7 +1108,17 @@ let akB='',akS=0,akL=[],akU=0,akBusy=0,akUid='';
 const lsG=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsS=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const akOk=()=>'Notification' in window&&window.isSecureContext,akTm=t=>new Date(t).toLocaleTimeString('hr-HR',{hour:'2-digit',minute:'2-digit'});
 function akShow(t,b,tag){try{const n=new Notification(t,{body:b,icon:'/icon-192.png',tag});n.onclick=()=>{window.focus();setPage('akt');n.close()}}catch(e){}}
-function akNotify(l){if(lsG('akOn')!=='1'||!akOk()||Notification.permission!=='granted')return;l=l.filter(a=>!a.login||lsG('akPr')!=='0');if(!l.length)return;
+/* PUSH: obavijesti stižu preko service workera (public/sw.js) i kad prozor aplikacije nije otvoren; dok je push uključen, stranica ne prikazuje svoje obavijesti (da ne budu dvostruke) */
+let pushReg=null,pushSub=null,pushIni=0;const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&window.isSecureContext;
+const pushKey=s=>{const b=atob(s.replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(b,c=>c.charCodeAt(0))};
+const pushSave=()=>pushSub?api('POST','push/sub',{sub:pushSub.toJSON(),prijava:lsG('akPr')!=='0'}):Promise.resolve();
+async function pushInit(){if(pushIni||!pushOk()||!me||!me.ak)return;pushIni=1;try{pushReg=await navigator.serviceWorker.register('/sw.js');pushSub=await pushReg.pushManager.getSubscription();if(pushSub)await pushSave()}catch(e){}if(page==='akt')drawAkt()}
+async function pushOn(){if(Notification.permission!=='granted'&&await Notification.requestPermission()!=='granted')return drawAkt();
+ try{if(!pushReg)pushReg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;const k=await api('GET','push/key');
+  pushSub=await pushReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pushKey(k.key)});await pushSave();await api('POST','push/test',{endpoint:pushSub.endpoint});toast('Push obavijesti su uključene na ovom uređaju.')}
+ catch(e){toast('Uključivanje nije uspjelo: '+e.message)}drawAkt()}
+async function pushOff(){try{if(pushSub){await api('POST','push/unsub',{endpoint:pushSub.endpoint}).catch(()=>{});await pushSub.unsubscribe()}}catch(e){}pushSub=null;drawAkt()}
+function akNotify(l){if(pushSub)return;if(lsG('akOn')!=='1'||!akOk()||Notification.permission!=='granted')return;l=l.filter(a=>!a.login||lsG('akPr')!=='0');if(!l.length)return;
  if(l.length>4)akShow(l.length+' novih aktivnosti radnika',l.slice(-6).reverse().map(a=>akTm(a.ts)+' '+a.name+': '+a.t+(a.d?' ('+a.d.split('\n')[0]+')':'')).join('\n'),'akt-g'+l[l.length-1].id);
  else l.forEach(a=>akShow(a.name+': '+a.t,(a.d?a.d+'\n':'')+'Vrijeme: '+akTm(a.ts),'akt'+a.id))}
 async function akCheck(){if(!me||!me.ak||akBusy)return;if(akUid!==me.id){akUid=me.id;akB='';akS=0;akL=[];akU=0}
@@ -1117,18 +1127,25 @@ async function akCheck(){if(!me||!me.ak||akBusy)return;if(akUid!==me.id){akUid=m
   if(nw.length){akNotify(nw);if(page!=='akt')akU+=nw.length}$('akn').classList.toggle('hide',!akU);$('akn').textContent=akU>99?'99+':akU;
   if(page==='akt')drawAkt()}catch(e){}finally{akBusy=0}}
 function drawAkt(){akU=0;$('akn').classList.add('hide');const on=lsG('akOn')==='1',pm=akOk()?Notification.permission:'';
- $('aks').innerHTML='<b>Obavijesti u Windowsima</b><div style="margin:6px 0">'+(!akOk()?'<span style="color:var(--er)">Ovaj preglednik ne može prikazati obavijesti na ovoj adresi.</span> Obavijesti rade kad je aplikacija otvorena preko sigurne adrese (https://…) ili na samom serveru preko http://localhost:3000. Preko http://IP-adrese u lokalnoj mreži preglednik ih ne dopušta.'
-  :pm==='denied'?'<span style="color:var(--er)">Preglednik je blokirao obavijesti za ovu stranicu.</span> Kliknite ikonu lijevo od adrese (lokot), kod <b>Obavijesti</b> odaberite <b>Dopusti</b> i osvježite stranicu.'
+ const push='<b>Obavijesti i kad je aplikacija zatvorena</b><div style="margin:6px 0">'+(!pushOk()?'<span class="mu">Ovaj preglednik ili adresa ne podržava ove obavijesti (potrebna je sigurna adresa https://…).</span></div>'
+  :pm==='denied'?'<span style="color:var(--er)">Preglednik je blokirao obavijesti za ovu stranicu.</span> Kliknite ikonu lijevo od adrese (lokot), kod <b>Obavijesti</b> odaberite <b>Dopusti</b> i osvježite stranicu.</div>'
+  :pushSub?'<b style="color:var(--ok)">Uključeno na ovom uređaju.</b> Obavijest o svakoj radnji radnika stiže u Windows i kad je prozor aplikacije zatvoren, dok god Chrome radi u pozadini.</div><button class="sm" id="pu2">Probna obavijest</button> <button class="sm" id="pu0">Isključi</button>'
+  :'Isključeno.</div><button id="pu1">Uključi obavijesti i kad je aplikacija zatvorena</button>')
+  +'<div class="mu" style="margin-top:6px">Uključuje se posebno na svakom računalu. Chrome mora smjeti raditi u pozadini: Postavke → Sustav → <i>Nastavi izvoditi pozadinske aplikacije kad se Google Chrome zatvori</i> (u Windowsima je to obično uključeno). Klik na obavijest otvara ovu stranicu.</div>';
+ const page_='<b>Obavijesti dok je aplikacija otvorena</b><div style="margin:6px 0">'+(!akOk()?'<span style="color:var(--er)">Ovaj preglednik ne može prikazati obavijesti na ovoj adresi.</span> Obavijesti rade kad je aplikacija otvorena preko sigurne adrese (https://…) ili na samom serveru preko http://localhost:3000. Preko http://IP-adrese u lokalnoj mreži preglednik ih ne dopušta.'
+  :pm==='denied'?'<span style="color:var(--er)">Preglednik je blokirao obavijesti za ovu stranicu.</span>'
   :on&&pm==='granted'?'<b style="color:var(--ok)">Uključeno.</b> Svaka nova radnja radnika prikazuje se kao skočna obavijest u Windowsima.':'Isključeno.')+'</div>'
   +(akOk()&&pm!=='denied'?(on&&pm==='granted'?'<button class="sm" id="akt1">Probna obavijest</button> <button class="sm" id="ak0">Isključi</button>':'<button id="ak1">Uključi obavijesti u Windowsima</button>'):'')
-  +'<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:400"><input type="checkbox" id="akpr" style="width:auto"'+(lsG('akPr')!=='0'?' checked':'')+'> Obavijesti i o prijavi radnika u aplikaciju</label>'
-  +'<div class="mu" style="margin-top:6px">Obavijesti stižu dok je aplikacija otvorena u pregledniku (kartica smije biti u pozadini, prozor smanjen). Ako je prozor dugo smanjen, obavijest može kasniti do jedne minute. Klik na obavijest otvara ovu stranicu.</div>';
+  +'<div class="mu" style="margin-top:6px">Stižu dok je aplikacija otvorena u pregledniku (kartica smije biti u pozadini, prozor smanjen). Ako je prozor dugo smanjen, obavijest može kasniti do jedne minute.</div>';
+ $('aks').innerHTML=push+'<hr style="border:0;border-top:1px solid var(--bd);margin:12px 0">'+(pushSub?'<div class="mu">Obavijesti dok je aplikacija otvorena nisu potrebne: dok su uključene obavijesti i kad je aplikacija zatvorena, stižu samo one (bez udvostručavanja).</div>':page_)
+  +'<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-weight:400"><input type="checkbox" id="akpr" style="width:auto"'+(lsG('akPr')!=='0'?' checked':'')+'> Obavijesti i o prijavi radnika u aplikaciju</label>';
  $('akl').innerHTML=akL.length?akL.slice().reverse().map(a=>'<div class="card" style="border-left:5px solid '+(a.login?'var(--bd)':'var(--ac)')+'"><b>'+E(a.name)+': '+E(a.t)+'</b><div class="mu">'+new Date(a.ts).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</div>'+(a.d?'<div style="white-space:pre-wrap;margin-top:4px">'+E(a.d)+'</div>':'')+'</div>').join(''):'<div class="card mu">Još nema zabilježenih aktivnosti.</div>'}
 $('akb').onclick=()=>setPage('akt');
 $('aks').onclick=async e=>{const id=e.target.id;
+ if(id==='pu1')return pushOn();if(id==='pu0')return pushOff();if(id==='pu2')return api('POST','push/test',{endpoint:pushSub.endpoint}).then(()=>toast('Probna obavijest je poslana.')).catch(x=>toast(x.message));
  if(id==='ak1'){const r=await Notification.requestPermission();if(r==='granted'){lsS('akOn','1');akShow('Evidencija: obavijesti su uključene','Ovako će izgledati obavijest o aktivnosti radnika.','akt-test')}drawAkt()}
  else if(id==='ak0'){lsS('akOn','0');drawAkt()}else if(id==='akt1')akShow('Evidencija: probna obavijest','Obavijesti o aktivnostima radnika rade.','akt-test')};
-$('aks').onchange=e=>{if(e.target.id==='akpr')lsS('akPr',e.target.checked?'1':'0')};
+$('aks').onchange=e=>{if(e.target.id==='akpr'){lsS('akPr',e.target.checked?'1':'0');pushSave().catch(()=>{})}};
 setInterval(akCheck,10000);['zt','zs','nmhs'].forEach(i=>abcSel($(i)));
 /* Automatsko osvježavanje: svakih 10 s (i pri povratku u aplikaciju) provjeri je li itko promijenio podatke; ako jest, učitaj ih ponovno.
    Ne osvježava dok korisnik upisuje u polje ili je otvoren dijalog – tada se osvježi čim završi. */

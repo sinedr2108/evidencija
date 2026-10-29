@@ -1,5 +1,5 @@
 'use strict';
-const http=require('http'),crypto=require('crypto'),fs=require('fs'),path=require('path');
+const http=require('http'),crypto=require('crypto'),fs=require('fs'),path=require('path'),Push=require('./push.js');
 /* Iza Cloudflare Tunnela svi zahtjevi dolaze s localhosta; pravu adresu klijenta vjerujemo samo u tom slučaju. */
 const clientIp=req=>{const a=req.socket.remoteAddress||'';return /^(::1|127\.0\.0\.1|::ffff:127\.0\.0\.1)$/.test(a)&&req.headers['cf-connecting-ip']?String(req.headers['cf-connecting-ip']).slice(0,64):a};
 const PORT=+process.env.PORT||3000,DIR=path.join(__dirname,'data'),DB=path.join(DIR,'db.json');
@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=12;
+const DATA_VERSION=13;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -35,7 +35,8 @@ const MIGRATIONS={
   10:d=>{ /* NARUČI MATERIJAL: narudžbe materijala radnika */ if(!Array.isArray(d.narudzbe))d.narudzbe=[]; },
   11:d=>{ /* VODITELJ RADOVA: nova uloga role:'vod' (samo administratorski dio, odabrane funkcije u u.prava); postojeći korisnici se ne mijenjaju */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) },
   12:d=>{ /* OBRAĐENO: narudžbe imaju status obrade (obr: null = neobrađeno) i povijest prosljeđivanja (fwd); otpSeen = kad je korisnik zadnji put otvorio Otpremnice u administraciji (značka) */
-    (d.narudzbe||[]).forEach(o=>{if(o.obr===undefined)o.obr=null;if(!Array.isArray(o.fwd))o.fwd=[]});const n=Date.now();(d.users||[]).forEach(u=>{if(!u.otpSeen)u.otpSeen=n}) }
+    (d.narudzbe||[]).forEach(o=>{if(o.obr===undefined)o.obr=null;if(!Array.isArray(o.fwd))o.fwd=[]});const n=Date.now();(d.users||[]).forEach(u=>{if(!u.otpSeen)u.otpSeen=n}) },
+  13:d=>{ /* PUSH OBAVIJESTI: ključevi poslužitelja (VAPID) i pretplate preglednika {uid,endpoint,keys,prijava,ts} */ if(!Array.isArray(d.push))d.push=[];if(!d.vapid||!d.vapid.pub)d.vapid=Push.vapidKeys() }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -132,7 +133,20 @@ const AKT={
   'DELETE /api/narudzbe/:id':{pre:c=>db.narudzbe.find(x=>x.id===c.p[0]&&x.uid===c.u.id),f:(c,o)=>['Obrisana neposlana narudžba materijala',o?o.site+' · stavki: '+o.items.length:'']},
   'POST /api/password':{f:()=>['Promjena lozinke','']}
 };
-function aktAdd(u,t,d){akt.push({id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'});if(akt.length>300)akt.shift()}
+function aktAdd(u,t,d){const a={id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'};akt.push(a);if(akt.length>300)akt.shift();pushAkt(a)}
+/* push obavijest o aktivnosti radnika svima koji smiju vidjeti Aktivnosti radnika i uključili su push na nekom uređaju */
+const pushSubj=()=>'mailto:'+(String((db.smtp||{}).from||'').match(/[^<\s]+@[^>\s]+/)||['obavijesti@tid-intel.hr'])[0];
+async function pushTo(list,data){for(const s of list){const st=await Push.send(db.vapid,s,data,pushSubj());if(st===404||st===410){db.push=db.push.filter(x=>x!==s);save()}}}
+function pushAkt(a){const hm=new Date(a.ts).toLocaleTimeString('hr-HR',{hour:'2-digit',minute:'2-digit'});
+  const l=(db.push||[]).filter(s=>s.uid!==a.uid&&(!a.login||s.prijava)&&can(db.users.find(u=>u.id===s.uid),'ak'));
+  if(l.length)pushTo(l,{title:a.name+': '+a.t,body:(a.d?a.d+'\n':'')+'Vrijeme: '+hm,tag:'akt'+a.id,url:'/#akt'}).catch(e=>console.error(e))}
+R('GET','/api/push/key','ak',c=>c.send(200,{key:db.vapid.pub}));
+R('POST','/api/push/sub','ak',c=>{const s=c.b.sub||{},ep=String(s.endpoint||''),k=s.keys||{};
+  if(!/^https:\/\//.test(ep)||ep.length>1000||!k.p256dh||!k.auth)return c.send(400,{e:'Neispravna pretplata preglednika.'});
+  db.push=db.push.filter(x=>x.endpoint!==ep);db.push.push({uid:c.u.id,endpoint:ep,keys:{p256dh:String(k.p256dh).slice(0,200),auth:String(k.auth).slice(0,100)},prijava:c.b.prijava!==false,ts:Date.now()});save();c.send(200,{ok:1})});
+R('POST','/api/push/unsub',1,c=>{const ep=String(c.b.endpoint||'');db.push=db.push.filter(x=>!(x.endpoint===ep&&x.uid===c.u.id));save();c.send(200,{ok:1})});
+R('POST','/api/push/test','ak',async c=>{const l=db.push.filter(x=>x.uid===c.u.id&&x.endpoint===String(c.b.endpoint||''));if(!l.length)return c.send(400,{e:'Na ovom uređaju push obavijesti nisu uključene.'});
+  await pushTo(l,{title:'TiDy Connect: probna obavijest',body:'Push obavijesti rade i kad je aplikacija zatvorena.',tag:'akt-test',url:'/#akt'});c.send(200,{ok:1})});
 R('GET','/api/aktivnost','ak',c=>{const s=c.q.b===BOOT?+c.q.s||0:0;c.send(200,{boot:BOOT,seq:aktSeq,list:akt.filter(a=>a.id>s)})});
 R('POST','/api/login',0,c=>{
   const un=String(c.b.username||'').trim().toLowerCase(),key=c.ip+'|'+un,f=fails[key];
@@ -395,6 +409,8 @@ http.createServer((req,res)=>{
   /* ikone za početni zaslon mobitela (logo tvrtke) i manifest */
   {const IK={'/icon-192.png':'image/png','/icon-512.png':'image/png','/icon-maskable-512.png':'image/png','/apple-touch-icon.png':'image/png','/apple-touch-icon-precomposed.png':'image/png','/favicon.png':'image/png','/favicon.ico':'image/png','/manifest.webmanifest':'application/manifest+json'},t=req.method==='GET'&&IK[url.pathname];
    if(t){const f=url.pathname==='/apple-touch-icon-precomposed.png'?'apple-touch-icon.png':url.pathname==='/favicon.ico'?'favicon.png':url.pathname.slice(1);return raw(200,fs.readFileSync(path.join(__dirname,'public',f)),{'Content-Type':t,'Cache-Control':'public, max-age=86400'})}}
+  if(req.method==='GET'&&url.pathname==='/sw.js')
+    return raw(200,fs.readFileSync(path.join(__dirname,'public','sw.js')),{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-cache','Service-Worker-Allowed':'/'});
   if(req.method==='GET'&&url.pathname==='/logo.png')
     return raw(200,fs.readFileSync(path.join(__dirname,'public','logo.png')),{'Content-Type':'image/png','Cache-Control':'public, max-age=86400'});
   if(req.method==='GET'&&url.pathname==='/core.js')
