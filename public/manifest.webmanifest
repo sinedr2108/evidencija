@@ -2,7 +2,7 @@
   "name": "TiDy Connect",
   "short_name": "TiDy Connect",
   "start_url": "/",
-  "display": "browser",
+  "display": "standalone",
   "background_color": "#ffcc00",
   "theme_color": "#d97706",
   "icons": [
