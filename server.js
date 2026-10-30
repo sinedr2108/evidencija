@@ -434,7 +434,7 @@ R('POST','/api/report/send','iz',async c=>{if(!valid(c.b.month))return c.send(40
 
 http.createServer((req,res)=>{
   const url=new URL(req.url,'http://x');
-  const raw=(code,t,h)=>{res.writeHead(code,h||{});res.end(t)};
+  const raw=(code,t,h)=>{h=h||{};if(url.pathname.startsWith('/api/')&&!h['Cache-Control'])h['Cache-Control']='no-store';res.writeHead(code,h);res.end(t)};
   const send=(code,o,h)=>raw(code,JSON.stringify(o),{'Content-Type':'application/json; charset=utf-8',...h});
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))
     return raw(200,fs.readFileSync(path.join(__dirname,'public','index.html')),{'Content-Type':'text/html; charset=utf-8'});

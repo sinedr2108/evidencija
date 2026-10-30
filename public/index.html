@@ -856,7 +856,7 @@ async function drawSh(){if(!$('rm').value)return;const keep=$('shs').value,all=[
     '<tr><th>Ukupno</th>'+d.months.map(m=>'<th class="n">'+(s.totals.byMonth[m]?f1(s.totals.byMonth[m]):'')+'</th>').join('')+'<th class="n">'+f1(s.totals.total)+'</th></tr></table></div>').join(''):'<span class="mu">Nema sati na gradilištima u ovom razdoblju.</span>'
  }catch(e){$('shh').innerHTML='<span class="mu">'+E(e.message)+'</span>'}}
 $('shp').onchange=drawSh;$('shs').onchange=drawSh;
-$('shx').onclick=()=>{location.href='/api/sitehours.xlsx?'+shq()};$('shc2').onclick=()=>{location.href='/api/sitehours.csv?'+shq()};
+$('shx').onclick=()=>{location.href='/api/sitehours.xlsx?'+shq()+'&t='+Date.now()};$('shc2').onclick=()=>{location.href='/api/sitehours.csv?'+shq()+'&t='+Date.now()};
 function drawSlRep(){
  const m=today().slice(0,7),dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.';
  const L=users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled).map(u=>{const b=Core.bank(entries.filter(e=>e.uid===u.id),m,prij[u.id+'|'+m]||0),rs=slreq.filter(r=>r.uid===u.id&&((r.status==='approved'&&(r.date.slice(0,7)>=m))||r.status==='open')).sort((a,c)=>a.date<c.date?-1:1);return{u,b,rs}}).filter(x=>x.b>=5||x.rs.some(r=>r.status==='approved')).sort((a,b)=>b.b-a.b||a.u.name.localeCompare(b.u.name,'hr'));
@@ -981,7 +981,7 @@ $('nm').oninput=()=>{const i=$('nm'),a=i.selectionStart,b=i.selectionEnd,u=i.val
 $('am2').onclick=()=>{const v=$('nm').value.trim().toLocaleUpperCase('hr-HR');if(v){$('nm').value='';cfg(me.sites,me.meals.concat([v]))}};
 $('ls').onclick=e=>{const b=e.target.closest('[data-k]');if(b)cfg(me.sites.filter((_,i)=>i!==+b.dataset.k),me.meals)};
 $('lm2').onclick=e=>{const b=e.target.closest('[data-k]');if(b)cfg(me.sites,me.meals.filter((_,i)=>i!==+b.dataset.k))};
-/*EXPORT*/async function doExport(kind){if(kind==='sih'){location.href='/api/sihterice.xlsx?month='+$('rm').value+'&uid='+encodeURIComponent($('fw').value);return}location.href='/api/report.'+(kind==='xlsx'?'xlsx':'csv')+'?'+qf()+(kind==='xlsx'?'':'&kind='+kind)}/*/EXPORT*/
+/*EXPORT*/async function doExport(kind){if(kind==='sih'){location.href='/api/sihterice.xlsx?month='+$('rm').value+'&uid='+encodeURIComponent($('fw').value)+'&t='+Date.now();return}location.href='/api/report.'+(kind==='xlsx'?'xlsx':'csv')+'?'+qf()+(kind==='xlsx'?'':'&kind='+kind)+'&t='+Date.now()}/*/EXPORT*/
 $('xl').onclick=()=>doExport('xlsx');$('sih').onclick=()=>doExport('sih');$('c1').onclick=()=>doExport('sum');$('c3').onclick=()=>doExport('day');$('c4').onclick=()=>doExport('site');$('c5').onclick=()=>doExport('sl');$('c2').onclick=()=>doExport('det');
 $('pr').onclick=()=>print();
 $('em').onclick=async()=>{try{say('am',(await api('POST','report/send',{month:$('rm').value})).msg,1)}catch(e){say('am',e.message)}};
