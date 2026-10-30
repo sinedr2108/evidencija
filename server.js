@@ -100,6 +100,8 @@ const can=(u,g)=>{if(!u)return false;if(Array.isArray(g))return g.some(x=>can(u,
   return p.includes(g)||(EVF.includes(g)&&p.includes('ev'))||(g==='ev'&&p.some(x=>EVF.includes(x)))};
 const pravaOf=u=>u.role==='vod'?FUNK.filter(g=>can(u,g)):u.role==='user'?GRUPE.filter(g=>Array.isArray(u.prava)&&u.prava.includes(g)):[];
 const uloga=r=>r==='admin'||r==='vod'?r:'user';
+/* naučnik je radnik (role 'user') s oznakom nau; u API-ju korisnika uloga 'nau' */
+const noNau=c=>c.u.nau&&(c.send(403,{e:'Naučnik koristi samo šihtericu.'}),true);
 const noAdm=c=>c.u.role!=='user'&&(c.send(403,{e:c.u.role==='vod'?'Voditelj radova ne unosi radno vrijeme.':'Administratori ne unose radno vrijeme.'}),true);
 const valid=m=>/^\d{4}-\d{2}$/.test(m||'');
 const fails={};
@@ -171,7 +173,7 @@ R('POST','/api/login',0,c=>{
   c.send(200,{ok:1},{'Set-Cookie':'t='+sign(u.id)+'; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000'});
 });
 R('POST','/api/logout',0,c=>c.send(200,{ok:1},{'Set-Cookie':'t=; HttpOnly; Path=/; Max-Age=0'}));
-R('GET','/api/me',1,c=>c.send(200,{id:c.u.id,name:c.u.name,role:c.u.role,prava:pravaOf(c.u),sites:db.sites,meals:db.meals,vrste:VRSTE}));
+R('GET','/api/me',1,c=>c.send(200,{id:c.u.id,name:c.u.name,role:c.u.role,prava:pravaOf(c.u),nau:!!c.u.nau,sites:db.sites,meals:db.meals,vrste:core.vrsteOf(c.u)}));
 R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'));
   c.send(200,{entries:db.entries.filter(e=>a||e.uid===c.u.id).map(e=>({...e,vrsta:e.vrsta||'Redovan rad',name:core.nameOf(e.uid)})),closed:db.closed.filter(k=>a||k.startsWith(c.u.id+'|')),
     requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),prijenos:Object.fromEntries(Object.entries(db.prijenos).filter(([k])=>a||k.startsWith(c.u.id+'|'))),
@@ -192,7 +194,7 @@ R('DELETE','/api/entries/:id',1,c=>{if(noAdm(c))return;const i=db.entries.findIn
   if(db.closed.includes(c.u.id+'|'+db.entries[i].date.slice(0,7)))return c.send(400,{e:'Taj je mjesec završen.'});
   {const e0=db.entries[i],m=e0.date.slice(0,7),mine=db.entries.filter(x=>x.uid===c.u.id),aft=core.bank(mine.filter(x=>x!==e0),m,core.pr(c.u.id,m));if(aft<0&&aft<core.bank(mine,m,core.pr(c.u.id,m)))return c.send(400,{e:'Brisanje nije moguće jer je slobodan dan već iskorišten, pa bi Sati za slobodan dan postali negativni.'})}
   db.slreq.forEach(q=>{if(q.entryId===db.entries[i].id)q.entryId=null});db.entries.splice(i,1);save();c.send(200,{ok:1})});
-R('POST','/api/slreq',1,c=>{if(noAdm(c))return;const d=String(c.b.date||''),m=d.slice(0,7);
+R('POST','/api/slreq',1,c=>{if(noAdm(c)||noNau(c))return;const d=String(c.b.date||''),m=d.slice(0,7);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return c.send(400,{e:'Odaberite datum slobodnog dana.'});
   if(db.closed.includes(c.u.id+'|'+m))return c.send(400,{e:'Taj je mjesec završen.'});
   if(core.bank(db.entries.filter(x=>x.uid===c.u.id),m,core.pr(c.u.id,m))>=8)return c.send(400,{e:'Imate barem 8 sati za slobodan dan, zahtjev nije potreban.'});
@@ -206,7 +208,7 @@ R('PUT','/api/prijenos','iz',c=>{const u=db.users.find(x=>x.id===c.b.uid&&x.role
   if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});
   const k=u.id+'|'+c.b.month;if(v===0)delete db.prijenos[k];else db.prijenos[k]=Math.round(v*100)/100;save();c.send(200,{ok:1})});
 const dd=core.dfmt,span=q=>q.dates.length===1?dd(q.dates[0]):dd(q.dates[0])+' – '+dd(q.dates[q.dates.length-1]);
-R('POST','/api/gorq',1,c=>{if(noAdm(c))return;const dates=core.rangeDates(String(c.b.from||''),c.b.to?String(c.b.to):'');
+R('POST','/api/gorq',1,c=>{if(noAdm(c)||noNau(c))return;const dates=core.rangeDates(String(c.b.from||''),c.b.to?String(c.b.to):'');
   if(!dates)return c.send(400,{e:'Neispravan raspon datuma (najviše 92 dana).'});if(!dates.length)return c.send(400,{e:'Odabrani datumi nisu radni dani.'});
   if(dates.some(d=>db.closed.includes(c.u.id+'|'+d.slice(0,7))))return c.send(400,{e:'Neki od dana nalaze se u završenom mjesecu.'});
   const taken=new Set(db.gorq.filter(q=>q.uid===c.u.id&&(q.status==='open'||q.status==='approved')).flatMap(q=>q.dates));
@@ -273,10 +275,10 @@ R('DELETE','/api/inbox/:k/:id',1,c=>{if(!core.inboxHide(c.u.id,c.p[0],c.p[1]))re
    datoteka u data/otpremnice, a zapis otpremnice s popisom datoteka u bazu. */
 const OTP=path.join(DIR,'otpremnice');fs.mkdirSync(OTP,{recursive:true});
 const otpPath=f=>path.join(OTP,f);
-R('POST','/api/otpremnice/foto',1,c=>{if(noAdm(c))return;const m=/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(c.b.data||''));
+R('POST','/api/otpremnice/foto',1,c=>{if(noAdm(c)||noNau(c))return;const m=/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(c.b.data||''));
   const buf=m&&Buffer.from(m[1],'base64');if(!buf||buf.length<500||buf[0]!==0xFF||buf[1]!==0xD8)return c.send(400,{e:'Neispravna fotografija.'});
   const f='u-'+core.otpKey(c.u.id)+'-'+crypto.randomBytes(8).toString('hex')+'.jpg';fs.writeFileSync(otpPath(f),buf);c.send(200,{f})});
-R('POST','/api/otpremnice',1,c=>{if(noAdm(c))return;const o=core.otpCheck(c.u,c.b,f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});
+R('POST','/api/otpremnice',1,c=>{if(noAdm(c)||noNau(c))return;const o=core.otpCheck(c.u,c.b,f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});
   db.otpremnice.push(o);save();c.send(200,{ok:1})});
 const ymdOk=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||'');
 R('GET','/api/otpremnice',1,c=>{const adm=can(c.u,'ot')&&(c.u.role==='admin'||!!c.q.adm);c.send(200,{list:core.otpList(c.u,ymdOk(c.q.od)?c.q.od:'',ymdOk(c.q.do)?c.q.do:'',adm),sites:adm?core.otpSitesAll():[]})});
@@ -324,7 +326,7 @@ async function nmMail(o,subject,text){const a=db.users.find(x=>x.id===o.adminId)
   try{await M.t.sendMail({from:M.from,to:a.email,subject,text,
       attachments:[{filename:'narudzba-materijala-'+o.site.replace(/[^\wÀ-ɏ-]+/g,'_').slice(0,60)+'.pdf',content:Buffer.from(Core.pdf(Core.nmDoc(v)))}]});o.mailTs=Date.now();delete o.mailErr;save();return{mail:'',mailTo:a.email}}
   catch(e){o.mailErr=String(e.message).slice(0,200);save();return{mail:'E-mail nije poslan: '+e.message}}}
-R('POST','/api/narudzbe',1,async c=>{if(noAdm(c))return;const o=core.nmSave(c.u,c.b);if(typeof o==='string')return c.send(400,{e:o});if(o.status==='sent'){o.obr=null;o.fwd=[]}save();
+R('POST','/api/narudzbe',1,async c=>{if(noAdm(c)||noNau(c))return;const o=core.nmSave(c.u,c.b);if(typeof o==='string')return c.send(400,{e:o});if(o.status==='sent'){o.obr=null;o.fwd=[]}save();
   if(o.status!=='sent')return c.send(200,{ok:1,id:o.id});
   const r=await nmMail(o,'Narudžba materijala za '+o.site,c.u.name+' Vam šalje narudžbu materijala za '+o.site+'.');
   c.send(200,{ok:1,id:o.id,mail:r.mail,mailTo:r.mailTo||''})});
@@ -374,11 +376,11 @@ R('POST','/api/users/:id/purge',2,c=>{const u=db.users.find(x=>x.id===c.p[0]);
   u.purged=Date.now();u.email='';delete u.salt;delete u.hash;delete u.loginSent;save();c.send(200,{ok:1})});
 R('GET','/api/users',1,c=>{const full=c.u.role==='admin';if(!full&&c.u.role!=='vod'&&!pravaOf(c.u).length)return c.send(403,{e:'Samo za administratore.'});
   /* djelomični administrator dobiva samo imena i stanje korisnika (bez korisničkih imena i e-mailova) */
-  c.send(200,db.users.filter(u=>!u.purged).map(({id,name,username,role,email,disabled,deleted,loginSent,prava})=>full?({id,name,username:deleted?'':username,role,email,disabled:!!disabled,deleted:deleted||0,loginSent:loginSent||0,prava:role!=='admin'&&Array.isArray(prava)?prava:[]}):({id,name,role,disabled:!!disabled,deleted:deleted||0})))});
+  c.send(200,db.users.filter(u=>!u.purged).map(({id,name,username,role,email,disabled,deleted,loginSent,prava,nau})=>full?({id,name,username:deleted?'':username,role,nau:!!nau,email,disabled:!!disabled,deleted:deleted||0,loginSent:loginSent||0,prava:role!=='admin'&&Array.isArray(prava)?prava:[]}):({id,name,role,nau:!!nau,disabled:!!disabled,deleted:deleted||0})))});
 R('POST','/api/users',2,c=>{const b=c.b,un=String(b.username||'').trim().toLowerCase(),pw=String(b.password||'');
   if(!String(b.name||'').trim()||!un||pw.length<6)return c.send(400,{e:'Unesite ime i prezime, korisničko ime i lozinku (min. 6 znakova).'});
   if(db.users.some(u=>u.username===un))return c.send(400,{e:'Korisničko ime već postoji.'});
-  const nu=addUser(String(b.name).trim(),un,pw,uloga(b.role),String(b.email||'').trim());nu.prava=[];save();c.send(200,{ok:1})});
+  const nu=addUser(String(b.name).trim(),un,pw,uloga(b.role),String(b.email||'').trim());nu.prava=[];if(b.role==='nau')nu.nau=true;save();c.send(200,{ok:1})});
 R('PUT','/api/users/:id',2,c=>{const u=db.users.find(x=>x.id===c.p[0]);if(!u)return c.send(404,{e:'Nije pronađeno.'});
   if(u.deleted)return c.send(400,{e:'Korisnik je izbrisan.'});const b=c.b,bad=e=>c.send(400,{e});
   /* prvo sve provjeri, pa tek onda spremi */
@@ -393,8 +395,8 @@ R('PUT','/api/users/:id',2,c=>{const u=db.users.find(x=>x.id===c.p[0]);if(!u)ret
   if(b.role!==undefined&&u.id===c.u.id&&uloga(b.role)!==u.role)return bad('Ne možete promijeniti vlastitu ulogu.');
   if(b.password){u.salt=crypto.randomBytes(16).toString('hex');u.hash=hash(String(b.password),u.salt)}
   if(b.name!==undefined)u.name=String(b.name).trim().slice(0,100);if(un!==undefined)u.username=un;if(em!==undefined)u.email=em;
-  if(b.disabled!==undefined)u.disabled=!!b.disabled;if(b.role!==undefined&&u.id!==c.u.id){const r=uloga(b.role);if(r!==u.role)u.prava=[];u.role=r}
-  if(Array.isArray(b.prava))u.prava=(u.role==='vod'?FUNK:GRUPE).filter(g=>b.prava.includes(g));if(u.role==='admin')u.prava=[];
+  if(b.disabled!==undefined)u.disabled=!!b.disabled;if(b.role!==undefined&&u.id!==c.u.id){const r=uloga(b.role),n=b.role==='nau';if(r!==u.role||n!==!!u.nau)u.prava=[];u.role=r;if(n)u.nau=true;else delete u.nau}
+  if(Array.isArray(b.prava))u.prava=(u.role==='vod'?FUNK:GRUPE).filter(g=>b.prava.includes(g));if(u.role==='admin'||u.nau)u.prava=[];
   save();c.send(200,{ok:1})});
 R('DELETE','/api/users/:id',2,c=>{if(c.p[0]===c.u.id)return c.send(400,{e:'Ne možete obrisati sami sebe.'});
   /* Brisanje je logičko: unosi i ime ostaju u evidenciji, a prijava i novi podaci više nisu mogući. */
