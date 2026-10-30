@@ -21,7 +21,7 @@
     Object.values(g).forEach(l => { l.sort((a, b) => (a.ts || 0) - (b.ts || 0)); let cap = otLimit(l[0].date); l.forEach(e => { const reg = Math.min(e.hours, cap); cap -= reg; out.set(e.id, Math.round((e.hours - reg) * 100) / 100); }); });
     return out;
   }
-  /* Sati za slobodan dan (po mjesecu, od nule svakog 1.): prijenos (unosi administrator, moze biti negativan)
+  /* Sati za slobodan dan u mjesecu: prijenos iz proslog mjeseca (automatski visak proslog mjeseca ili rucno, moze biti negativan)
      + 1 h za svaki dan s ukupnim radom >= 9 h (Praznik/Bolovanje/Godisnji/Slobodan dan se ne racunaju kao rad) - 8 h za svaki Slobodan dan u tom mjesecu */
   function bank(list, month, prijenos) {
     const byDay = {}; let used = 0;
@@ -190,9 +190,38 @@
     /* until: zadnji datum na koji se obavijest odnosi; dan poslije više se ne prikazuje na početnoj stranici */
     const notify = (uid, text, until) => { db.obav.push({ id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid, text, ts: Date.now(), read: false, until: until || '' }); if (Core.onNotify) Core.onNotify(uid, text); };
     const approval = (uid, date, ex) => db.slreq.find(q => q.uid === uid && q.status === 'approved' && q.date === date && (!q.entryId || q.entryId === ex));
-    const pr = (uid, m) => +db.prijenos[uid + '|' + m] || 0;
-    /* prijenos u sljedeći mjesec: ručna vrijednost administratora ili višak sati za slobodan dan na kraju mjeseca */
-    const prOut = (uid, m) => { const k = uid + '|' + m; return Object.prototype.hasOwnProperty.call(db.prijenosOut, k) ? { v: +db.prijenosOut[k], rucno: true } : { v: r2(bank(db.entries.filter(e => e.uid === uid), m, pr(uid, m))), rucno: false }; };
+    /* PRIJENOS SATI ZA SLOBODAN DAN: prijenos iz prošlog mjeseca = prijenos u sljedeći mjesec prethodnog mjeseca (automatski),
+       osim ako ga administrator upiše ručno (db.prijenos). Prijenos u sljedeći mjesec = višak sati za slobodan dan na kraju mjeseca,
+       osim ako ga administrator upiše ručno (db.prijenosOut). Lanac kreće od prvog mjeseca u kojem radnik ima unos ili ručni prijenos. */
+    const hasK = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+    const nextM = m => { let y = +m.slice(0, 4), mo = +m.slice(5, 7) + 1; if (mo > 12) { y++; mo = 1; } return y + '-' + pad(mo); };
+    function prChain(uid, m) {
+      const ents = db.entries.filter(e => e.uid === uid), p = uid + '|';
+      let f = null; ents.forEach(e => { const x = e.date.slice(0, 7); if (!f || x < f) f = x; });
+      Object.keys(db.prijenos).concat(Object.keys(db.prijenosOut)).forEach(k => { if (k.startsWith(p)) { const x = k.slice(p.length); if (!f || x < f) f = x; } });
+      const res = { in: 0, inRucno: hasK(db.prijenos, p + m), out: 0, outRucno: hasK(db.prijenosOut, p + m) };
+      let carry = 0, cur = f;
+      if (!f || m < f) cur = m;
+      for (let n = 0; n < 1200; n++) {
+        const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (f && cur > f ? carry : 0);
+        const out = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : r2(bank(ents, cur, inn));
+        if (cur === m) { res.in = r2(inn); res.out = r2(out); return res; }
+        carry = out; cur = nextM(cur);
+      }
+      return res;
+    }
+    const pr = (uid, m) => prChain(uid, m).in;
+    const prOut = (uid, m) => { const c = prChain(uid, m); return { v: c.out, rucno: c.outRucno }; };
+    /* učinkoviti prijenosi za klijenta: svaki mjesec od prvog do sljedećeg mjeseca */
+    function prMap(uids, today) {
+      const out = {}, last = nextM(today.slice(0, 7));
+      uids.forEach(uid => { const p = uid + '|'; let f = null; db.entries.forEach(e => { if (e.uid === uid) { const x = e.date.slice(0, 7); if (!f || x < f) f = x; } });
+        Object.keys(db.prijenos).forEach(k => { if (k.startsWith(p)) { const x = k.slice(p.length); if (!f || x < f) f = x; } });
+        if (!f) return; const ents = db.entries.filter(e => e.uid === uid); let carry = 0;
+        for (let cur = f, n = 0; cur <= last && n < 1200; cur = nextM(cur), n++) { const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (cur > f ? carry : 0);
+          if (inn) out[k] = r2(inn); carry = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : r2(bank(ents, cur, inn)); } });
+      return out;
+    }
     const nameOf = id => (db.users.find(u => u.id === id) || {}).name || '?';
     /* Pošta radnika: primljene poruke i obavijesti te poslani zahtjevi, najnovije prvo. Zapisi se nikad ne brišu, samo skrivaju za tog radnika
        (db.inboxDel[uid]): ručno gumbom ✕ i automatski početkom mjeseca (inboxClean) – tada ostaje samo 5 najnovijih. */
@@ -380,7 +409,7 @@
       const list = Object.values(rows).map(r => {
         const v = Object.fromEntries(Object.entries(r.v).map(([k, x]) => [k, r2(x)]));
         return { uid: r.uid, name: r.name, h: r2(r.h), ot: r2(r.ot), pren: applies ? om.trans[r.uid + '|' + month] || 0 : 0, t: r.t, m: r.m, v, days: r.days.size, closed: db.closed.includes(r.uid + '|' + month),
-          prijenos: pr(r.uid, month), bank: bank(db.entries.filter(e => e.uid === r.uid), month, pr(r.uid, month)), out: prOut(r.uid, month).v, outRucno: prOut(r.uid, month).rucno, norma: applies ? norma : null, razlika: applies ? r2(r2(r.h) - norma) : null };
+          prijenos: pr(r.uid, month), prRucno: hasK(db.prijenos, r.uid + '|' + month), bank: bank(db.entries.filter(e => e.uid === r.uid), month, pr(r.uid, month)), out: prOut(r.uid, month).v, outRucno: prOut(r.uid, month).rucno, norma: applies ? norma : null, razlika: applies ? r2(r2(r.h) - norma) : null };
       }).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
       return { cols, vrste: VRSTE, list, norma: { dani: wd, dnevna: dn, sati: norma, applies } };
     }
@@ -547,7 +576,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { sihterice, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { sihterice, prMap, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

@@ -178,7 +178,7 @@ R('POST','/api/logout',0,c=>c.send(200,{ok:1},{'Set-Cookie':'t=; HttpOnly; Path=
 R('GET','/api/me',1,c=>c.send(200,{id:c.u.id,name:c.u.name,role:c.u.role,prava:pravaOf(c.u),nau:!!c.u.nau,sites:db.sites,meals:db.meals,vrste:core.vrsteOf(c.u)}));
 R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'));
   c.send(200,{entries:db.entries.filter(e=>a||e.uid===c.u.id).map(e=>({...e,vrsta:e.vrsta||'Redovan rad',name:core.nameOf(e.uid)})),closed:db.closed.filter(k=>a||k.startsWith(c.u.id+'|')),
-    requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),prijenos:Object.fromEntries(Object.entries(db.prijenos).filter(([k])=>a||k.startsWith(c.u.id+'|'))),
+    requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),prijenos:core.prMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id],todayStr()),
     gorq:db.gorq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
     sitereq:db.sitereq.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
     poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,fromName:core.nameOf(p.from)})),
@@ -211,8 +211,10 @@ R('PUT','/api/prijenos','iz',c=>{const u=db.users.find(x=>x.id===c.b.uid&&x.role
   /* kind 'out': prijenos u sljedeći mjesec; prazno = opet automatski (višak sati za slobodan dan) */
   if(c.b.kind==='out'){if(c.b.value===''||c.b.value===null||c.b.value===undefined){delete db.prijenosOut[k];save();return c.send(200,{ok:1})}
     if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});db.prijenosOut[k]=Math.round(v*100)/100;save();return c.send(200,{ok:1})}
+  /* prazno = automatski (prijenos u sljedeći mjesec prošlog mjeseca); broj, i 0, = ručno */
+  if(c.b.value===''||c.b.value===null||c.b.value===undefined){delete db.prijenos[k];save();return c.send(200,{ok:1})}
   if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});
-  if(v===0)delete db.prijenos[k];else db.prijenos[k]=Math.round(v*100)/100;save();c.send(200,{ok:1})});
+  db.prijenos[k]=Math.round(v*100)/100;save();c.send(200,{ok:1})});
 const dd=core.dfmt,span=q=>q.dates.length===1?dd(q.dates[0]):dd(q.dates[0])+' – '+dd(q.dates[q.dates.length-1]);
 R('POST','/api/gorq',1,c=>{if(noAdm(c)||noNau(c))return;const dates=core.rangeDates(String(c.b.from||''),c.b.to?String(c.b.to):'');
   if(!dates)return c.send(400,{e:'Neispravan raspon datuma (najviše 92 dana).'});if(!dates.length)return c.send(400,{e:'Odabrani datumi nisu radni dani.'});
