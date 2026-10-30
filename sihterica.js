@@ -19,12 +19,16 @@
     else body = '<c r="' + ref + '"' + at + ' t="inlineStr"><is><t xml:space="preserve">' + X(val) + '</t></is></c>';
     return xml.slice(0, m.index) + body + xml.slice(m.index + m[0].length);
   }
+  /* crvena ispuna dana sa slobodnim danom: stil ćelije dana (redak 10/11) → isti stil s crvenom ispunom (dodan u predlosci/sihterica/styles.xml) */
+  const CRVENO = { 34: 108, 35: 109 };
+  function red(xml, ref) { return xml.replace(new RegExp('(<c r="' + ref + '" s=")(\\d+)"'), (m, a, s) => a + (CRVENO[s] || s) + '"'); }
   const r2 = n => Math.round(n * 100) / 100, sum = o => r2(Object.values(o).reduce((a, x) => a + (typeof x === 'number' ? x : 0), 0));
   /* s = {name, mjesec, dana, sites:[{name, d:{dan:sati}}], sd, pr, go, bo:{dan:sati}, prijenos, prijenosOut, fond, obrok:{dan:1} (samo Vlastiti trošak), teren:{dan:1}} */
   function sheet(tpl, s) {
     let x = tpl;
     x = cell(x, 'J6', s.name); x = cell(x, 'AB6', s.mjesec);
     for (let d = 29; d <= 31; d++) if (d > s.dana) x = cell(x, DAN(d) + '10', '');
+    for (const d of Object.keys(s.sd || {})) { x = red(x, DAN(+d) + '10'); x = red(x, DAN(+d) + '11'); }
     let tot = 0;
     const row = (r, o) => { for (const [d, v] of Object.entries(o || {})) x = cell(x, DAN(+d) + r, v); const t = sum(o || {}); tot += t; return t; };
     s.sites.slice(0, 10).forEach((st, i) => { const r = 13 + i; x = cell(x, 'B' + r, st.name); const t = row(r, st.d); x = cell(x, 'AI' + r, { f: 'SUM(D' + r + ':AH' + r + ')', v: t }); });

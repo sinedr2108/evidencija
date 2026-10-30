@@ -556,7 +556,7 @@
         const st = {};
         E.filter(e => e.uid === id).sort((a, b) => a.date < b.date ? -1 : 1).forEach(e => {
           const d = +e.date.slice(8, 10), v = vr(e);
-          if (v === 'Slobodan dan') add(s.sd, d, FIKSNI_SATI);
+          if (v === 'Slobodan dan') add(s.sd, d, 0);
           else if (v === 'Praznik') add(s.pr, d, e.hours);
           else if (v === 'Godišnji odmor') add(s.go, d, e.hours);
           else if (v === 'Bolovanje' || v === 'Bolest') add(s.bo, d, e.hours);
