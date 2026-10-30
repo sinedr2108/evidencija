@@ -134,8 +134,10 @@ const AKT={
   'POST /api/password':{f:()=>['Promjena lozinke','']}
 };
 /* push osim onima s Aktivnostima ide i administratorima te grupe (g) i primatelju narudžbe (to) */
+/* bez push obavijesti (ostaju samo u popisu Aktivnosti radnika): prijava i unosi radnog vremena */
+const AKNP=new Set(['POST /api/login','POST /api/entries','PUT /api/entries/:id','DELETE /api/entries/:id']);
 const AKG={'POST /api/slreq':'sl','POST /api/gorq':'go','POST /api/requests':'iz','POST /api/sitereq':'gr','POST /api/otpremnice':'ot','POST /api/otpremnice/:id/odgovor':'ot'};
-function aktAdd(u,t,d,x){const a={id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'};akt.push(a);if(akt.length>300)akt.shift();pushAkt(a,x||{})}
+function aktAdd(u,t,d,x){const a={id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'};akt.push(a);if(akt.length>300)akt.shift();if(!(x&&x.np))pushAkt(a,x||{})}
 /* PUSH obavijesti na sve uređaje na kojima je korisnik uključio obavijesti (računalo, Android, iPhone).
    pushAkt: radnja radnika → svima koji vide Aktivnosti radnika, administratorima te grupe i primatelju narudžbe.
    pushU: obavijest određenim korisnicima (radniku odluka, poruka, obrađena narudžba…; administratoru proslijeđena narudžba). */
@@ -445,7 +447,7 @@ http.createServer((req,res)=>{
         if((typeof auth==='string'||Array.isArray(auth))&&!can(c.u,auth))return send(403,{e:'Nemate pravo pristupa ovom dijelu.'})}
       const ak=req.method!=='GET'&&AKT[key];
       if(ak){let u=c.u,pre;try{if(!u)u=db.users.find(x=>x.username===String(b.username||'').trim().toLowerCase());if(u&&u.role==='user'&&ak.pre)pre=ak.pre(c)}catch(e){}
-        if(u&&u.role==='user')c.send=(code,o,h)=>{if(code===200)try{const[t,d]=ak.f(c,pre,o);const n=key==='POST /api/narudzbe'&&o&&db.narudzbe.find(x=>x.id===o.id&&x.status==='sent');aktAdd(u,t,d,{g:AKG[key],to:n?n.adminId:''})}catch(e){console.error(e)}send(code,o,h)}}
+        if(u&&u.role==='user')c.send=(code,o,h)=>{if(code===200)try{const[t,d]=ak.f(c,pre,o);const n=key==='POST /api/narudzbe'&&o&&db.narudzbe.find(x=>x.id===o.id&&x.status==='sent');aktAdd(u,t,d,{g:AKG[key],to:n?n.adminId:'',np:AKNP.has(key)})}catch(e){console.error(e)}send(code,o,h)}}
       return Promise.resolve(fn(c)).catch(e=>{console.error(e);send(500,{e:'Greška na serveru.'})});
     }
     send(404,{e:'Nije pronađeno.'});
