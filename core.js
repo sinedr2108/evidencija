@@ -168,7 +168,7 @@
   const nmTotal = list => { const m = new Map(); list.forEach(o => o.items.forEach(it => { const k = it.naziv.trim().toLocaleLowerCase('hr') + '|' + it.jm; const x = m.get(k) || { naziv: it.naziv.trim(), jm: it.jm, kol: 0, n: 0 }; x.kol += it.kol; x.n++; m.set(k, x); })); return [...m.values()].sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr') || a.jm.localeCompare(b.jm, 'hr')); };
   function Core(db) {
     db.requests = db.requests || [];
-    db.prijenos = db.prijenos || {};
+    db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {};
     db.slreq = db.slreq || [];
     db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
     const dfmt = d => d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.';
@@ -191,6 +191,8 @@
     const notify = (uid, text, until) => { db.obav.push({ id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid, text, ts: Date.now(), read: false, until: until || '' }); if (Core.onNotify) Core.onNotify(uid, text); };
     const approval = (uid, date, ex) => db.slreq.find(q => q.uid === uid && q.status === 'approved' && q.date === date && (!q.entryId || q.entryId === ex));
     const pr = (uid, m) => +db.prijenos[uid + '|' + m] || 0;
+    /* prijenos u sljedeći mjesec: ručna vrijednost administratora ili višak sati za slobodan dan na kraju mjeseca */
+    const prOut = (uid, m) => { const k = uid + '|' + m; return Object.prototype.hasOwnProperty.call(db.prijenosOut, k) ? { v: +db.prijenosOut[k], rucno: true } : { v: r2(bank(db.entries.filter(e => e.uid === uid), m, pr(uid, m))), rucno: false }; };
     const nameOf = id => (db.users.find(u => u.id === id) || {}).name || '?';
     /* Pošta radnika: primljene poruke i obavijesti te poslani zahtjevi, najnovije prvo. Zapisi se nikad ne brišu, samo skrivaju za tog radnika
        (db.inboxDel[uid]): ručno gumbom ✕ i automatski početkom mjeseca (inboxClean) – tada ostaje samo 5 najnovijih. */
@@ -378,7 +380,7 @@
       const list = Object.values(rows).map(r => {
         const v = Object.fromEntries(Object.entries(r.v).map(([k, x]) => [k, r2(x)]));
         return { uid: r.uid, name: r.name, h: r2(r.h), ot: r2(r.ot), pren: applies ? om.trans[r.uid + '|' + month] || 0 : 0, t: r.t, m: r.m, v, days: r.days.size, closed: db.closed.includes(r.uid + '|' + month),
-          prijenos: pr(r.uid, month), bank: bank(db.entries.filter(e => e.uid === r.uid), month, pr(r.uid, month)), norma: applies ? norma : null, razlika: applies ? r2(r2(r.h) - norma) : null };
+          prijenos: pr(r.uid, month), bank: bank(db.entries.filter(e => e.uid === r.uid), month, pr(r.uid, month)), out: prOut(r.uid, month).v, outRucno: prOut(r.uid, month).rucno, norma: applies ? norma : null, razlika: applies ? r2(r2(r.h) - norma) : null };
       }).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
       return { cols, vrste: VRSTE, list, norma: { dani: wd, dnevna: dn, sati: norma, applies } };
     }
@@ -492,11 +494,11 @@
     const todayIso = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
     function tables(month, f, today) {
       const s = summary(month, f), d = daily(month, f), st = sitesRep(month, f), l = rowsList(month, f), sl = slobodni(month, f), ms = missing(month, f, today), nm = s.norma.applies;
-      const sumHead = ['Radnik', 'Dani', 'Sati ukupno', 'Prekovremeni sati', 'Preneseno u redovan rad', ...VRSTE.map(v => 'Sati – ' + v), 'Fond sati', 'Razlika', 'Prijenos iz prošlog mjeseca', 'Sati za slobodan dan', 'Terenski dodatak', ...s.cols];
+      const sumHead = ['Radnik', 'Dani', 'Sati ukupno', 'Prekovremeni sati', 'Preneseno u redovan rad', ...VRSTE.map(v => 'Sati – ' + v), 'Fond sati', 'Razlika', 'Prijenos iz prošlog mjeseca', 'Sati za slobodan dan', 'Prijenos u sljedeći mjesec', 'Terenski dodatak', ...s.cols];
       return {
         sum: { name: 'Sažetak', head: sumHead,
-          rows: s.list.map(r => [r.name, r.days, r.h, r.ot, r.pren, ...VRSTE.map(v => r.v[v] || 0), nm ? r.norma : '', nm ? r.razlika : '', r.prijenos, r.bank, r.t, ...s.cols.map(c => r.m[c] || 0)]),
-          total: ['Ukupno u mjesecu', '', r2(S(s.list, r => r.h)), r2(S(s.list, r => r.ot)), r2(S(s.list, r => r.pren)), ...VRSTE.map(v => r2(S(s.list, r => r.v[v] || 0))), nm ? r2(S(s.list, r => r.norma)) : '', nm ? r2(S(s.list, r => r.razlika)) : '', r2(S(s.list, r => r.prijenos)), r2(S(s.list, r => r.bank)), S(s.list, r => r.t), ...s.cols.map(c => S(s.list, r => r.m[c] || 0))] },
+          rows: s.list.map(r => [r.name, r.days, r.h, r.ot, r.pren, ...VRSTE.map(v => r.v[v] || 0), nm ? r.norma : '', nm ? r.razlika : '', r.prijenos, r.bank, r.out, r.t, ...s.cols.map(c => r.m[c] || 0)]),
+          total: ['Ukupno u mjesecu', '', r2(S(s.list, r => r.h)), r2(S(s.list, r => r.ot)), r2(S(s.list, r => r.pren)), ...VRSTE.map(v => r2(S(s.list, r => r.v[v] || 0))), nm ? r2(S(s.list, r => r.norma)) : '', nm ? r2(S(s.list, r => r.razlika)) : '', r2(S(s.list, r => r.prijenos)), r2(S(s.list, r => r.bank)), r2(S(s.list, r => r.out)), S(s.list, r => r.t), ...s.cols.map(c => S(s.list, r => r.m[c] || 0))] },
         day: { name: 'Sati po danima', head: ['Datum', 'Radnik', 'Vrsta', 'Gradilišta', 'Ukupno sati', 'Prekovremeni sati'],
           rows: d.map(r => [r.date, r.name, r.vrste.join(', '), r.sites.join(', '), r.h, r.ot]), total: ['Ukupno u mjesecu', '', '', '', r2(S(d, r => r.h)), r2(S(d, r => r.ot))] },
         site: { name: 'Po gradilištima', head: ['Gradilište', 'Sati', 'Prekovremeni sati', 'Radnika', 'Radnici'],
@@ -515,13 +517,14 @@
     }
     /* ŠIHTERICA (oblik tvrtkinog predloška): podaci za list svakog radnika u mjesecu (aktivni radnici i svi koji imaju unose) */
     const MJESECI = ['SIJEČANJ', 'VELJAČA', 'OŽUJAK', 'TRAVANJ', 'SVIBANJ', 'LIPANJ', 'SRPANJ', 'KOLOVOZ', 'RUJAN', 'LISTOPAD', 'STUDENI', 'PROSINAC'];
+    /* topli obrok: označavaju se samo dani s obrokom Vlastiti trošak */
     function sihterice(month, uid) {
       const E = db.entries.filter(e => e.date.startsWith(month) && (!uid || e.uid === uid)), y = +month.slice(0, 4), m = +month.slice(5, 7), fd = fond(month);
       const ids = new Set(E.map(e => e.uid)); db.users.filter(u => u.role === 'user' && !u.deleted && !u.disabled && (!uid || u.id === uid)).forEach(u => ids.add(u.id));
       const add = (o, d, h) => { o[d] = r2((o[d] || 0) + h); };
       return [...ids].map(id => {
-        const u = db.users.find(x => x.id === id) || {}, s = { name: nameOf(id), mjesec: MJESECI[m - 1] + ' ' + y + '.', dana: new Date(Date.UTC(y, m, 0)).getUTCDate(), sites: [], sd: {}, pr: {}, go: {}, bo: {}, obrok: {}, teren: {}, prijenos: pr(id, month), fond: u.nau ? null : fd.sati };
-        const st = {}, ob = {};
+        const u = db.users.find(x => x.id === id) || {}, s = { name: nameOf(id), mjesec: MJESECI[m - 1] + ' ' + y + '.', dana: new Date(Date.UTC(y, m, 0)).getUTCDate(), sites: [], sd: {}, pr: {}, go: {}, bo: {}, obrok: {}, teren: {}, prijenos: pr(id, month), prijenosOut: prOut(id, month).v, fond: u.nau ? null : fd.sati };
+        const st = {};
         E.filter(e => e.uid === id).sort((a, b) => a.date < b.date ? -1 : 1).forEach(e => {
           const d = +e.date.slice(8, 10), v = vr(e);
           if (v === 'Slobodan dan') add(s.sd, d, FIKSNI_SATI);
@@ -529,13 +532,12 @@
           else if (v === 'Godišnji odmor') add(s.go, d, e.hours);
           else if (v === 'Bolovanje' || v === 'Bolest') add(s.bo, d, e.hours);
           else if (!NERAD.includes(v)) add(st[e.site || '–'] = st[e.site || '–'] || {}, d, e.hours);
-          if (e.meal) { s.obrok[d] = 1; ob[e.meal] = (ob[e.meal] || 0) + 1; }
+          if (e.meal && e.meal.toLocaleLowerCase('hr') === 'vlastiti trošak') s.obrok[d] = 1;
           if (e.teren) s.teren[d] = 1;
         });
         let sl = Object.entries(st).map(([name, dd]) => ({ name, d: dd }));
         if (sl.length > 10) { const o = {}; sl.slice(9).forEach(x => Object.entries(x.d).forEach(([d, h]) => add(o, d, h))); sl = sl.slice(0, 9).concat([{ name: 'OSTALA GRADILIŠTA', d: o }]); }
-        s.sites = sl; const ok = Object.keys(ob);
-        s.obrokTxt = ok.length === 1 ? ok[0].toLocaleUpperCase('hr-HR') : ok.length ? ok.map(k => k + ' ' + ob[k]).join(', ') : '';
+        s.sites = sl;
         return s;
       }).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
     }

@@ -20,7 +20,7 @@
     return xml.slice(0, m.index) + body + xml.slice(m.index + m[0].length);
   }
   const r2 = n => Math.round(n * 100) / 100, sum = o => r2(Object.values(o).reduce((a, x) => a + (typeof x === 'number' ? x : 0), 0));
-  /* s = {name, mjesec, dana, sites:[{name, d:{dan:sati}}], sd, pr, go, bo:{dan:sati}, prijenos, fond, obrok:{dan:1}, obrokTxt, teren:{dan:1}} */
+  /* s = {name, mjesec, dana, sites:[{name, d:{dan:sati}}], sd, pr, go, bo:{dan:sati}, prijenos, prijenosOut, fond, obrok:{dan:1} (samo Vlastiti trošak), teren:{dan:1}} */
   function sheet(tpl, s) {
     let x = tpl;
     x = cell(x, 'J6', s.name); x = cell(x, 'AB6', s.mjesec);
@@ -30,12 +30,13 @@
     s.sites.slice(0, 10).forEach((st, i) => { const r = 13 + i; x = cell(x, 'B' + r, st.name); const t = row(r, st.d); x = cell(x, 'AI' + r, { f: 'SUM(D' + r + ':AH' + r + ')', v: t }); });
     [['23', s.sd], ['24', s.pr], ['25', s.go], ['26', s.bo]].forEach(([r, o]) => { const t = row(r, o); if (t || Object.keys(o || {}).length) x = cell(x, 'AI' + r, { f: 'SUM(D' + r + ':AH' + r + ')', v: t }); });
     if (s.prijenos) { x = cell(x, 'AI27', s.prijenos); tot += s.prijenos; }
+    /* prijenos u sljedeći mjesec (višak sati za slobodan dan) odbija se od REDOVNOG RADA */
+    if (s.prijenosOut) { x = cell(x, 'AI28', s.prijenosOut); tot -= s.prijenosOut; }
     tot = r2(tot);
-    x = cell(x, 'AI29', { f: 'SUM(AI12:AI28)', v: tot });
+    x = cell(x, 'AI29', { f: 'SUM(AI12:AI27)-AI28', v: tot });
     if (s.fond !== null && s.fond !== undefined) x = cell(x, 'D30', s.fond);
     const ot = tot - (s.fond || 0) < 1 ? 0 : r2(tot - (s.fond || 0));
     x = cell(x, 'AI30', { f: 'IF((AI29-D30)<1, 0, AI29-D30)', v: ot });
-    if (s.obrokTxt) x = cell(x, 'C31', s.obrokTxt);
     for (const d of Object.keys(s.obrok || {})) x = cell(x, DAN(+d) + '31', s.obrok[d]);
     for (const d of Object.keys(s.teren || {})) x = cell(x, DAN(+d) + '32', s.teren[d]);
     x = x.replace(/(<c r="AI31"[^>]*><f [^>]*>[^<]*<\/f><v>)0(<\/v>)/, '$1' + sum(s.obrok || {}) + '$2').replace(/(<c r="AI32"[^>]*><f [^>]*\/><v>)0(<\/v>)/, '$1' + sum(s.teren || {}) + '$2');

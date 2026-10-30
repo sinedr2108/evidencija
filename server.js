@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=14;
+const DATA_VERSION=15;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -37,7 +37,8 @@ const MIGRATIONS={
   12:d=>{ /* OBRAĐENO: narudžbe imaju status obrade (obr: null = neobrađeno) i povijest prosljeđivanja (fwd); otpSeen = kad je korisnik zadnji put otvorio Otpremnice u administraciji (značka) */
     (d.narudzbe||[]).forEach(o=>{if(o.obr===undefined)o.obr=null;if(!Array.isArray(o.fwd))o.fwd=[]});const n=Date.now();(d.users||[]).forEach(u=>{if(!u.otpSeen)u.otpSeen=n}) },
   13:d=>{ /* PUSH OBAVIJESTI: ključevi poslužitelja (VAPID) i pretplate preglednika {uid,endpoint,keys,prijava,ts} */ if(!Array.isArray(d.push))d.push=[];if(!d.vapid||!d.vapid.pub)d.vapid=Push.vapidKeys() },
-  14:d=>{ /* NAUČNIK: Bolest i Odobren izostanak vrijede 0 sati */ (d.entries||[]).forEach(e=>{if(e.vrsta==='Bolest'||e.vrsta==='Odobren izostanak')e.hours=0}) }
+  14:d=>{ /* NAUČNIK: Bolest i Odobren izostanak vrijede 0 sati */ (d.entries||[]).forEach(e=>{if(e.vrsta==='Bolest'||e.vrsta==='Odobren izostanak')e.hours=0}) },
+  15:d=>{ /* PRIJENOS U SLJEDEĆI MJESEC: ručna vrijednost administratora {uid|mjesec: sati}; bez nje vrijedi višak sati za slobodan dan na kraju mjeseca */ if(!d.prijenosOut||typeof d.prijenosOut!=='object')d.prijenosOut={} }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -206,8 +207,12 @@ R('POST','/api/slreq/:id/decide','sl',c=>{const q=db.slreq.find(x=>x.id===c.p[0]
   pushU(q.uid,'Zahtjev za slobodan dan '+(c.b.approve?'prihvaćen':'odbijen'),aktD(q.date)+(q.note?' ('+q.note+')':''),'/#pt')});
 R('PUT','/api/prijenos','iz',c=>{const u=db.users.find(x=>x.id===c.b.uid&&x.role==='user'&&!x.deleted),v=parseFloat(String(c.b.value).replace(',','.'));
   if(!u)return c.send(404,{e:'Radnik nije pronađen.'});if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
+  const k=u.id+'|'+c.b.month;
+  /* kind 'out': prijenos u sljedeći mjesec; prazno = opet automatski (višak sati za slobodan dan) */
+  if(c.b.kind==='out'){if(c.b.value===''||c.b.value===null||c.b.value===undefined){delete db.prijenosOut[k];save();return c.send(200,{ok:1})}
+    if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});db.prijenosOut[k]=Math.round(v*100)/100;save();return c.send(200,{ok:1})}
   if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});
-  const k=u.id+'|'+c.b.month;if(v===0)delete db.prijenos[k];else db.prijenos[k]=Math.round(v*100)/100;save();c.send(200,{ok:1})});
+  if(v===0)delete db.prijenos[k];else db.prijenos[k]=Math.round(v*100)/100;save();c.send(200,{ok:1})});
 const dd=core.dfmt,span=q=>q.dates.length===1?dd(q.dates[0]):dd(q.dates[0])+' – '+dd(q.dates[q.dates.length-1]);
 R('POST','/api/gorq',1,c=>{if(noAdm(c)||noNau(c))return;const dates=core.rangeDates(String(c.b.from||''),c.b.to?String(c.b.to):'');
   if(!dates)return c.send(400,{e:'Neispravan raspon datuma (najviše 92 dana).'});if(!dates.length)return c.send(400,{e:'Odabrani datumi nisu radni dani.'});
