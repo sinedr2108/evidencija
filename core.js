@@ -67,7 +67,7 @@
   function zip(files) {
     const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
     for (const f of files) {
-      const nm = enc.encode(f.name), d = enc.encode(f.data), crc = crc32(d);
+      const nm = enc.encode(f.name), d = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(d);
       const lh = new Uint8Array(30 + nm.length), v = new DataView(lh.buffer);
       v.setUint32(0, 0x04034b50, true); v.setUint16(4, 20, true); v.setUint16(6, 0x0800, true); v.setUint16(10, 0, true); v.setUint16(12, 0x5C21, true);
       v.setUint32(14, crc, true); v.setUint32(18, d.length, true); v.setUint32(22, d.length, true); v.setUint16(26, nm.length, true); lh.set(nm, 30);
@@ -513,14 +513,40 @@
       const rows = [t.head, ...t.rows].concat(t.total ? [t.total] : []);
       return '﻿' + rows.map(r => r.map(v => q(typeof v === 'number' ? String(v).replace('.', ',') : v)).join(';')).join('\r\n');
     }
+    /* ŠIHTERICA (oblik tvrtkinog predloška): podaci za list svakog radnika u mjesecu (aktivni radnici i svi koji imaju unose) */
+    const MJESECI = ['SIJEČANJ', 'VELJAČA', 'OŽUJAK', 'TRAVANJ', 'SVIBANJ', 'LIPANJ', 'SRPANJ', 'KOLOVOZ', 'RUJAN', 'LISTOPAD', 'STUDENI', 'PROSINAC'];
+    function sihterice(month, uid) {
+      const E = db.entries.filter(e => e.date.startsWith(month) && (!uid || e.uid === uid)), y = +month.slice(0, 4), m = +month.slice(5, 7), fd = fond(month);
+      const ids = new Set(E.map(e => e.uid)); db.users.filter(u => u.role === 'user' && !u.deleted && !u.disabled && (!uid || u.id === uid)).forEach(u => ids.add(u.id));
+      const add = (o, d, h) => { o[d] = r2((o[d] || 0) + h); };
+      return [...ids].map(id => {
+        const u = db.users.find(x => x.id === id) || {}, s = { name: nameOf(id), mjesec: MJESECI[m - 1] + ' ' + y + '.', dana: new Date(Date.UTC(y, m, 0)).getUTCDate(), sites: [], sd: {}, pr: {}, go: {}, bo: {}, obrok: {}, teren: {}, prijenos: pr(id, month), fond: u.nau ? null : fd.sati };
+        const st = {}, ob = {};
+        E.filter(e => e.uid === id).sort((a, b) => a.date < b.date ? -1 : 1).forEach(e => {
+          const d = +e.date.slice(8, 10), v = vr(e);
+          if (v === 'Slobodan dan') add(s.sd, d, FIKSNI_SATI);
+          else if (v === 'Praznik') add(s.pr, d, e.hours);
+          else if (v === 'Godišnji odmor') add(s.go, d, e.hours);
+          else if (v === 'Bolovanje' || v === 'Bolest') add(s.bo, d, e.hours);
+          else if (!NERAD.includes(v)) add(st[e.site || '–'] = st[e.site || '–'] || {}, d, e.hours);
+          if (e.meal) { s.obrok[d] = 1; ob[e.meal] = (ob[e.meal] || 0) + 1; }
+          if (e.teren) s.teren[d] = 1;
+        });
+        let sl = Object.entries(st).map(([name, dd]) => ({ name, d: dd }));
+        if (sl.length > 10) { const o = {}; sl.slice(9).forEach(x => Object.entries(x.d).forEach(([d, h]) => add(o, d, h))); sl = sl.slice(0, 9).concat([{ name: 'OSTALA GRADILIŠTA', d: o }]); }
+        s.sites = sl; const ok = Object.keys(ob);
+        s.obrokTxt = ok.length === 1 ? ok[0].toLocaleUpperCase('hr-HR') : ok.length ? ok.map(k => k + ' ' + ob[k]).join(', ') : '';
+        return s;
+      }).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
+    }
     function xlsx(month, f, today) {
       const t = tables(month, f, today), list = [t.sum, t.day, t.site, t.det];
       if (t.sl.rows.length) list.push(t.sl);
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { sihterice, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
-  Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
+  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
 })(typeof window !== 'undefined' ? window : this);

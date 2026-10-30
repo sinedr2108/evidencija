@@ -68,9 +68,10 @@ assert m
 script=script[:m.start()]+script[m.end():]
 rep("$('pr').onclick=()=>print();\n","")
 blk('EXPORT',"""async function doExport(kind){const m=$('rm').value;if(!/^\\d{4}-\\d{2}$/.test(m))return;const f={uid:$('fw').value,site:$('fs').value,vrsta:$('fv').value},t=todayStr();
- const nm=kind==='xlsx'?'izvjestaj-'+m+'.xlsx':({det:'unosi-',day:'sati-po-danima-',site:'po-gradilistima-',mis:'bez-unosa-',sum:'sazetak-'}[kind]||'sazetak-')+m+'.csv';
+ const nm=kind==='sih'?'sihterice-'+m+'.xlsx':kind==='xlsx'?'izvjestaj-'+m+'.xlsx':({det:'unosi-',day:'sati-po-danima-',site:'po-gradilistima-',mis:'bez-unosa-',sum:'sazetak-'}[kind]||'sazetak-')+m+'.csv';
  try{const d=await claude.use('downloads');if(!d){toast('Preuzimanje nije dostupno u ovom prikazu.');return}
-  await d.save({filename:nm,data:kind==='xlsx'?core().xlsx(m,f,t):core().csv(m,kind,f,t)})}catch(e){toast('Preuzimanje nije uspjelo.')}}""")
+  const sl=kind==='sih'&&core().sihterice(m,f.uid);if(sl&&!sl.length){toast('Nema radnika za taj mjesec.');return}
+  await d.save({filename:nm,data:kind==='sih'?Sihterica.build(SIHT,sl,Core.zip):kind==='xlsx'?core().xlsx(m,f,t):core().csv(m,kind,f,t)})}catch(e){toast('Preuzimanje nije uspjelo.')}}""")
 blk('BOOT',"showLogin();")
 # demo nema servera ni service workera: push obavijesti se ne nude
 rep("const pushOk=()=>'serviceWorker' in navigator","const pushOk=()=>false&&'serviceWorker' in navigator")
@@ -216,6 +217,10 @@ script=script[:m.start()]+script[m.end():]
 import base64
 html=html.replace('src="/logo.png"','src="data:image/png;base64,'+base64.b64encode(open(P+'public/logo.png','rb').read()).decode()+'"')
 script+="\nsaveFile=async(name,data)=>{try{const d=await claude.use('downloads');if(!d){toast('Preuzimanje nije dostupno u ovom prikazu.');return}await d.save({filename:name,data})}catch(e){toast('Preuzimanje nije uspjelo.')}};\n"
+import json,os
+SD=P+'predlosci/sihterica/'
+siht={f:('B64:'+base64.b64encode(open(SD+f,'rb').read()).decode() if f.endswith('.png') else open(SD+f,encoding='utf-8').read()) for f in sorted(os.listdir(SD))}
+core=core+'\n'+open(P+'sihterica.js',encoding='utf-8').read()+'\nconst SIHT=Object.fromEntries(Object.entries('+json.dumps(siht,ensure_ascii=False).replace('</','<\\/')+').map(([k,v])=>[k,v.startsWith("B64:")?Uint8Array.from(atob(v.slice(4)),c=>c.charCodeAt(0)):v]));\n'
 out='<meta charset="utf-8">\n<title>TiDy Connect demo</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>'+style+'</style>\n<main>'+html+'</main>\n<script>'+core+'</script>\n<script>'+script+'</script>\n'
 open(sys.argv[2] if len(sys.argv)>2 else 'evidencija-demo.html','w',encoding='utf-8').write(out)
 print(len(out))

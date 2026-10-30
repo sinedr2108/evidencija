@@ -417,6 +417,10 @@ R('GET','/api/stats','st',c=>/^\d{4}(-\d{2})?$/.test(c.q.period||'')?c.send(200,
 R('GET','/api/report','ev',c=>valid(c.q.month)?c.send(200,core.report(c.q.month,flt(c.q),todayStr())):c.send(400,{e:'Neispravan mjesec.'}));
 R('GET','/api/report.csv','iz',c=>{if(!valid(c.q.month))return c.send(400,{e:'Neispravan mjesec.'});const k=['sum','day','site','det','sl','mis'].includes(c.q.kind)?c.q.kind:'sum';
   c.raw(200,core.csv(c.q.month,k,flt(c.q),todayStr()),{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="'+({det:'unosi-',day:'sati-po-danima-',site:'po-gradilistima-',sl:'slobodni-dani-',mis:'bez-unosa-'}[k]||'sazetak-')+c.q.month+'.csv"'})});
+/* ŠIHTERICE: list po radniku u obliku tvrtkinog predloška (predlosci/sihterica), za sve radnike ili odabranog */
+const Sih=require('./sihterica.js'),SIHD=path.join(__dirname,'predlosci','sihterica'),SIHT=Object.fromEntries(fs.readdirSync(SIHD).map(f=>[f,f.endsWith('.png')?fs.readFileSync(path.join(SIHD,f)):fs.readFileSync(path.join(SIHD,f),'utf8')]));
+R('GET','/api/sihterice.xlsx','iz',c=>{if(!valid(c.q.month))return c.send(400,{e:'Neispravan mjesec.'});const l=core.sihterice(c.q.month,String(c.q.uid||''));if(!l.length)return c.send(400,{e:'Nema radnika za taj mjesec.'});
+  c.raw(200,Buffer.from(Sih.build(SIHT,l,Core.zip)),{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':'attachment; filename="sihterice-'+c.q.month+(l.length===1?'-'+l[0].name.normalize('NFD').replace(/[^\w]+/g,'-').replace(/^-|-$/g,''):'')+'.xlsx"'})});
 R('GET','/api/report.xlsx','iz',c=>valid(c.q.month)?c.raw(200,Buffer.from(core.xlsx(c.q.month,flt(c.q),todayStr())),{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':'attachment; filename="izvjestaj-'+c.q.month+'.xlsx"'}):c.send(400,{e:'Neispravan mjesec.'}));
 R('POST','/api/report/send','iz',async c=>{if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   try{c.send(200,{msg:await mail(c.b.month)})}catch(e){c.send(500,{e:'Slanje nije uspjelo: '+e.message})}});

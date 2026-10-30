@@ -305,7 +305,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
   <div id="af" class="pg hide">
   <div class="card"><label for="rm">Mjesec</label><input type="month" id="rm">
    <div class="grid3"><div><label for="fw">Radnik</label><select id="fw"></select><select id="fwm" aria-label="Koje radnike prikazati" style="margin-top:6px"><option value="a">Prikaži aktivne radnike</option><option value="s">Prikaži sve radnike (i izbrisane)</option></select></div><div><label for="fs">Gradilište</label><select id="fs"></select></div><div><label for="fv">Vrsta upisa</label><select id="fv"></select></div></div>
-   <div class="fl noprint" style="margin-top:12px;flex-wrap:wrap"><button class="sm pri" id="xl">Excel</button><button class="sm" id="c1">CSV sažetak</button><button class="sm" id="c3">CSV po danima</button><button class="sm" id="c4">CSV po gradilištima</button><button class="sm" id="c5">CSV slobodni dani</button><button class="sm" id="c2">CSV svi unosi</button><button class="sm" id="pr">Ispiši</button><button class="sm" id="em">Pošalji e-mailom</button></div><div class="msg" id="am"></div>
+   <div class="fl noprint" style="margin-top:12px;flex-wrap:wrap"><button class="sm pri" id="xl">Excel</button><button class="sm pri" id="sih">Šihterice (Excel)</button><button class="sm" id="c1">CSV sažetak</button><button class="sm" id="c3">CSV po danima</button><button class="sm" id="c4">CSV po gradilištima</button><button class="sm" id="c5">CSV slobodni dani</button><button class="sm" id="c2">CSV svi unosi</button><button class="sm" id="pr">Ispiši</button><button class="sm" id="em">Pošalji e-mailom</button></div><div class="msg" id="am"></div>
    <div class="mu">Filteri vrijede za tablice ispod i za sve izvoze.</div></div>
   </div>
   <div id="p-aiz" class="pg hide">
@@ -419,6 +419,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h3>IZVJEŠTAJI</h3>
    <ul><li>Na vrhu odaberite <b>Mjesec</b> i po potrebi filtere <b>Radnik</b>, <b>Gradilište</b> i <b>Vrsta upisa</b>. Filteri vrijede za sve tablice na stranici i za sve izvoze. Ispod izbornika Radnik birate prikaz aktivnih ili svih radnika (i izbrisanih).</li>
    <li>Izvoz: <b>Excel</b> (svi listovi), CSV (sažetak, po danima, po gradilištima, slobodni dani, svi unosi), <b>Ispiši</b> i <b>Pošalji e-mailom</b> (administratorima s upisanim e-mailom). Zadnjeg dana u mjesecu poslije 23:00 izvještaj se šalje sam.</li>
+   <li><b>Šihterice (Excel)</b>: mjesečna šihterica u obliku tvrtkinog predloška (logo, dani 1–31, sati po gradilištima, slobodni dan, praznik, godišnji, bolovanje, prijenos, fond sati, prekovremeni, topli obrok i terenski dodatak), jedan list po radniku, spremna za ispis na A4. Ako je gore odabran radnik, dobije se samo njegova.</li>
    <li><b>Izvještaj po radniku</b>: upisani sati, fond sati (radni dani × 8 h) i razlika, prekovremeni sati i sati za slobodan dan. U toj tablici upisujete <b>prijenos sati za slobodan dan</b> iz prošlog mjeseca (može biti negativan).</li>
    <li>Ako je radnik <b>završio mjesec</b>, ovdje ga možete ponovno otvoriti.</li>
    <li><b>Radnici bez unosa</b>: radni dani do jučer za koje radnik nema nijedan unos.</li>
@@ -979,8 +980,8 @@ $('nm').oninput=()=>{const i=$('nm'),a=i.selectionStart,b=i.selectionEnd,u=i.val
 $('am2').onclick=()=>{const v=$('nm').value.trim().toLocaleUpperCase('hr-HR');if(v){$('nm').value='';cfg(me.sites,me.meals.concat([v]))}};
 $('ls').onclick=e=>{const b=e.target.closest('[data-k]');if(b)cfg(me.sites.filter((_,i)=>i!==+b.dataset.k),me.meals)};
 $('lm2').onclick=e=>{const b=e.target.closest('[data-k]');if(b)cfg(me.sites,me.meals.filter((_,i)=>i!==+b.dataset.k))};
-/*EXPORT*/async function doExport(kind){location.href='/api/report.'+(kind==='xlsx'?'xlsx':'csv')+'?'+qf()+(kind==='xlsx'?'':'&kind='+kind)}/*/EXPORT*/
-$('xl').onclick=()=>doExport('xlsx');$('c1').onclick=()=>doExport('sum');$('c3').onclick=()=>doExport('day');$('c4').onclick=()=>doExport('site');$('c5').onclick=()=>doExport('sl');$('c2').onclick=()=>doExport('det');
+/*EXPORT*/async function doExport(kind){if(kind==='sih'){location.href='/api/sihterice.xlsx?month='+$('rm').value+'&uid='+encodeURIComponent($('fw').value);return}location.href='/api/report.'+(kind==='xlsx'?'xlsx':'csv')+'?'+qf()+(kind==='xlsx'?'':'&kind='+kind)}/*/EXPORT*/
+$('xl').onclick=()=>doExport('xlsx');$('sih').onclick=()=>doExport('sih');$('c1').onclick=()=>doExport('sum');$('c3').onclick=()=>doExport('day');$('c4').onclick=()=>doExport('site');$('c5').onclick=()=>doExport('sl');$('c2').onclick=()=>doExport('det');
 $('pr').onclick=()=>print();
 $('em').onclick=async()=>{try{say('am',(await api('POST','report/send',{month:$('rm').value})).msg,1)}catch(e){say('am',e.message)}};
 $('ua').onclick=async()=>{try{await api('POST','users',{name:$('un').value,username:$('uu').value,password:$('up').value,role:$('ur').value,email:$('ue').value});
