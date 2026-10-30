@@ -97,7 +97,7 @@ function seed(){
   else if(i%7===2){add('u_ivan',ds,{site:'Ugljan',hours:5,meal:meals[i%5],teren:i%2});add('u_ivan',ds,{site:'Granosta',hours:4})}
   else if(i%8!==5)add('u_ivan',ds,{site:sites[i%2],meal:meals[i%5]});
   if(i%10===6)add('u_marko',ds,{vrsta:'Godišnji odmor'});
-  if(i%11===3)add('u_luka',ds,{vrsta:'Bolest'});else if(i%13===5)add('u_luka',ds,{vrsta:'Odobren izostanak'});else if(i%6!==1)add('u_luka',ds,{vrsta:'Praktična nastava',site:sites[i%2],hours:6,meal:meals[i%5]});
+  if(i%11===3)add('u_luka',ds,{vrsta:'Bolest',hours:0});else if(i%13===5)add('u_luka',ds,{vrsta:'Odobren izostanak',hours:0});else if(i%6!==1)add('u_luka',ds,{vrsta:'Praktična nastava',site:sites[i%2],hours:6,meal:meals[i%5]});
   else add('u_marko',ds,{site:sites[(i+1)%3],hours:i%3===0?9:8,meal:meals[(i+2)%5],teren:i%4===0?1:0})}
 
  const Y=y;S.godisnji['u_ivan|'+Y]={ukupno:20,pocetno:3};S.godisnji['u_marko|'+Y]={ukupno:22,pocetno:0};
@@ -108,7 +108,7 @@ function seed(){
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
 function initDb(){db=null;_c=null;try{const s=localStorage.getItem(KEY);if(s)db=JSON.parse(s)}catch(e){}if(!db){db=seed();persist()}
  /* stari spremljeni demo: dodaj nove primjere korisnika (npr. naučnika) s njihovim unosima */
- else{const S=seed();S.users.forEach(u=>{if(!db.users.some(x=>x.id===u.id)){db.users.push(u);db.entries.push(...S.entries.filter(e=>e.uid===u.id))}});persist()}}
+ else{const S=seed();S.users.forEach(u=>{if(!db.users.some(x=>x.id===u.id)){db.users.push(u);db.entries.push(...S.entries.filter(e=>e.uid===u.id))}});db.entries.forEach(e=>{if(Core.NULA_SATI.includes(e.vrsta))e.hours=0});persist()}}
 initDb();
 /* demo: fotografije otpremnica samo u memoriji (ne preživljavaju ponovno otvaranje) */
 const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];if(!Array.isArray(db.narudzbe))db.narudzbe=[];

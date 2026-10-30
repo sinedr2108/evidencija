@@ -8,6 +8,7 @@
   const vrsteOf = u => u && u.nau ? VRSTE_NAU : VRSTE.filter(v => !VRSTE_NAU.includes(v));
   const PRAZNIK_VRSTE = ['Praznik', 'Rad na praznik'];
   const FIKSNI_SATI = 8; /* za NERAD vrste sati su fiksni i unosi ih aplikacija */
+  const NULA_SATI = ['Slobodan dan', 'Bolest', 'Odobren izostanak']; /* NERAD vrste s 0 sati (naučnik: Bolest, Odobren izostanak) */
   const pad = n => String(n).padStart(2, '0');
   const r2 = n => Math.round(n * 100) / 100;
   const vr = e => e.vrsta || 'Redovan rad';
@@ -185,7 +186,7 @@
       const ukupno = +g.ukupno || 0, pocetno = +g.pocetno || 0, isk = pocetno + used;
       return { year: +year, ukupno, pocetno, iskoristeno: isk, preostalo: ukupno - isk };
     }
-    const missingDays = (uid, month) => { const have = new Set(db.entries.filter(e => e.uid === uid && e.date.startsWith(month)).map(e => e.date)), u = db.users.find(x => x.id === uid), hol = u && u.nau ? holidays(+month.slice(0, 4)) : new Set(); return weekdays(month).filter(d => !have.has(d) && !hol.has(d)); }; /* naučnik ne upisuje državne praznike */
+    const missingDays = (uid, month) => { const have = new Set(db.entries.filter(e => e.uid === uid && e.date.startsWith(month)).map(e => e.date)), u = db.users.find(x => x.id === uid); if (u && u.nau) return []; return weekdays(month).filter(d => !have.has(d)); }; /* naučnik ne mora imati unos za svaki radni dan */
     /* until: zadnji datum na koji se obavijest odnosi; dan poslije više se ne prikazuje na početnoj stranici */
     const notify = (uid, text, until) => { db.obav.push({ id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid, text, ts: Date.now(), read: false, until: until || '' }); if (Core.onNotify) Core.onNotify(uid, text); };
     const approval = (uid, date, ex) => db.slreq.find(q => q.uid === uid && q.status === 'approved' && q.date === date && (!q.entryId || q.entryId === ex));
@@ -366,7 +367,7 @@
     }
     /* Gradilište koje radnik upiše ručno (nije s administratorova popisa) sprema se velikim slovima. */
     const upSite = s => (db.sites || []).includes(s) ? s : s.toLocaleUpperCase('hr-HR');
-    const rec = b => { const v = String(b.vrsta || 'Redovan rad'), n = NERAD.includes(v); return { date: b.date, site: n ? '' : upSite(String(b.site || '').trim()), vrsta: v, hours: v === 'Slobodan dan' ? 0 : n ? FIKSNI_SATI : parseFloat(b.hours), meal: n ? '' : String(b.meal || ''), teren: n || VRSTE_NAU.includes(v) ? 0 : (b.teren ? 1 : 0) }; };
+    const rec = b => { const v = String(b.vrsta || 'Redovan rad'), n = NERAD.includes(v); return { date: b.date, site: n ? '' : upSite(String(b.site || '').trim()), vrsta: v, hours: NULA_SATI.includes(v) ? 0 : n ? FIKSNI_SATI : parseFloat(b.hours), meal: n ? '' : String(b.meal || ''), teren: n || VRSTE_NAU.includes(v) ? 0 : (b.teren ? 1 : 0) }; };
 
     function summary(month, f) {
       const E = ents(month, f), fd = fond(month), wd = fd.dani, dn = fd.dnevno, applies = !f.site && !f.vrsta, norma = fd.sati, rows = {};
@@ -520,6 +521,6 @@
     }
     return { VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
-  Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
+  Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
 })(typeof window !== 'undefined' ? window : this);

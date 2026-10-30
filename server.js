@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=13;
+const DATA_VERSION=14;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -36,7 +36,8 @@ const MIGRATIONS={
   11:d=>{ /* VODITELJ RADOVA: nova uloga role:'vod' (samo administratorski dio, odabrane funkcije u u.prava); postojeći korisnici se ne mijenjaju */ (d.users||[]).forEach(u=>{if(!Array.isArray(u.prava))u.prava=[]}) },
   12:d=>{ /* OBRAĐENO: narudžbe imaju status obrade (obr: null = neobrađeno) i povijest prosljeđivanja (fwd); otpSeen = kad je korisnik zadnji put otvorio Otpremnice u administraciji (značka) */
     (d.narudzbe||[]).forEach(o=>{if(o.obr===undefined)o.obr=null;if(!Array.isArray(o.fwd))o.fwd=[]});const n=Date.now();(d.users||[]).forEach(u=>{if(!u.otpSeen)u.otpSeen=n}) },
-  13:d=>{ /* PUSH OBAVIJESTI: ključevi poslužitelja (VAPID) i pretplate preglednika {uid,endpoint,keys,prijava,ts} */ if(!Array.isArray(d.push))d.push=[];if(!d.vapid||!d.vapid.pub)d.vapid=Push.vapidKeys() }
+  13:d=>{ /* PUSH OBAVIJESTI: ključevi poslužitelja (VAPID) i pretplate preglednika {uid,endpoint,keys,prijava,ts} */ if(!Array.isArray(d.push))d.push=[];if(!d.vapid||!d.vapid.pub)d.vapid=Push.vapidKeys() },
+  14:d=>{ /* NAUČNIK: Bolest i Odobren izostanak vrijede 0 sati */ (d.entries||[]).forEach(e=>{if(e.vrsta==='Bolest'||e.vrsta==='Odobren izostanak')e.hours=0}) }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
