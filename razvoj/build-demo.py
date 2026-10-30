@@ -106,7 +106,9 @@ function seed(){
  S.obav.push({id:uid(),uid:'u_marko',text:'Administrator vam je odobrio godišnji odmor: '+ds.slice(8,10)+'.'+ds.slice(5,7)+'.'+ds.slice(0,4)+'. (1 dan). Opcija Godišnji odmor otključana je za taj dan.',ts:Date.now(),read:false});
  return S}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
-function initDb(){db=null;_c=null;try{const s=localStorage.getItem(KEY);if(s)db=JSON.parse(s)}catch(e){}if(!db){db=seed();persist()}}
+function initDb(){db=null;_c=null;try{const s=localStorage.getItem(KEY);if(s)db=JSON.parse(s)}catch(e){}if(!db){db=seed();persist()}
+ /* stari spremljeni demo: dodaj nove primjere korisnika (npr. naučnika) s njihovim unosima */
+ else{const S=seed();S.users.forEach(u=>{if(!db.users.some(x=>x.id===u.id)){db.users.push(u);db.entries.push(...S.entries.filter(e=>e.uid===u.id))}});persist()}}
 initDb();
 /* demo: fotografije otpremnica samo u memoriji (ne preživljavaju ponovno otvaranje) */
 const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];if(!Array.isArray(db.narudzbe))db.narudzbe=[];
