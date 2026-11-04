@@ -44,7 +44,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
 .svf{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media(max-width:520px){.svf{grid-template-columns:1fr}}.svt{white-space:pre-wrap;margin-top:4px}.svb{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--bg)}
 .nmr{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)}.nmr .rb{color:var(--mu);font-weight:700;text-align:right}.nmq{white-space:nowrap;font-weight:700}
 .nmin{display:grid;grid-template-columns:1fr 110px 100px;gap:8px}@media(max-width:520px){.nmin{grid-template-columns:1fr 1fr}.nmin .nmnw{grid-column:1/-1}}
-.nmnw{position:relative}#nmsug{position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:30;background:var(--card);border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);max-height:260px;overflow:auto}#nmsug button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:11px 12px;border:0;border-bottom:1px solid var(--bd);background:none;color:var(--tx);font:inherit}#nmsug button:last-child{border:0}#nmsug button.on,#nmsug button:hover{background:var(--bg)}#nmsug .mu{flex-shrink:0}
+.nmnw{position:relative}#nmsug,#svmsug{position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:30;background:var(--card);border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);max-height:260px;overflow:auto}#nmsug button,#svmsug button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:11px 12px;border:0;border-bottom:1px solid var(--bd);background:none;color:var(--tx);font:inherit}#nmsug button:last-child,#svmsug button:last-child{border:0}#nmsug button.on,#nmsug button:hover,#svmsug button.on,#svmsug button:hover{background:var(--bg)}#nmsug .mu,#svmsug .mu{flex-shrink:0}
 .b-nob{background:var(--er)!important;color:#fff!important;font-size:13px!important;padding:3px 10px!important;letter-spacing:.03em}
 .tile{position:relative}.zn{position:absolute;top:8px;right:8px;display:flex;align-items:center;gap:3px;background:#fff;color:#b91c1c;border-radius:999px;padding:3px 8px 3px 6px;font-size:13px;font-weight:800;letter-spacing:0;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.25)}.zn svg{width:14px;height:14px}
 .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}.b-ok{background:rgba(21,128,61,.12);color:var(--ok)}.b-no{background:rgba(185,28,28,.1);color:var(--er)}
@@ -135,7 +135,10 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <div class="card hide" id="svz" style="border-top:5px solid #4f46e5"><h2 style="margin-top:0">Zapisnik o izvršenom servisu</h2><div id="svzi"></div>
     <div class="svf"><div><label for="svzd">Datum izvršenja</label><input type="date" id="svzd"></div><div><label for="svzh">Utrošeno sati</label><input id="svzh" inputmode="decimal" placeholder="npr. 2,5"></div></div>
     <label for="svzr">Opis izvedenih radova</label><textarea id="svzr" rows="5" maxlength="4000" placeholder="Što je napravljeno, što je pregledano i zamijenjeno…"></textarea>
-    <label for="svzm">Ugrađeni materijal i rezervni dijelovi (neobavezno)</label><textarea id="svzm" rows="3" maxlength="2000"></textarea>
+    <label for="svmn">Ugrađeni materijal i rezervni dijelovi (neobavezno)</label>
+    <div class="nmin"><div class="nmnw"><input id="svmn" maxlength="120" placeholder="Naziv materijala" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="svmsug" aria-expanded="false"><div id="svmsug" class="hide" role="listbox"></div></div><select id="svmj" aria-label="Jedinična mjera"></select><input id="svmk" inputmode="decimal" placeholder="Količina" aria-label="Količina"></div>
+    <div class="fl" style="margin-top:8px"><button class="sm pri" id="svmadd">Dodaj u popis</button><button class="sm hide" id="svmaddx">Odustani od izmjene</button></div>
+    <div id="svml" style="margin-top:6px"></div>
     <label for="svzs">Stanje nakon servisa</label><select id="svzs"><option value="ok">Ispravno, servis završen</option><option value="dalje">Potrebna dodatna intervencija</option></select>
     <label for="svzn">Napomena ili preporuka (neobavezno)</label><textarea id="svzn" rows="2" maxlength="2000"></textarea>
     <label for="svzp">Radove potvrdio kod naručitelja (ime i prezime)</label><input id="svzp" maxlength="100">
@@ -229,8 +232,9 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <div class="uh" data-h="sv">
    <h3>SERVIS – RADNI NALOZI</h3>
    <ol><li>Pod <b>Zadani servisi</b> su radni nalozi koje vam je zadao administrator: broj naloga, naručitelj, adresa, kontakt, opis kvara ili zadatka i rok. <b style="color:var(--er)">HITNO</b> i nalozi s najbližim rokom su na vrhu. Telefon u kontaktu možete dodirnuti i odmah nazvati.</li>
-   <li>Kad završite servis, kliknite <b>Izradi zapisnik</b> uz taj nalog. Upišite <b>datum izvršenja</b>, <b>utrošene sate</b> i <b>opis izvedenih radova</b>, a po potrebi ugrađeni materijal, napomenu i ime osobe koja je kod naručitelja potvrdila radove. Odaberite <b>stanje nakon servisa</b>: ispravno ili potrebna dodatna intervencija.</li>
+   <li>Kad završite servis, kliknite <b>Izradi zapisnik</b> uz taj nalog. Upišite <b>datum izvršenja</b>, <b>utrošene sate</b> i <b>opis izvedenih radova</b>, a po potrebi napomenu i ime osobe koja je kod naručitelja potvrdila radove. Odaberite <b>stanje nakon servisa</b>: ispravno ili potrebna dodatna intervencija.</li>
    <li>Na kraju dajte mobitel naručitelju da se <b>potpiše prstom</b> u bijelom okviru (<b>Obriši potpis</b> ako treba ponoviti) i upišite njegovo <b>ime i prezime</b>. U polju <b>E-mail naručitelja</b> je adresa iz naloga; možete je promijeniti ili upisati. Potpisani zapisnik naručitelj nakon slanja dobije na taj e-mail kao PDF s potpisom.</li>
+   <li><b>Ugrađeni materijal</b> upisujete kao kod narudžbe materijala: naziv, jedinična mjera i količina, pa <b>Dodaj u popis</b> (ili Enter u polju količine). Od trećeg slova aplikacija predlaže nazive koji su već upisivani u narudžbama i zapisnicima, s uobičajenom mjerom. Stavku ispravljate olovkom ✎, a brišete gumbom ✕.</li>
    <li>Gumbima <b>Fotografiraj</b> i <b>Odaberi iz galerije</b> dodajte do 10 fotografija (npr. prije i poslije, pločica uređaja). Pogrešnu fotografiju maknite gumbom ✕.</li>
    <li>Kliknite <b>Pošalji zapisnik</b>. Zapisnik odmah stiže administratoru u aplikaciju i na njegov e-mail kao PDF. Nedovršen zapisnik (tekst) ostaje spremljen na ovom uređaju dok ga ne pošaljete; fotografije treba dodati ponovno ako zatvorite aplikaciju.</li>
    <li>Ako je nalog zadan za više radnika, zapisnik šalje jedan od vas, a ostali ga vide pod <b>Izvršeni servisi</b>.</li>
@@ -1194,7 +1198,7 @@ const svFoto=f=>'<a href="'+fotoSrc(f)+'" target="_blank" rel="noopener" style="
 const svZapHtml=(o,open)=>{const z=o.zap;if(!z||o.status==='open')return '';const t=(h,v)=>v?'<div style="margin-top:4px"><b>'+h+':</b></div><div class="svt" style="margin-top:0">'+E(v)+'</div>':'';
  return '<details class="svb"'+(open?' open':'')+'><summary style="cursor:pointer;font-weight:600">Zapisnik · '+E(z.byName)+', '+nmDt(z.ts)+'</summary>'
  +'<div style="margin-top:6px"><b>Datum izvršenja:</b> '+svDm(z.datum)+' · <b>Utrošeno:</b> '+Core.nmNum(z.sati)+' h</div><div><b>Stanje:</b> <b style="color:var(--'+(z.stanje==='ok'?'ok':'er')+')">'+E(Core.SV_STANJE[z.stanje]||'')+'</b></div>'
- +t('Izvedeni radovi',z.radovi)+t('Ugrađeni materijal i rezervni dijelovi',z.materijal)+t('Napomena / preporuka',z.napomena)+(z.potvrdio?'<div style="margin-top:4px"><b>Radove potvrdio:</b> '+E(z.potvrdio)+'</div>':'')+(z.potpis?'<div style="margin-top:6px"><b>Potpis naručitelja:</b><br><img src="'+fotoSrc(z.potpis)+'" alt="Potpis naručitelja" style="max-width:240px;width:100%;background:#fff;border:1px solid var(--bd);border-radius:8px;margin-top:4px"></div>':'')+(z.emailN&&z.potpis?'<div class="mu" style="margin-top:4px'+(z.mailNErr?';color:var(--er)':'')+'">'+(z.mailNTs?'PDF poslan naručitelju na '+E(z.emailN)+', '+nmDt(z.mailNTs):z.mailNErr?'PDF naručitelju ('+E(z.emailN)+') nije poslan: '+E(z.mailNErr):'PDF naručitelju: '+E(z.emailN))+'</div>':'')
+ +t('Izvedeni radovi',z.radovi)+(z.items&&z.items.length?'<div style="margin-top:4px"><b>Ugrađeni materijal i rezervni dijelovi:</b></div>'+nmRows(z.items,false):'')+t(z.items&&z.items.length?'Ostali materijal':'Ugrađeni materijal i rezervni dijelovi',z.materijal)+t('Napomena / preporuka',z.napomena)+(z.potvrdio?'<div style="margin-top:4px"><b>Radove potvrdio:</b> '+E(z.potvrdio)+'</div>':'')+(z.potpis?'<div style="margin-top:6px"><b>Potpis naručitelja:</b><br><img src="'+fotoSrc(z.potpis)+'" alt="Potpis naručitelja" style="max-width:240px;width:100%;background:#fff;border:1px solid var(--bd);border-radius:8px;margin-top:4px"></div>':'')+(z.emailN&&z.potpis?'<div class="mu" style="margin-top:4px'+(z.mailNErr?';color:var(--er)':'')+'">'+(z.mailNTs?'PDF poslan naručitelju na '+E(z.emailN)+', '+nmDt(z.mailNTs):z.mailNErr?'PDF naručitelju ('+E(z.emailN)+') nije poslan: '+E(z.mailNErr):'PDF naručitelju: '+E(z.emailN))+'</div>':'')
  +(z.files&&z.files.length?'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+z.files.map(svFoto).join('')+'</div>':'')+'</details>'};
 const svCard=(o,adm)=>{const id=E(o.id),btn=adm?(o.status==='open'?'<button class="sm" data-sve="'+id+'">Uredi</button><button class="sm" data-svc="'+id+'" style="color:var(--er);border-color:var(--er)">Otkaži nalog</button>'
   :o.status==='done'?'<button class="sm pri" data-svg="'+id+'|1">Označi kao pregledano</button><button class="sm" data-svd="'+id+'">Vrati na doradu</button>':o.status==='closed'?'<button class="sm" data-svg="'+id+'|0">Vrati u nepregledano</button>':'')
@@ -1216,12 +1220,32 @@ function svRender(){const L=svData.list.slice().sort(svSort),op=L.filter(o=>o.st
  if(svZid){const o=svData.list.find(x=>x.id===svZid);if(!o||o.status!=='open'){svZid='';svPend=[];$('svz').classList.add('hide')}else svZHead(o)}
  svThumbs()}
 const svZHead=o=>{$('svzi').innerHTML='<div><b>'+E(o.broj)+' · '+E(o.klijent)+'</b>'+(o.hitno?' <span class="badge b-nob">HITNO</span>':'')+'</div><div class="mu">'+E(o.adresa)+'</div>'+(o.status==='open'?svDor({dorada:(o.dorada||[]).slice(-1)}):'')};
-const svDKey=()=>'svDraft-'+me.id,SVZF={datum:'svzd',sati:'svzh',radovi:'svzr',materijal:'svzm',napomena:'svzn',stanje:'svzs',potvrdio:'svzp',emailN:'svze'};
+const svDKey=()=>'svDraft-'+me.id,SVZF={datum:'svzd',sati:'svzh',radovi:'svzr',napomena:'svzn',stanje:'svzs',potvrdio:'svzp',emailN:'svze'};
 const svDGet=()=>{try{return JSON.parse(localStorage.getItem(svDKey()))||{}}catch(e){return {}}},svDSet=v=>{try{if(v)localStorage.setItem(svDKey(),JSON.stringify(v));else localStorage.removeItem(svDKey())}catch(e){}};
 function svZOpen(id){const o=svData.list.find(x=>x.id===id);if(!o)return;svZid=id;const d=svDGet(),z=o.zap||{},src=d.id===id?d:z;
  for(const k in SVZF)$(SVZF[k]).value=src[k]!=null?(k==='sati'?String(src[k]).replace('.',','):src[k]):'';
  if(!$('svzd').value)$('svzd').value=today();$('svzd').max=today();if(!$('svzs').value)$('svzs').value='ok';
- if(!$('svze').value)$('svze').value=o.email||'';svPend=(z.files||[]).slice();svZHead(o);svThumbs();$('svz').classList.remove('hide');svSigInit(z.potpis||'');window.scrollTo(0,0)}
+ if(!$('svze').value)$('svze').value=o.email||'';svItems=((d.id===id&&Array.isArray(d.items)?d.items:z.items)||[]).map(x=>({...x}));svEi=-1;$('svmn').value='';$('svmk').value='';svMDraw();svPend=(z.files||[]).slice();svZHead(o);svThumbs();$('svz').classList.remove('hide');svSigInit(z.potpis||'');window.scrollTo(0,0)}
+/* UGRAĐENI MATERIJAL u zapisniku: isti unos kao Naruči materijal (naziv, jedinična mjera, količina) i prijedlozi naziva iz svih narudžbi i zapisnika */
+let svItems=[],svEi=-1;
+function svMDraw(){if(!$('svmj').options.length)$('svmj').innerHTML=Core.NM_JM.slice().sort(abc).map(j=>'<option>'+E(j)+'</option>').join('');
+ $('svml').innerHTML=svItems.length?nmRows(svItems,true):'<div class="mu">Nema upisanog materijala.</div>';$('svmadd').textContent=svEi>=0?'Spremi izmjenu stavke '+(svEi+1)+'.':'Dodaj u popis';$('svmaddx').classList.toggle('hide',svEi<0)}
+$('svmadd').onclick=()=>{const n=$('svmn').value.trim(),j=$('svmj').value,k=parseFloat($('svmk').value.replace(',','.'));
+ if(!n)return say('svzmsg','Upišite naziv materijala.');if(!isFinite(k)||k<=0)return say('svzmsg','Upišite količinu veću od nule.');
+ const it={naziv:n.slice(0,120),jm:j,kol:Math.round(k*1000)/1000};if(svEi>=0)svItems[svEi]=it;else svItems.push(it);svEi=-1;$('svmn').value='';$('svmk').value='';svZSave();svMDraw();$('svmn').focus()};
+$('svmk').onkeydown=e=>{if(e.key==='Enter')$('svmadd').onclick()};
+$('svmaddx').onclick=()=>{svEi=-1;$('svmn').value='';$('svmk').value='';svMDraw()};
+$('svml').onclick=e=>{const a=e.target.closest('[data-nme]'),x=e.target.closest('[data-nmx]');
+ if(a){svEi=+a.dataset.nme;const it=svItems[svEi];$('svmn').value=it.naziv;$('svmj').value=it.jm;$('svmk').value=String(it.kol).replace('.',',');svMDraw();$('svmn').focus()}
+ else if(x){svItems.splice(+x.dataset.nmx,1);svEi=-1;svZSave();svMDraw()}};
+{let sg=[],si=-1,tm=0,sq='';const I=$('svmn'),X=$('svmsug');
+ const hide=()=>{X.classList.add('hide');I.setAttribute('aria-expanded','false');sg=[];si=-1};
+ const draw=()=>{if(!sg.length)return hide();X.innerHTML=sg.map((x,i)=>'<button type="button" role="option" data-nsg="'+i+'"'+(i===si?' class="on" aria-selected="true"':'')+'><span>'+E(x.naziv)+'</span><span class="mu">'+E(x.jm)+'</span></button>').join('');X.classList.remove('hide');I.setAttribute('aria-expanded','true')};
+ const pick=i=>{const x=sg[i];if(!x)return;I.value=x.naziv;if(x.jm&&[...$('svmj').options].some(o=>o.value===x.jm))$('svmj').value=x.jm;hide();$('svmk').focus()};
+ I.oninput=()=>{clearTimeout(tm);const q=I.value.trim();if(q.length<3)return hide();
+  tm=setTimeout(async()=>{sq=q;try{const l=await api('GET','narudzbe/nazivi?q='+encodeURIComponent(q));if(sq!==q||I.value.trim()!==q)return;sg=l.filter(x=>x.naziv.toLocaleLowerCase('hr')!==q.toLocaleLowerCase('hr')||l.length>1);si=-1;draw()}catch(e){hide()}},150)};
+ I.onkeydown=e=>{if(X.classList.contains('hide'))return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();si=(si+(e.key==='ArrowDown'?1:-1)+sg.length)%sg.length;draw()}else if(e.key==='Enter'&&si>=0){e.preventDefault();pick(si)}else if(e.key==='Escape')hide()};
+ I.onblur=()=>setTimeout(hide,150);X.onmousedown=e=>e.preventDefault();X.onclick=e=>{const b=e.target.closest('[data-nsg]');if(b)pick(+b.dataset.nsg)}}
 /* POTPIS NARUČITELJA: crta se prstom (ili mišem) na bijelom platnu; šalje se kao JPEG slika zajedno sa zapisnikom */
 let svSigOld='',svSigDirty=false,svSigDown=false,svSigLast=null;
 function svSigInit(old){const cv=$('svzsig'),r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=Math.max(300,Math.round(r.width*d));cv.height=Math.round(180*d);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);
@@ -1233,7 +1257,7 @@ const svSigTxt=()=>{$('svzsigs').textContent=svSigDirty?'Potpisano.':svSigOld?'R
  const up=()=>{svSigDown=false};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);cv.addEventListener('pointerleave',up)}
 $('svzsigx').onclick=()=>svSigInit('');
 const svSigJpg=()=>{const cv=$('svzsig'),k=Math.min(1,700/cv.width),t=document.createElement('canvas');t.width=Math.round(cv.width*k);t.height=Math.round(cv.height*k);const x=t.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,t.width,t.height);x.drawImage(cv,0,0,t.width,t.height);return t.toDataURL('image/jpeg',.85)};
-const svZSave=()=>{if(!svZid)return;const v={id:svZid};for(const k in SVZF)v[k]=$(SVZF[k]).value;svDSet(v)};
+const svZSave=()=>{if(!svZid)return;const v={id:svZid,items:svItems};for(const k in SVZF)v[k]=$(SVZF[k]).value;svDSet(v)};
 Object.values(SVZF).forEach(i=>$(i).addEventListener('input',svZSave));
 function svThumbs(){$('svzth').innerHTML=svPend.map((d,i)=>'<span style="position:relative"><img src="'+(d.startsWith('data:')?d:fotoSrc(d))+'" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"><button class="x" data-svx="'+i+'" aria-label="Makni fotografiju" style="position:absolute;top:-8px;right:-8px;width:30px;height:30px;font-size:16px">✕</button></span>').join('')}
 async function svAdd(files){try{for(const f of files){if(svPend.length>=10){say('svzmsg','Najviše 10 fotografija po zapisniku.');break}svPend.push(await shrink(f))}}catch(x){say('svzmsg',x.message)}svThumbs()}
@@ -1243,11 +1267,12 @@ $('svzth').onclick=e=>{const b=e.target.closest('[data-svx]');if(b){svPend.splic
 $('svzx').onclick=()=>{svZid='';svPend=[];$('svz').classList.add('hide')};
 $('svzsend').onclick=async()=>{const o=svData.list.find(x=>x.id===svZid);if(!o)return;const b={};for(const k in SVZF)b[k]=$(SVZF[k]).value;
  if(!b.datum)return say('svzmsg','Odaberite datum izvršenja.');if(!(parseFloat(b.sati.replace(',','.'))>0))return say('svzmsg','Upišite utrošene sate.');if(!b.radovi.trim())return say('svzmsg','Opišite izvedene radove.');
+ if($('svmn').value.trim())return say('svzmsg','Upisani materijal nije dodan: kliknite Dodaj u popis ili obrišite naziv.');
  const sig=svSigDirty||!!svSigOld;if(sig&&!b.potvrdio.trim())return say('svzmsg','Upišite ime i prezime osobe koja se potpisala.');
  if(!await cf('Poslati zapisnik za nalog '+o.broj+' ('+o.klijent+')?'+(sig&&b.emailN.trim()?' Naručitelj će dobiti PDF na '+b.emailN.trim()+'.':!sig?' Zapisnik nije potpisan, pa se naručitelju ništa ne šalje.':'')+' Nakon slanja zapisnik više ne možete mijenjati, osim ako ga administrator vrati na doradu.'))return;
  const B=$('svzsend');B.disabled=true;try{const files=[];for(let i=0;i<svPend.length;i++){const d=svPend[i];if(d.startsWith('data:')){B.textContent='Šaljem fotografiju '+(i+1)+'/'+svPend.length+'…';const f=(await api('POST','otpremnice/foto',{data:d})).f;svPend[i]=f;files.push(f)}else files.push(d)}
   let potpis=svSigOld;if(svSigDirty){B.textContent='Šaljem potpis…';potpis=(await api('POST','otpremnice/foto',{data:svSigJpg()})).f;svSigOld=potpis;svSigDirty=false}
-  B.textContent='Šaljem zapisnik…';const r=await api('POST','servisi/'+o.id+'/zapisnik',{...b,files,potpis});svDSet(null);svZid='';svPend=[];$('svz').classList.add('hide');
+  B.textContent='Šaljem zapisnik…';const r=await api('POST','servisi/'+o.id+'/zapisnik',{...b,files,potpis,items:svItems});svDSet(null);svItems=[];svZid='';svPend=[];$('svz').classList.add('hide');
   toast('Zapisnik je poslan.'+(r.mailNTo?' Naručitelj je dobio PDF na '+r.mailNTo+'.':r.mailN?' '+r.mailN:'')+(r.mail?' '+r.mail:r.mailTo?' E-mail s PDF-om je poslan na '+r.mailTo+'.':''));await load()}
  catch(x){say('svzmsg',x.message)}finally{B.disabled=false;B.textContent='Pošalji zapisnik'}};
 $('p-sv').addEventListener('click',e=>{const z=e.target.closest('[data-svz]'),p=e.target.closest('[data-svp]');if(z)svZOpen(z.dataset.svz);else if(p)svPdf(p.dataset.svp)});

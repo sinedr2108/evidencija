@@ -185,7 +185,8 @@
     if (z) {
       bl.push({ h: 'Zapisnik o izvršenom servisu' }, { table: [kv('Izvršio', z.byName), kv('Datum izvršenja', svDm(z.datum)), kv('Utrošeno sati', nmNum(z.sati) + ' h'), kv('Stanje nakon servisa', SV_STANJE[z.stanje] || ''), kv('Radove potvrdio', z.potvrdio), kv('Potpis naručitelja', z.potpis ? 'da' : 'ne'), kv('Zapisnik poslan', nmDt(z.ts)), kv('Fotografija', String((z.files || []).length))] });
       bl.push(...svPar('Opis izvedenih radova', z.radovi));
-      if (z.materijal) bl.push(...svPar('Ugrađeni materijal i rezervni dijelovi', z.materijal));
+      if (z.items && z.items.length) bl.push({ h: 'Ugrađeni materijal i rezervni dijelovi' }, { table: [{ head: true, cells: [{ t: 'R. br.', right: true }, { t: 'Materijal' }, { t: 'Količina', right: true }, { t: 'Jed. mjera' }] }].concat(z.items.map((it, i) => ({ cells: [{ t: (i + 1) + '.', right: true }, { t: it.naziv }, { t: nmNum(it.kol), right: true }, { t: it.jm }] }))) });
+      if (z.materijal) bl.push(...svPar(z.items && z.items.length ? 'Ostali materijal' : 'Ugrađeni materijal i rezervni dijelovi', z.materijal));
       if (z.napomena) bl.push(...svPar('Napomena / preporuka', z.napomena));
       if (z.potpis && potpis) bl.push({ h: 'Potpis naručitelja' }, { img: potpis, w: 220 }, { p: (z.potvrdio || '') + ', ' + svDm(z.datum), tx: true });
       if (o.pregled) bl.push({ p: 'Pregledao: ' + (o.pregled.name || '') + ', ' + nmDt(o.pregled.ts) });
@@ -307,7 +308,7 @@
     function nmNazivi(q, max = 12) {
       const t = String(q || '').trim().toLocaleLowerCase('hr'); if (t.length < 3) return [];
       const m = new Map();
-      for (const o of db.narudzbe) for (const it of o.items || []) {
+      for (const it of db.narudzbe.flatMap(o => o.items || []).concat((db.servisi || []).flatMap(o => o.zap && o.zap.items || []))) {
         const n = String(it.naziv || '').trim(), k = n.toLocaleLowerCase('hr'); if (!n || !k.includes(t)) continue;
         const r = m.get(k) || { k, n: new Map(), j: new Map() }; r.n.set(n, (r.n.get(n) || 0) + 1); if (it.jm) r.j.set(it.jm, (r.j.get(it.jm) || 0) + 1); m.set(k, r);
       }
@@ -399,11 +400,19 @@
       const files = [...new Set(Array.isArray(b.files) ? b.files.map(String) : [])];
       if (files.length > 10) return 'Najviše 10 fotografija po zapisniku.';
       if (files.some(f => !otpOwn(u.id, f) || (exists && !exists(f)))) return 'Fotografija nije pronađena. Dodajte je ponovno.';
+      const items = [];
+      for (const x of (Array.isArray(b.items) ? b.items : []).slice(0, 200)) {
+        const naziv = svT(x && x.naziv, 120), jm = String(x && x.jm || ''), kol = Math.round(parseFloat(String(x && x.kol).replace(',', '.')) * 1000) / 1000;
+        if (!naziv) return 'Svaka stavka materijala mora imati naziv.';
+        if (!NM_JM.includes(jm)) return 'Odaberite jediničnu mjeru za „' + naziv + '”.';
+        if (!isFinite(kol) || kol <= 0 || kol > 1e7) return 'Upišite ispravnu količinu za „' + naziv + '”.';
+        items.push({ naziv, jm, kol });
+      }
       const potpis = String(b.potpis || ''), potvrdio = svT(b.potvrdio, 100), emailN = svT(b.emailN, 150);
       if (potpis && (!otpName(potpis) || (exists && !exists(potpis)) || !(otpOwn(u.id, potpis) || (o.zap && o.zap.potpis === potpis)))) return 'Potpis nije pronađen. Neka se naručitelj ponovno potpiše.';
       if (potpis && !potvrdio) return 'Upišite ime i prezime osobe koja se potpisala.';
       if (emailN && !svMailOk(emailN)) return 'Neispravna e-mail adresa naručitelja.';
-      o.zap = { ts: Date.now(), by: u.id, datum, sati, radovi, materijal: svT(b.materijal, 2000), napomena: svT(b.napomena, 2000), stanje, potvrdio, files, potpis, emailN };
+      o.zap = { ts: Date.now(), by: u.id, datum, sati, radovi, materijal: svT(b.materijal, 2000), napomena: svT(b.napomena, 2000), stanje, potvrdio, files, potpis, emailN, items };
       o.status = 'done'; o.updated = o.zap.ts; o.pregled = null; return o;
     }
     function svPregled(u, id, val) {
