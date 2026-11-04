@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=15;
+const DATA_VERSION=16;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -38,7 +38,8 @@ const MIGRATIONS={
     (d.narudzbe||[]).forEach(o=>{if(o.obr===undefined)o.obr=null;if(!Array.isArray(o.fwd))o.fwd=[]});const n=Date.now();(d.users||[]).forEach(u=>{if(!u.otpSeen)u.otpSeen=n}) },
   13:d=>{ /* PUSH OBAVIJESTI: ključevi poslužitelja (VAPID) i pretplate preglednika {uid,endpoint,keys,prijava,ts} */ if(!Array.isArray(d.push))d.push=[];if(!d.vapid||!d.vapid.pub)d.vapid=Push.vapidKeys() },
   14:d=>{ /* NAUČNIK: Bolest i Odobren izostanak vrijede 0 sati */ (d.entries||[]).forEach(e=>{if(e.vrsta==='Bolest'||e.vrsta==='Odobren izostanak')e.hours=0}) },
-  15:d=>{ /* PRIJENOS U SLJEDEĆI MJESEC: ručna vrijednost administratora {uid|mjesec: sati}; bez nje vrijedi višak sati za slobodan dan na kraju mjeseca */ if(!d.prijenosOut||typeof d.prijenosOut!=='object')d.prijenosOut={} }
+  15:d=>{ /* PRIJENOS U SLJEDEĆI MJESEC: ručna vrijednost administratora {uid|mjesec: sati}; bez nje vrijedi višak sati za slobodan dan na kraju mjeseca */ if(!d.prijenosOut||typeof d.prijenosOut!=='object')d.prijenosOut={} },
+  16:d=>{ /* SERVIS – RADNI NALOZI: nalozi koje administrator zadaje radnicima i zapisnici o izvršenom servisu; pravo grupe 'sv' */ if(!Array.isArray(d.servisi))d.servisi=[] }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -93,10 +94,10 @@ const inboxTick=()=>{const m=ym(new Date());if(db.inboxCleaned===m)return;db.use
 /* ---- rute ---- */
 const routes=[],R=(m,p,a,f)=>routes.push([m,new RegExp('^'+p.replace(/:\w+/g,'([^/]+)')+'$'),a,f,m+' '+p]);
 /* GRUPE: radnik može dobiti administratorska prava samo za pojedine grupe; razina rute 'ot'/'iz'/... to provjerava na serveru.
-   VODITELJ RADOVA (role 'vod') nije radnik: koristi samo administratorski dio i to pojedine funkcije: ot, nm, al, funkcije Evidencije (EVF) i 'ak' Aktivnosti radnika.
+   VODITELJ RADOVA (role 'vod') nije radnik: koristi samo administratorski dio i to pojedine funkcije: ot, nm, sv (Servis – radni nalozi), al, funkcije Evidencije (EVF) i 'ak' Aktivnosti radnika.
    Grupa 'ev' uključuje sve funkcije Evidencije; can(u,'ev') znači "barem jedna funkcija Evidencije".
    Razina rute može biti i popis (dovoljna je jedna od navedenih funkcija). */
-const GRUPE=['ot','ev','al','nm'],EVF=['iz','sl','go','gr','st','ob','po','zh'],FUNK=['ot','nm','al',...EVF,'ak'];
+const GRUPE=['ot','ev','al','nm','sv'],EVF=['iz','sl','go','gr','st','ob','po','zh'],FUNK=['ot','nm','sv','al',...EVF,'ak'];
 const can=(u,g)=>{if(!u)return false;if(Array.isArray(g))return g.some(x=>can(u,x));if(u.role==='admin')return true;
   if((u.role!=='user'&&u.role!=='vod')||u.disabled||u.deleted||!Array.isArray(u.prava))return false;const p=u.prava;
   return p.includes(g)||(EVF.includes(g)&&p.includes('ev'))||(g==='ev'&&p.some(x=>EVF.includes(x)))};
@@ -135,12 +136,13 @@ const AKT={
   'POST /api/poruke/:id/read':{pre:c=>db.poruke.find(x=>x.id===c.p[0]),f:(c,p)=>['Pročitana poruka',p?aktS(p.text):'']},
   'POST /api/narudzbe':{f:(c,_,o)=>[c.b.send?'Narudžba materijala poslana':'Narudžba materijala spremljena (nije poslana)',String(c.b.site||'')+' · primatelj: '+core.nameOf(String(c.b.adminId||''))+' · stavki: '+(Array.isArray(c.b.items)?c.b.items.length:0)]},
   'DELETE /api/narudzbe/:id':{pre:c=>db.narudzbe.find(x=>x.id===c.p[0]&&x.uid===c.u.id),f:(c,o)=>['Obrisana neposlana narudžba materijala',o?o.site+' · stavki: '+o.items.length:'']},
+  'POST /api/servisi/:id/zapisnik':{pre:c=>db.servisi.find(x=>x.id===c.p[0]),f:(c,o)=>['Zapisnik o izvršenom servisu',o?o.broj+' · '+o.klijent+' · '+o.adresa+(c.b.stanje==='dalje'?'\nPotrebna dodatna intervencija':''):'']},
   'POST /api/password':{f:()=>['Promjena lozinke','']}
 };
 /* push osim onima s Aktivnostima ide i administratorima te grupe (g) i primatelju narudžbe (to) */
 /* bez push obavijesti (ostaju samo u popisu Aktivnosti radnika): prijava i unosi radnog vremena */
 const AKNP=new Set(['POST /api/login','POST /api/entries','PUT /api/entries/:id','DELETE /api/entries/:id']);
-const AKG={'POST /api/slreq':'sl','POST /api/gorq':'go','POST /api/requests':'iz','POST /api/sitereq':'gr','POST /api/otpremnice':'ot','POST /api/otpremnice/:id/odgovor':'ot'};
+const AKG={'POST /api/slreq':'sl','POST /api/gorq':'go','POST /api/requests':'iz','POST /api/sitereq':'gr','POST /api/otpremnice':'ot','POST /api/otpremnice/:id/odgovor':'ot','POST /api/servisi/:id/zapisnik':'sv'};
 function aktAdd(u,t,d,x){const a={id:++aktSeq,ts:Date.now(),uid:u.id,name:u.name,t,d:d||'',login:t==='Prijava u aplikaciju'};akt.push(a);if(akt.length>300)akt.shift();if(!(x&&x.np))pushAkt(a,x||{})}
 /* PUSH obavijesti na sve uređaje na kojima je korisnik uključio obavijesti (računalo, Android, iPhone).
    pushAkt: radnja radnika → svima koji vide Aktivnosti radnika, administratorima te grupe i primatelju narudžbe.
@@ -182,7 +184,7 @@ R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'))
     gorq:db.gorq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
     sitereq:db.sitereq.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
     poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,fromName:core.nameOf(p.from)})),
-    go:a?null:core.goStats(c.u.id,new Date().getFullYear()),godatumi:a?[]:[...core.goDates(c.u.id)],rev})});
+    svOtv:core.svOtvoreni(c.u.id),go:a?null:core.goStats(c.u.id,new Date().getFullYear()),godatumi:a?[]:[...core.goDates(c.u.id)],rev})});
 R('GET','/api/rev',1,c=>c.send(200,{rev}));
 function linkSl(e){db.slreq.forEach(q=>{if(q.entryId===e.id)q.entryId=null});if(e.vrsta!=='Slobodan dan')return;
   const m=e.date.slice(0,7),mine=db.entries.filter(x=>x.uid===e.uid&&x!==e);
@@ -301,7 +303,7 @@ R('DELETE','/api/otpremnice/:id',1,c=>{const r=core.otpDelete(c.u,c.p[0],can(c.u
   r.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();c.send(200,{ok:1})});
 /* poslane fotografije koje nisu postale dio otpremnice (prekinuto slanje) brišu se nakon 2 dana */
 const otpSweep=()=>{try{const old=core.otpExpire(Date.now());if(old.length){old.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();console.log('Obrisane otpremnice starije od '+core.OTP_DANA+' dana, fotografija: '+old.length)}}catch(e){console.error(e)}
-  try{const used=new Set(db.otpremnice.flatMap(o=>o.files));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
+  try{const used=new Set(db.otpremnice.flatMap(o=>o.files).concat(core.svFiles()));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
 otpSweep();setInterval(otpSweep,6*36e5);
 R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/close',1,c=>{if(noAdm(c))return;if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
@@ -344,10 +346,32 @@ R('POST','/api/narudzbe/:id/obradi','nm',c=>{const o=core.nmObradi(c.u,c.p[0],!!
 R('POST','/api/narudzbe/:id/proslijedi','nm',async c=>{const o=core.nmProslijedi(c.u,c.p[0],String(c.b.to||''));if(typeof o==='string')return c.send(400,{e:o});save();
   const n=core.nameOf(o.uid);if(o.adminId!==c.u.id)pushU(o.adminId,c.u.name+': proslijeđena narudžba materijala',o.site+' · naručio: '+n,'/#anm');const r=await nmMail(o,'Proslijeđena narudžba materijala za '+o.site,c.u.name+' Vam prosljeđuje narudžbu materijala za '+o.site+' (naručio: '+n+').');
   c.send(200,{ok:1,mail:r.mail,mailTo:r.mailTo||'',toName:core.nameOf(o.adminId)})});
+/* ===== SERVIS – RADNI NALOZI =====
+   Administrator (ili korisnik s pravom 'sv') zadaje radni nalog jednom ili više radnika; radnici dobiju push obavijest.
+   Radnik izrađuje zapisnik o izvršenom servisu (s fotografijama), koji stiže onome tko je zadao nalog u aplikaciju i e-mailom s PDF-om. */
+R('GET','/api/servisi',1,c=>{const adm=!!c.q.adm&&can(c.u,'sv');c.send(200,{list:core.svList(c.u,adm),radnici:adm?core.svRadnici():[]})});
+R('POST','/api/servisi','sv',c=>{const r=core.svSave(c.u,c.b);if(typeof r==='string')return c.send(400,{e:r});const o=r.o;save();c.send(200,{ok:1,id:o.id,broj:o.broj});
+  if(r.novi.length)pushU(r.novi,(o.hitno?'HITNO · ':'')+'Novi radni nalog '+o.broj,o.klijent+' · '+o.adresa+(o.rok?' · rok '+core.dfmt(o.rok):''),'/#sv')});
+R('POST','/api/servisi/:id/otkazi','sv',c=>{const o=core.svOtkazi(c.u,c.p[0],c.b.note);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});
+  pushU(o.uids,'Radni nalog '+o.broj+' je otkazan',o.klijent+(o.cancel.note?' · '+o.cancel.note:''),'/#sv')});
+R('POST','/api/servisi/:id/pregled','sv',c=>{const o=core.svPregled(c.u,c.p[0],!!c.b.val);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1})});
+R('POST','/api/servisi/:id/dorada','sv',c=>{const o=core.svDorada(c.u,c.p[0],c.b.note);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});
+  pushU(o.uids,'Radni nalog '+o.broj+' vraćen na doradu',o.dorada[o.dorada.length-1].note,'/#sv')});
+/* e-mail s PDF-om onome tko je zadao nalog */
+async function svMail(o){const a=db.users.find(x=>x.id===o.by);
+  if(!a||!a.email||a.disabled||a.deleted)return{mail:'Tko je zadao nalog nema upisan e-mail, zapisnik je vidljiv u aplikaciji.'};
+  const M=mailer();if(M.err)return{mail:'E-mail nije poslan: '+M.err};const v=core.svView(o);
+  try{await M.t.sendMail({from:M.from,to:a.email,subject:'Zapisnik o izvršenom servisu '+o.broj+' – '+o.klijent,
+      text:v.zap.byName+' je poslao/la zapisnik o izvršenom servisu.\n\nNalog: '+o.broj+'\nNaručitelj: '+o.klijent+'\nAdresa: '+o.adresa+'\nStanje: '+Core.SV_STANJE[o.zap.stanje]+'\n\nZapisnik je u privitku (PDF). Fotografije su u aplikaciji: SERVIS – RADNI NALOZI.',
+      attachments:[{filename:'zapisnik-'+o.broj+'.pdf',content:Buffer.from(Core.pdf(Core.svDoc(v)))}]});o.mailTs=Date.now();delete o.mailErr;save();return{mail:'',mailTo:a.email}}
+  catch(e){o.mailErr=String(e.message).slice(0,200);save();return{mail:'E-mail nije poslan: '+e.message}}}
+R('POST','/api/servisi/:id/zapisnik',1,async c=>{if(noAdm(c)||noNau(c))return;const o=core.svZapisnik(c.u,{...c.b,id:c.p[0]},f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});save();
+  const r=await svMail(o);c.send(200,{ok:1,mail:r.mail,mailTo:r.mailTo||''})});
 /* ZNAČKE na tipkama početne stranice administracije: broj primljenih, a neobrađenih stavki po grupi (samo ono što korisnik smije vidjeti) */
 R('GET','/api/znacke',1,c=>{const u=c.u,z={};
   if(can(u,'ot'))z.aot=db.otpremnice.filter(o=>o.ts>(u.otpSeen||0)&&o.uid!==u.id).length;
   if(can(u,'nm'))z.anm=core.nmNeobr(u);
+  if(can(u,'sv'))z.asv=core.svCekaPregled();
   const op=k=>db[k].filter(q=>q.status==='open').length;
   if(can(u,'sl'))z.asl=op('slreq');if(can(u,'go'))z.ago=op('gorq');if(can(u,'iz'))z.aiz=op('requests');if(can(u,'gr'))z.agr=op('sitereq');
   z.aev=(z.asl||0)+(z.ago||0)+(z.aiz||0)+(z.agr||0);c.send(200,z)});

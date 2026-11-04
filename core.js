@@ -120,7 +120,7 @@
     y -= 6; line(M, y, W - M, y, 0.6); y -= 14;
     (doc.blocks || []).forEach(b => {
       if (b.h) { need(72); y -= 6; text(M, y - 12, b.h, 12.5, true); y -= 20; }
-      else if (b.p) { wrap(b.p, W - 2 * M, 9.5).forEach(l => { need(14); text(M, y - 9, l, 9.5, false, true); y -= 13; }); y -= 2; }
+      else if (b.p) { const sz = b.tx ? 10.5 : 9.5; wrap(b.p, W - 2 * M, sz).forEach(l => { need(15); text(M, y - 9, l, sz, false, !b.tx); y -= b.tx ? 14 : 13; }); y -= 2; }
       else if (b.table && b.table.length) {
         const rows = b.table, n = Math.max(...rows.map(r => r.cells.length)), sz = 9.5, pad = 6, avail = W - 2 * M;
         const wid = Array.from({ length: n }, (_, i) => Math.max(30, ...rows.map(r => r.cells[i] ? pW(r.cells[i].t, sz, r.head || r.cells[i].bold) + 2 * pad + 3 : 0)));
@@ -166,8 +166,27 @@
     blocks: [{ table: [{ head: true, cells: [{ t: 'R. br.', right: true }, { t: 'Materijal' }, { t: 'Količina', right: true }, { t: 'Jed. mjera' }] }].concat(o.items.map((it, i) => ({ cells: [{ t: (i + 1) + '.', right: true }, { t: it.naziv }, { t: nmNum(it.kol), right: true }, { t: it.jm }] }))) }] });
   /* zbroj istog materijala (naziv bez obzira na velika/mala slova) u istoj jediničnoj mjeri */
   const nmTotal = list => { const m = new Map(); list.forEach(o => o.items.forEach(it => { const k = it.naziv.trim().toLocaleLowerCase('hr') + '|' + it.jm; const x = m.get(k) || { naziv: it.naziv.trim(), jm: it.jm, kol: 0, n: 0 }; x.kol += it.kol; x.n++; m.set(k, x); })); return [...m.values()].sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr') || a.jm.localeCompare(b.jm, 'hr')); };
+  /* ---- SERVIS – RADNI NALOZI: statusi i PDF radnog naloga sa zapisnikom (dijele server, preglednik i demo) ---- */
+  const SV_ST = { open: 'Zadano', done: 'Izvršeno – čeka pregled', closed: 'Pregledano', cancelled: 'Otkazano' };
+  const SV_STANJE = { ok: 'Ispravno, servis završen', dalje: 'Potrebna dodatna intervencija' };
+  const svDm = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.' : '';
+  const svPar = (h, t) => [{ h }].concat(String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean).map(p => ({ p, tx: true })));
+  const svDoc = o => {
+    const z = o.zap, kv = (k, v) => ({ cells: [{ t: k, bold: true }, { t: v || '–' }] });
+    const info = ['Broj naloga: ' + o.broj + (o.hitno ? ' · HITNO' : ''), 'Zadao: ' + (o.byName || '') + ', ' + nmDt(o.ts), 'Radnici: ' + (o.uidNames || []).join(', '), 'Status: ' + (SV_ST[o.status] || o.status)];
+    const bl = [{ h: 'Radni nalog' }, { table: [kv('Naručitelj', o.klijent), kv('Adresa / lokacija', o.adresa), kv('Kontakt', o.kontakt), kv('Rok izvršenja', svDm(o.rok))] }].concat(svPar('Opis kvara / zadatak', o.opis));
+    if (z) {
+      bl.push({ h: 'Zapisnik o izvršenom servisu' }, { table: [kv('Izvršio', z.byName), kv('Datum izvršenja', svDm(z.datum)), kv('Utrošeno sati', nmNum(z.sati) + ' h'), kv('Stanje nakon servisa', SV_STANJE[z.stanje] || ''), kv('Radove potvrdio', z.potvrdio), kv('Zapisnik poslan', nmDt(z.ts)), kv('Fotografija', String((z.files || []).length))] });
+      bl.push(...svPar('Opis izvedenih radova', z.radovi));
+      if (z.materijal) bl.push(...svPar('Ugrađeni materijal i rezervni dijelovi', z.materijal));
+      if (z.napomena) bl.push(...svPar('Napomena / preporuka', z.napomena));
+      if (o.pregled) bl.push({ p: 'Pregledao: ' + (o.pregled.name || '') + ', ' + nmDt(o.pregled.ts) });
+    }
+    if (o.status === 'cancelled' && o.cancel) bl.push({ h: 'Nalog je otkazan' }, { p: (o.cancel.name || '') + ', ' + nmDt(o.cancel.ts) + (o.cancel.note ? ' – ' + o.cancel.note : '') });
+    return { title: 'Radni nalog ' + o.broj + ' – ' + o.klijent, footer: 'TiDy Connect – servis, radni nalog ' + o.broj, info, blocks: bl };
+  };
   function Core(db) {
-    db.requests = db.requests || [];
+    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = [];
     db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {};
     db.slreq = db.slreq || [];
     db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
@@ -330,6 +349,71 @@
       fwd: (o.fwd || []).map(f => ({ ...f, fromName: nameOf(f.from), toName: nameOf(f.to), byName: nameOf(f.by) })) });
     /* radnik: svoje narudžbe; primatelj (adm): poslane njemu, a puni administrator uz svi=1 sve poslane */
     const nmList = (u, adm, svi) => db.narudzbe.filter(o => adm ? o.status === 'sent' && (o.adminId === u.id || (svi && u.role === 'admin')) : o.uid === u.id).sort((a, b) => (b.sentTs || b.updated) - (a.sentTs || a.updated)).slice(0, 2000).map(nmView);
+    /* SERVIS – RADNI NALOZI: administrator (ili tko ima pravo 'sv') zadaje nalog jednom ili više radnika; radnik izrađuje zapisnik o izvršenom servisu.
+       Statusi: open (zadano) → done (zapisnik poslan, čeka pregled) → closed (pregledano); done se može vratiti na doradu (opet open); open se može otkazati (cancelled).
+       Nalozi se ne brišu, pa se broj naloga (RN-godina-redni broj) nikad ne ponavlja. */
+    const svRadnici = () => db.users.filter(u => u.role === 'user' && !u.nau && !u.deleted && !u.disabled && !u.purged).map(u => ({ id: u.id, name: u.name })).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
+    const svT = (v, n) => String(v == null ? '' : v).replace(/\r/g, '').trim().slice(0, n);
+    const svIso = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z'));
+    function svBroj(now) { const y = new Date(now).getFullYear(), p = 'RN-' + y + '-'; let n = 0; db.servisi.forEach(o => { if (String(o.broj || '').startsWith(p)) n = Math.max(n, parseInt(o.broj.slice(p.length), 10) || 0); }); return p + String(n + 1).padStart(3, '0'); }
+    function svSave(u, b) {
+      const klijent = svT(b.klijent, 150), adresa = svT(b.adresa, 200), kontakt = svT(b.kontakt, 150), opis = svT(b.opis, 4000), rok = String(b.rok || '');
+      const ok = svRadnici().map(x => x.id), uids = [...new Set(Array.isArray(b.uids) ? b.uids.map(String) : [])];
+      if (!klijent) return 'Upišite naručitelja (klijenta).';
+      if (!adresa) return 'Upišite adresu ili lokaciju servisa.';
+      if (!opis) return 'Upišite opis kvara ili zadatka.';
+      if (rok && !svIso(rok)) return 'Neispravan rok izvršenja.';
+      if (!uids.length) return 'Odaberite barem jednog radnika.';
+      const now = Date.now(); let o, prije = [];
+      if (b.id) {
+        o = db.servisi.find(x => x.id === b.id); if (!o) return 'Radni nalog nije pronađen.';
+        if (o.status !== 'open') return 'Mijenjati se može samo nalog koji još nije izvršen.';
+        prije = o.uids.slice(); if (uids.some(id => !ok.includes(id) && !prije.includes(id))) return 'Odaberite radnike s popisa.';
+        Object.assign(o, { klijent, adresa, kontakt, opis, rok, hitno: !!b.hitno, uids, updated: now, updatedBy: u.id });
+      } else {
+        if (uids.some(id => !ok.includes(id))) return 'Odaberite radnike s popisa.';
+        o = { id: Math.random().toString(36).slice(2) + now.toString(36), broj: svBroj(now), by: u.id, ts: now, klijent, adresa, kontakt, opis, rok, hitno: !!b.hitno, uids, status: 'open', updated: now, zap: null, pregled: null, cancel: null, dorada: [] };
+        db.servisi.push(o);
+      }
+      return { o, novi: uids.filter(id => !prije.includes(id)) };
+    }
+    const svFind = id => db.servisi.find(x => x.id === id);
+    function svZapisnik(u, b, exists) {
+      const o = svFind(String(b.id || '')); if (!o || !o.uids.includes(u.id)) return 'Radni nalog nije pronađen.';
+      if (o.status !== 'open') return o.status === 'cancelled' ? 'Ovaj radni nalog je otkazan.' : 'Zapisnik za ovaj nalog je već poslan.';
+      const datum = String(b.datum || ''), sati = Math.round(parseFloat(String(b.sati).replace(',', '.')) * 100) / 100, radovi = svT(b.radovi, 4000), stanje = b.stanje === 'dalje' ? 'dalje' : 'ok';
+      if (!svIso(datum)) return 'Odaberite datum izvršenja.';
+      if (datum > todayIso()) return 'Datum izvršenja ne može biti u budućnosti.';
+      if (!isFinite(sati) || sati <= 0 || sati > 500) return 'Upišite utrošene sate (broj veći od nule).';
+      if (!radovi) return 'Opišite izvedene radove.';
+      const files = [...new Set(Array.isArray(b.files) ? b.files.map(String) : [])];
+      if (files.length > 10) return 'Najviše 10 fotografija po zapisniku.';
+      if (files.some(f => !otpOwn(u.id, f) || (exists && !exists(f)))) return 'Fotografija nije pronađena. Dodajte je ponovno.';
+      o.zap = { ts: Date.now(), by: u.id, datum, sati, radovi, materijal: svT(b.materijal, 2000), napomena: svT(b.napomena, 2000), stanje, potvrdio: svT(b.potvrdio, 100), files };
+      o.status = 'done'; o.updated = o.zap.ts; o.pregled = null; return o;
+    }
+    function svPregled(u, id, val) {
+      const o = svFind(id); if (!o || (o.status !== 'done' && o.status !== 'closed')) return 'Radni nalog nije pronađen ili još nema zapisnik.';
+      o.status = val ? 'closed' : 'done'; o.pregled = val ? { ts: Date.now(), by: u.id } : null; o.updated = Date.now(); return o;
+    }
+    function svDorada(u, id, note) {
+      const o = svFind(id); if (!o || o.status !== 'done') return 'Na doradu se može vratiti samo izvršen, a nepregledan nalog.';
+      note = svT(note, 500); if (!note) return 'Upišite što radnik treba ispraviti ili dopuniti.';
+      if (!Array.isArray(o.dorada)) o.dorada = []; o.dorada.push({ ts: Date.now(), by: u.id, note, zapBy: o.zap ? o.zap.by : '' });
+      o.status = 'open'; o.updated = Date.now(); return o;
+    }
+    function svOtkazi(u, id, note) {
+      const o = svFind(id); if (!o || o.status !== 'open') return 'Otkazati se može samo nalog koji još nije izvršen.';
+      o.status = 'cancelled'; o.cancel = { ts: Date.now(), by: u.id, note: svT(note, 300) }; o.updated = Date.now(); return o;
+    }
+    const svView = o => ({ ...o, byName: nameOf(o.by), uidNames: o.uids.map(nameOf), zap: o.zap ? { ...o.zap, byName: nameOf(o.zap.by) } : null,
+      pregled: o.pregled ? { ...o.pregled, name: nameOf(o.pregled.by) } : null, cancel: o.cancel ? { ...o.cancel, name: nameOf(o.cancel.by) } : null,
+      dorada: (o.dorada || []).map(d => ({ ...d, name: nameOf(d.by) })) });
+    /* administrator: svi nalozi; radnik: nalozi zadani njemu */
+    const svList = (u, adm) => db.servisi.filter(o => adm || o.uids.includes(u.id)).sort((a, b) => b.ts - a.ts).slice(0, 3000).map(svView);
+    const svCekaPregled = () => db.servisi.filter(o => o.status === 'done').length;
+    const svOtvoreni = uid => db.servisi.filter(o => o.status === 'open' && o.uids.includes(uid)).length;
+    const svFiles = () => db.servisi.flatMap(o => o.zap ? o.zap.files || [] : []);
     function otpSetSite(u, id, f, site) {
       const o = db.otpremnice.find(x => x.id === id); if (!o || !o.files.includes(f)) return 'Fotografija nije pronađena.';
       site = String(site || '').trim().slice(0, 100); if (!site) return 'Odaberite ili upišite gradilište.';
@@ -596,8 +680,8 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svView, svList, svCekaPregled, svOtvoreni, svFiles, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
-  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
+  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
 })(typeof window !== 'undefined' ? window : this);

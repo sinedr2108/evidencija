@@ -39,7 +39,9 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
 .ms summary{padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ms[open] summary{border-color:var(--ac)}.ms>div{border:1px solid var(--bd);border-radius:10px;margin-top:4px;padding:4px 10px;max-height:260px;overflow:auto;background:var(--card)}.ms label{display:flex;gap:8px;align-items:center;color:var(--tx);margin:8px 0;font-size:15px}.ms input{width:auto}
 .a4grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.a4grid>.card{margin:0;padding:10px}.a4{display:block;aspect-ratio:210/297;background:#fff;border:1px solid var(--bd);border-radius:6px;overflow:hidden}.a4 img{width:100%;height:100%;object-fit:contain;display:block}
-.grp{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}.grp .tile{min-height:96px;font-size:19px}.t-ot{background:#ea580c;color:#fff}.t-al{background:var(--gy);color:#fff}.t-nm{background:#0d9488;color:#fff}
+.grp{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}.grp .tile{min-height:96px;font-size:19px}.t-ot{background:#ea580c;color:#fff}.t-al{background:var(--gy);color:#fff}.t-nm{background:#0d9488;color:#fff}.t-sv{background:#4f46e5;color:#fff}
+textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);resize:vertical}
+.svf{display:grid;grid-template-columns:1fr 1fr;gap:8px}@media(max-width:520px){.svf{grid-template-columns:1fr}}.svt{white-space:pre-wrap;margin-top:4px}.svb{margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--bg)}
 .nmr{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)}.nmr .rb{color:var(--mu);font-weight:700;text-align:right}.nmq{white-space:nowrap;font-weight:700}
 .nmin{display:grid;grid-template-columns:1fr 110px 100px;gap:8px}@media(max-width:520px){.nmin{grid-template-columns:1fr 1fr}.nmin .nmnw{grid-column:1/-1}}
 .nmnw{position:relative}#nmsug{position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:30;background:var(--card);border:1px solid var(--bd);border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);max-height:260px;overflow:auto}#nmsug button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:11px 12px;border:0;border-bottom:1px solid var(--bd);background:none;color:var(--tx);font:inherit}#nmsug button:last-child{border:0}#nmsug button.on,#nmsug button:hover{background:var(--bg)}#nmsug .mu{flex-shrink:0}
@@ -91,6 +93,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
     <button class="tile t-ot" data-pg="ot">OTPREMNICE</button>
     <button class="tile t-sh" data-pg="ev">EVIDENCIJA RADNOG VREMENA</button>
     <button class="tile t-nm" data-pg="nm">NARUČI MATERIJAL</button>
+    <button class="tile t-sv" data-pg="sv">SERVIS – RADNI NALOZI</button>
     <button class="tile t-al" data-pg="al">ALAT</button>
    </div>
   </div>
@@ -127,6 +130,22 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <details class="card"><summary style="cursor:pointer;font-weight:600">Filteri</summary><div class="nmin" style="margin-top:8px;grid-template-columns:1fr 1fr"><div><label for="nmhod">Od datuma</label><input type="date" id="nmhod"></div><div><label for="nmhdo">Do datuma</label><input type="date" id="nmhdo"></div></div><label for="nmhfs">Gradilište</label><select id="nmhfs"></select><label for="nmha">Administrator</label><select id="nmha"></select><label for="nmhs">Status</label><select id="nmhs"><option value="">Sve</option><option value="sent">Poslane</option><option value="unsent">Nije poslano</option></select><button class="sm" id="nmhfx" style="margin-top:8px">Poništi filtere</button></details>
    <div class="fl" style="margin:8px 0"><button class="sm" id="nmtot">Ukupna lista materijala</button></div><div id="nmtv" class="hide"></div>
    <div id="nmhl"></div>
+  </div>
+  <div id="p-sv" class="pg hide">
+   <div class="card hide" id="svz" style="border-top:5px solid #4f46e5"><h2 style="margin-top:0">Zapisnik o izvršenom servisu</h2><div id="svzi"></div>
+    <div class="svf"><div><label for="svzd">Datum izvršenja</label><input type="date" id="svzd"></div><div><label for="svzh">Utrošeno sati</label><input id="svzh" inputmode="decimal" placeholder="npr. 2,5"></div></div>
+    <label for="svzr">Opis izvedenih radova</label><textarea id="svzr" rows="5" maxlength="4000" placeholder="Što je napravljeno, što je pregledano i zamijenjeno…"></textarea>
+    <label for="svzm">Ugrađeni materijal i rezervni dijelovi (neobavezno)</label><textarea id="svzm" rows="3" maxlength="2000"></textarea>
+    <label for="svzs">Stanje nakon servisa</label><select id="svzs"><option value="ok">Ispravno, servis završen</option><option value="dalje">Potrebna dodatna intervencija</option></select>
+    <label for="svzn">Napomena ili preporuka (neobavezno)</label><textarea id="svzn" rows="2" maxlength="2000"></textarea>
+    <label for="svzp">Radove potvrdio kod naručitelja (ime i prezime, neobavezno)</label><input id="svzp" maxlength="100">
+    <label>Fotografije (neobavezno, najviše 10)</label><input type="file" id="svzc" accept="image/*" capture="environment" class="hide"><input type="file" id="svzg" accept="image/*" multiple class="hide">
+    <div class="fl" style="flex-wrap:wrap"><button class="sm" id="svzcb">Fotografiraj</button><button class="sm" id="svzgb">Odaberi iz galerije</button></div>
+    <div id="svzth" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
+    <div class="msg" id="svzmsg"></div>
+    <div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm pri" id="svzsend">Pošalji zapisnik</button><button class="sm" id="svzx">Odustani</button></div></div>
+   <h2>Zadani servisi</h2><div id="svl"></div>
+   <h2>Izvršeni servisi</h2><div id="svh"></div>
   </div>
   <div id="p-al" class="pg hide"><div class="card" style="border-top:5px solid var(--gy)"><b>ALAT</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
   <div id="p-sh" class="pg hide">
@@ -173,7 +192,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li>Nakon prve prijave promijenite lozinku: na početnoj stranici gumb <b>Lozinka</b>.</li>
    <li>Aplikaciju dodajte na početni zaslon mobitela: Chrome → izbornik ⋮ → <i>Dodaj na početni zaslon</i>; iPhone (Safari) → <i>Dijeli</i> → <i>Dodaj na početni zaslon</i>. Ikona ima logo tvrtke i naziv TiDy Connect; ako imate stari prečac, obrišite ga i dodajte ponovno.</li>
    <li>Ako zaboravite lozinku, javite se administratoru – on vam može poslati nove podatke za prijavu.</li>
-   <li><b>Obavijesti na mobitelu:</b> na početnoj stranici dodirnite <b>Uključi obavijesti</b> i dopustite ih. Mobitel vam tada javi novu poruku administratora, odluku o zahtjevu, obrađenu narudžbu materijala, pitanje o otpremnici i novo gradilište i kad je aplikacija zatvorena. Na <b>Androidu</b> radi u Chromeu, a na <b>iPhoneu</b> (iOS 16.4 ili noviji) samo kad aplikaciju otvorite s ikone na početnom zaslonu. Uključuje se posebno na svakom uređaju, a isključuje u dijelu <b>Poruke i obavijesti</b>; odjavom se obavijesti na tom uređaju zaustave do sljedeće prijave.</li>
+   <li><b>Obavijesti na mobitelu:</b> na početnoj stranici dodirnite <b>Uključi obavijesti</b> i dopustite ih. Mobitel vam tada javi novu poruku administratora, odluku o zahtjevu, novi radni nalog za servis, obrađenu narudžbu materijala, pitanje o otpremnici i novo gradilište i kad je aplikacija zatvorena. Na <b>Androidu</b> radi u Chromeu, a na <b>iPhoneu</b> (iOS 16.4 ili noviji) samo kad aplikaciju otvorite s ikone na početnom zaslonu. Uključuje se posebno na svakom uređaju, a isključuje u dijelu <b>Poruke i obavijesti</b>; odjavom se obavijesti na tom uređaju zaustave do sljedeće prijave.</li>
    <li>Aplikacija se <b>sama osvježava</b> (svakih desetak sekundi): odluke, poruke i obavijesti administratora pojavit će se bez odjave i ponovne prijave. Dok upisujete tekst, osvježavanje čeka da završite.</li></ul>
    </div>
    <div class="uh" data-h="hm">
@@ -184,7 +203,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada.</li>
    <li><b>Gumb s pismom</b> (gore, uz Lozinka i Odjava) – sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište) s njihovim statusom, najnovije na vrhu. Crveni broj na gumbu je broj nepročitanih poruka. Svaku stavku možete obrisati gumbom ✕ (briše se samo iz vaše pošte). Na kraju mjeseca automatski ostaje samo 5 najnovijih.</li>
    <li>Plavi gumb <b>?</b> dolje desno postoji na svakoj stranici i otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>.</li>
-   <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUČI MATERIJAL</b> i <b>ALAT</b> (Alat je u izradi).</li>
+   <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUČI MATERIJAL</b>, <b>SERVIS – RADNI NALOZI</b> i <b>ALAT</b> (Alat je u izradi). Broj sa zvonom na tipki SERVIS – RADNI NALOZI pokazuje koliko vas servisa čeka.</li>
    <li>Ako vam je administrator dao prava za neki dio administracije, gore imate gumb <b>Administracija</b>. Njime prelazite u administratorski dio (vidite samo dodijeljene grupe), a gumbom <b>Radnički dio</b> se vraćate.</li></ul>
    </div>
    <div class="uh" data-h="pt">
@@ -203,6 +222,16 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <li>Ispod su vaše poslane otpremnice. Klik na sličicu otvara fotografiju u A4 obliku (strelicama listate stranice, <b>Puna veličina</b> za povećanje). Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li>
    <li>Ako administrator zatraži <b>dodatno objašnjenje</b>, dobit ćete obavijest. Pitanje je ispod te otpremnice: upišite odgovor i kliknite <b>Pošalji odgovor</b>. Ako administrator promijeni gradilište, to piše uz otpremnicu.</li>
    <li>Poslane otpremnice s fotografijama automatski se brišu <b>60 dana nakon slanja</b>.</li></ol>
+   </div>
+   <div class="uh" data-h="sv">
+   <h3>SERVIS – RADNI NALOZI</h3>
+   <ol><li>Pod <b>Zadani servisi</b> su radni nalozi koje vam je zadao administrator: broj naloga, naručitelj, adresa, kontakt, opis kvara ili zadatka i rok. <b style="color:var(--er)">HITNO</b> i nalozi s najbližim rokom su na vrhu. Telefon u kontaktu možete dodirnuti i odmah nazvati.</li>
+   <li>Kad završite servis, kliknite <b>Izradi zapisnik</b> uz taj nalog. Upišite <b>datum izvršenja</b>, <b>utrošene sate</b> i <b>opis izvedenih radova</b>, a po potrebi ugrađeni materijal, napomenu i ime osobe koja je kod naručitelja potvrdila radove. Odaberite <b>stanje nakon servisa</b>: ispravno ili potrebna dodatna intervencija.</li>
+   <li>Gumbima <b>Fotografiraj</b> i <b>Odaberi iz galerije</b> dodajte do 10 fotografija (npr. prije i poslije, pločica uređaja). Pogrešnu fotografiju maknite gumbom ✕.</li>
+   <li>Kliknite <b>Pošalji zapisnik</b>. Zapisnik odmah stiže administratoru u aplikaciju i na njegov e-mail kao PDF. Nedovršen zapisnik (tekst) ostaje spremljen na ovom uređaju dok ga ne pošaljete; fotografije treba dodati ponovno ako zatvorite aplikaciju.</li>
+   <li>Ako je nalog zadan za više radnika, zapisnik šalje jedan od vas, a ostali ga vide pod <b>Izvršeni servisi</b>.</li>
+   <li>Ako administrator vrati zapisnik <b>na doradu</b>, nalog se vraća među zadane s napomenom što treba ispraviti. Kliknite <b>Uredi zapisnik</b> (prijašnji tekst je već upisan), ispravite i pošaljite ponovno.</li>
+   <li>Pod <b>Izvršeni servisi</b> su vaši poslani zapisnici sa statusom (<b>čeka pregled</b> ili <b>Pregledano</b>) i gumbom <b>Preuzmi PDF</b>. Otkazane naloge administrator označi kao <b>Otkazano</b>.</li></ol>
    </div>
    <div class="uh" data-h="nm">
    <h3>NARUČI MATERIJAL</h3>
@@ -289,6 +318,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <button class="tile t-ot" data-pg="aot">OTPREMNICE</button>
    <button class="tile t-sh" data-pg="aev">EVIDENCIJA RADNOG VREMENA</button>
    <button class="tile t-nm" data-pg="anm">NARUDŽBE MATERIJALA</button>
+   <button class="tile t-sv" data-pg="asv">SERVIS – RADNI NALOZI</button>
    <button class="tile t-al" data-pg="aal">ALAT</button>
   </div></div>
   <div id="p-aev" class="pg hide"><div class="tiles">
@@ -300,6 +330,24 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <details class="card"><summary style="cursor:pointer;font-weight:600">Filteri</summary><div class="nmin" style="margin-top:8px;grid-template-columns:1fr 1fr"><div><label for="anmod">Od datuma</label><input type="date" id="anmod"></div><div><label for="anmdo">Do datuma</label><input type="date" id="anmdo"></div></div><label for="anmfs">Gradilište</label><select id="anmfs"></select><label for="anmw">Naručio</label><select id="anmw"></select><label for="anms">Obrada</label><select id="anms"><option value="">Sve</option><option value="ne">Neobrađeno</option><option value="da">Obrađeno</option></select><div id="anmsw" class="hide"><label for="anmp">Primatelj</label><select id="anmp"><option value="">Meni</option><option value="svi">Svi primatelji</option></select></div><button class="sm" id="anmfx" style="margin-top:8px">Poništi filtere</button></details>
    <div class="fl" style="margin:8px 0"><button class="sm" id="anmtot">Ukupna lista materijala</button></div><div id="anmtv" class="hide"></div>
    <div class="mu" id="anmn" style="margin-bottom:6px"></div><div id="anml"></div>
+  </div>
+  <div id="p-asv" class="pg hide">
+   <div class="fl" style="margin-bottom:8px"><button class="sm pri" id="asvnew">+ Novi radni nalog</button></div>
+   <div class="card hide" id="asvf" style="border-top:5px solid #4f46e5"><h2 style="margin-top:0" id="asvft">Novi radni nalog</h2>
+    <label for="asvk">Naručitelj (klijent)</label><input id="asvk" maxlength="150">
+    <label for="asva">Adresa / lokacija</label><input id="asva" maxlength="200">
+    <label for="asvc">Kontakt osoba i telefon (neobavezno)</label><input id="asvc" maxlength="150">
+    <label for="asvo">Opis kvara / zadatak</label><textarea id="asvo" rows="4" maxlength="4000"></textarea>
+    <div class="svf"><div><label for="asvr">Rok izvršenja (neobavezno)</label><input type="date" id="asvr"></div><div><label>&nbsp;</label><label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--tx);margin:12px 0 0"><input type="checkbox" id="asvh" style="width:auto"> Hitno</label></div></div>
+    <label>Radnici (jedan ili više)</label><details class="ms" id="asvwd"><summary id="asvws"></summary><div id="asvw"></div></details>
+    <div class="msg" id="asvm"></div>
+    <div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm pri" id="asvsave">Spremi i pošalji radnicima</button><button class="sm" id="asvx">Odustani</button></div></div>
+   <details class="card"><summary style="cursor:pointer;font-weight:600">Filteri</summary>
+    <div class="svf" style="margin-top:8px"><div><label for="asvfs">Status</label><select id="asvfs"><option value="">Svi</option><option value="done">Izvršeno – čeka pregled</option><option value="open">Zadano</option><option value="closed">Pregledano</option><option value="cancelled">Otkazano</option></select></div><div><label for="asvfw">Radnik</label><select id="asvfw"></select></div>
+    <div><label for="asvod">Zadano od</label><input type="date" id="asvod"></div><div><label for="asvdo">Zadano do</label><input type="date" id="asvdo"></div></div>
+    <label for="asvq">Traži (broj, naručitelj, adresa)</label><input id="asvq" type="search" maxlength="60">
+    <button class="sm" id="asvfx" style="margin-top:8px">Poništi filtere</button></details>
+   <div class="mu" id="asvn" style="margin:8px 0 6px"></div><div id="asvl"></div>
   </div>
   <div id="p-aal" class="pg hide"><div class="card" style="border-top:5px solid var(--gy)"><b>ALAT</b><div class="mu" style="margin-top:6px">Ovaj dio je u izradi.</div></div></div>
   <div id="af" class="pg hide">
@@ -378,14 +426,24 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <h3>Početna stranica</h3>
    <ul><li>Na vrhu su <b>zahtjevi na čekanju</b>: slobodan dan, godišnji odmor, ponovno otvaranje mjeseca i novo gradilište. Svaki prihvatite ili odbijte, po želji s napomenom. Radnik odluku odmah vidi na svojoj početnoj stranici i u pošti.</li>
    <li>Zahtjev za novo gradilište možete prije prihvaćanja urediti (naziv). Prihvaćeno gradilište dolazi na popis za sve radnike, a radnici dobiju obavijest.</li>
-   <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUDŽBE MATERIJALA</b> i <b>ALAT</b> (u izradi).</li>
-   <li><b>Zvono s crvenim brojem</b> u gornjem desnom kutu tipke pokazuje koliko u toj grupi ima primljenih, a neobrađenih stavki: kod Otpremnica nove otpremnice od vašeg zadnjeg otvaranja Otpremnica, kod Narudžbi materijala vaše neobrađene narudžbe, a kod Evidencije zahtjevi na čekanju (broj je i na tipkama Slobodni dani, Godišnji odmor, Izvještaji i Gradilišta). Svatko vidi samo brojeve za dijelove kojima ima pristup.</li>
+   <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUDŽBE MATERIJALA</b>, <b>SERVIS – RADNI NALOZI</b> i <b>ALAT</b> (u izradi).</li>
+   <li><b>Zvono s crvenim brojem</b> u gornjem desnom kutu tipke pokazuje koliko u toj grupi ima primljenih, a neobrađenih stavki: kod Otpremnica nove otpremnice od vašeg zadnjeg otvaranja Otpremnica, kod Narudžbi materijala vaše neobrađene narudžbe, kod Servisa izvršeni nalozi koji čekaju pregled, a kod Evidencije zahtjevi na čekanju (broj je i na tipkama Slobodni dani, Godišnji odmor, Izvještaji i Gradilišta). Svatko vidi samo brojeve za dijelove kojima ima pristup.</li>
    <li><b>Obavijesti na ovom uređaju:</b> dok nisu uključene, na vrhu stoji gumb <b>Uključi obavijesti</b> (<b>Ne sada</b> ga skriva na 7 dana). Računalo ili mobitel tada javi i kad je aplikacija zatvorena: administratoru s Aktivnostima radnje radnika (osim prijava i unosa radnog vremena), a voditelju radova i radniku s pravima nove zahtjeve, otpremnice i narudžbe iz njegovih grupa te narudžbu koja mu je poslana ili proslijeđena.</li>
    <li>Gumbi gore: <b>zvono</b> (aktivnosti radnika i obavijesti u Windowsima), <b>Postavke</b>, <b>Lozinka</b> i <b>Odjava</b>.</li>
    <li>Radnik kojem ste dali prava za pojedine grupe (Postavke → Izmijeni) ovdje vidi samo te grupe i nema zvono ni Postavke. Gumbom <b>Radnički dio</b> vraća se na svoj radnički dio.</li>
    <li><b>Voditelj radova</b> nakon prijave ulazi ravno ovdje (nema radnički dio) i vidi samo funkcije koje ste mu odabrali (npr. samo Izvještaje i Godišnji odmor unutar Evidencije). Zahtjeve na vrhu vidi samo za odabrane funkcije, a zvono samo ako ima funkciju Aktivnosti radnika.</li>
    <li>Plavi gumb <b>?</b> dolje desno na svakoj stranici otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>, a kućica vraća na stranicu s koje ste došli.</li>
    <li>Aplikacija se sama osvježava svakih desetak sekundi, pa se novi unosi i zahtjevi radnika pojavljuju bez ponovne prijave.</li></ul>
+   </div>
+   <div class="uh" data-h="asv">
+   <h3>SERVIS – RADNI NALOZI</h3>
+   <ul><li><b>+ Novi radni nalog</b>: upišite naručitelja, adresu ili lokaciju, kontakt (neobavezno), opis kvara ili zadatka, po želji rok i oznaku <b>Hitno</b>, te odaberite jednog ili više radnika. <b>Spremi i pošalji radnicima</b> dodjeljuje nalogu broj (npr. RN-2026-001), a radnici ga vide u svom dijelu SERVIS – RADNI NALOZI i dobiju obavijest na mobitel (ako su je uključili).</li>
+   <li>Popis prikazuje sve naloge: prvo izvršene koji <b>čekaju pregled</b>, zatim zadane (hitni i oni s najbližim rokom na vrhu), a na kraju pregledane i otkazane. Nalog kojem je rok prošao, a nije izvršen, ima crveni rok.</li>
+   <li><b>Filteri</b>: status, radnik, razdoblje zadavanja i pretraživanje po broju, naručitelju i adresi.</li>
+   <li>Zadani nalog možete <b>Urediti</b> (npr. dodati radnika; novi radnik dobije obavijest) ili <b>Otkazati</b> (radnici dobiju obavijest). Nalozi se ne brišu, pa se brojevi naloga ne ponavljaju.</li>
+   <li>Kad radnik pošalje <b>zapisnik o izvršenom servisu</b>, vidite ga ispod naloga (datum, sati, izvedeni radovi, materijal, stanje, napomena, tko je potvrdio i fotografije; klik na fotografiju otvara je u punoj veličini). Onaj tko je zadao nalog dobije i e-mail s PDF-om, a svi s pravom na Servis push obavijest.</li>
+   <li><b>Označi kao pregledano</b> zatvara nalog (radnik vidi da je pregledan). <b>Vrati na doradu</b> s napomenom vraća nalog radniku da ispravi zapisnik. <b>Preuzmi PDF</b> daje radni nalog sa zapisnikom za ispis ili slanje naručitelju.</li>
+   <li>Pravo na ovu grupu daje se u Postavkama → Izmijeni korisnika (radniku <i>Servis – radni nalozi</i>, a voditelju radova istoimena funkcija).</li></ul>
    </div>
    <div class="uh" data-h="aot">
    <h3>OTPREMNICE</h3>
@@ -536,9 +594,9 @@ const showLogin=()=>{$('login').classList.remove('hide');$('app').classList.add(
    ali vidi samo svoje grupe (me.grp). Server svaku administratorsku radnju posebno provjerava. */
 /* VODITELJ RADOVA (uloga 'vod', me.vod): nije radnik, koristi samo administratorski dio i to funkcije koje mu administrator odabere (FN).
    me.evf = dopuštene funkcije Evidencije, me.ak = Aktivnosti radnika. */
-const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena',al:'Alat',nm:'Narudžbe materijala (primanje)'},EVF=['iz','sl','go','gr','st','ob','po','zh'],
- FN={ot:'Otpremnice',nm:'Narudžbe materijala (primanje)',al:'Alat',iz:'Evidencija: Izvještaji (i otvaranje mjeseca)',sl:'Evidencija: Slobodni dani',go:'Evidencija: Godišnji odmor',gr:'Evidencija: Gradilišta (sati i zahtjevi za novo gradilište)',st:'Evidencija: Statistika',ob:'Evidencija: Topli obrok',po:'Evidencija: Obavijesti radnicima',zh:'Evidencija: Odobreni zahtjevi',ak:'Aktivnosti radnika (i obavijesti u Windowsima)'},
- PGF={aiz:'iz',asl:'sl',ago:'go',agr:'gr',ast:'st',aob:'ob',apo:'po',azh:'zh',aev:'ev',aot:'ot',aal:'al',anm:'nm',akt:'ak',aps:'x'},
+const GRN={ot:'Otpremnice',ev:'Evidencija radnog vremena',al:'Alat',nm:'Narudžbe materijala (primanje)',sv:'Servis – radni nalozi'},EVF=['iz','sl','go','gr','st','ob','po','zh'],
+ FN={ot:'Otpremnice',nm:'Narudžbe materijala (primanje)',sv:'Servis – radni nalozi',al:'Alat',iz:'Evidencija: Izvještaji (i otvaranje mjeseca)',sl:'Evidencija: Slobodni dani',go:'Evidencija: Godišnji odmor',gr:'Evidencija: Gradilišta (sati i zahtjevi za novo gradilište)',st:'Evidencija: Statistika',ob:'Evidencija: Topli obrok',po:'Evidencija: Obavijesti radnicima',zh:'Evidencija: Odobreni zahtjevi',ak:'Aktivnosti radnika (i obavijesti u Windowsima)'},
+ PGF={aiz:'iz',asl:'sl',ago:'go',agr:'gr',ast:'st',aob:'ob',apo:'po',azh:'zh',aev:'ev',aot:'ot',aal:'al',anm:'nm',asv:'sv',akt:'ak',aps:'x'},
  admView=()=>{try{return sessionStorage.getItem('admView')==='1'}catch(e){return false}},setAdmView=v=>{try{sessionStorage.setItem('admView',v?'1':'0')}catch(e){}};
 /* ZNAČKE: zvono i crveni broj u gornjem desnom kutu tipke = primljene, a neobrađene stavke te grupe (server broji samo ono što korisnik smije vidjeti) */
 let zn={};const BELL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
@@ -548,8 +606,8 @@ async function loadZn(){if(!me||me.role!=='admin')return;try{zn=await api('GET',
 async function load(){
  try{me=await api('GET','me');me.full=me.role==='admin';me.vod=me.role==='vod';['sites','meals','vrste'].forEach(k=>(me[k]||[]).sort(abc));me.prava=me.prava||[];if(me.vod||(!me.full&&me.prava.length&&admView()))me.role='admin';me.pa=!me.full&&me.role==='admin';
  me.evf=me.full||me.prava.includes('ev')?EVF:me.pa?EVF.filter(g=>me.prava.includes(g)):[];me.ak=me.full||(me.pa&&me.prava.includes('ak'));
- me.grp=me.full?['ot','ev','al','nm']:me.pa?['ot','ev','al','nm'].filter(g=>g==='ev'?me.evf.length:me.prava.includes(g)):[];
- const d=await api('GET','data'+(me.pa?'?adm=1':''));entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};prOut=d.prOut||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];liveRev=d.rev;if(me.role==='admin'){users=(await api('GET','users')).sort((a,b)=>abc(a.name,b.name));zn=await api('GET','znacke').catch(()=>({}))}else inbox=await api('GET','inbox')}catch(e){return}
+ me.grp=me.full?['ot','ev','al','nm','sv']:me.pa?['ot','ev','al','nm','sv'].filter(g=>g==='ev'?me.evf.length:me.prava.includes(g)):[];
+ const d=await api('GET','data'+(me.pa?'?adm=1':''));entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};prOut=d.prOut||{};slreq=d.slreq||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];svOtv=d.svOtv||0;liveRev=d.rev;if(me.role==='admin'){users=(await api('GET','users')).sort((a,b)=>abc(a.name,b.name));zn=await api('GET','znacke').catch(()=>({}))}else inbox=await api('GET','inbox')}catch(e){return}
  $('login').classList.add('hide');$('app').classList.remove('hide');draw();
 }
 const mine=()=>entries.filter(e=>e.uid===me.id);
@@ -608,24 +666,24 @@ function draw(){
  $('zst').textContent=t;$('zod').classList.toggle('hide',!(cl&&rq&&rq.status==='open'));if(!$('izm').value)$('izm').value=zm;drawIzvj();{const have=new Set(mine().filter(e=>e.date.startsWith(zm)).map(e=>e.date)),md=cl||me.nau?[]:Core.weekdays(zm).filter(d=>!have.has(d));$('zavrsi').disabled=md.length>0;$('zmd').classList.toggle('hide',!md.length);$('zmd').textContent=md.length?'Završetak unosa nije moguć. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.':'';if(!$('pirp').classList.contains('hide'))drawIzv()}$('zavrsi').classList.toggle('hide',cl);$('zah').classList.toggle('hide',!(cl&&!(rq&&rq.status==='open')));
  if(me.role==='admin'&&tab==='adm')drawAdm();
  $('slc').innerHTML='<b>Sati za slobodan dan: '+f1(bankFor(zm))+' h</b><div class="mu">Za Slobodan dan potrebno je najmanje 8 h.</div>';
- drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='akt')drawAkt();applyPage();drawZn();if(page==='aot'&&zn.aot){zn.aot=0;api('POST','otpremnice/seen').catch(()=>{})}if(me.ak&&akUid!==me.id)akCheck();pushInit();pushDraw();
+ drawCal();drawPt();if(page==='ot'||page==='aot')drawOt();if(page==='nm'||page==='anm')drawNm();if(page==='sv'||page==='asv')drawSv();if(page==='akt')drawAkt();applyPage();drawZn();drawZnW();if(page==='aot'&&zn.aot){zn.aot=0;api('POST','otpremnice/seen').catch(()=>{})}if(me.ak&&akUid!==me.id)akCheck();pushInit();pushDraw();
 }
-let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',nm:'Naruči materijal',anm:'Narudžbe materijala',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika',aup:'Upute za administratore'};
+let page='hm',upFrom='up',upBack='hm';const TIT={ev:'Evidencija radnog vremena',ot:'Otpremnice',al:'Alat',pt:'Poruke i zahtjevi',nm:'Naruči materijal',anm:'Narudžbe materijala',sv:'Servis – radni nalozi',asv:'Servis – radni nalozi',up:'Upute za korištenje',sh:'ŠIHTERICA',go:'Godišnji odmor',sl:'Slobodni dan',iz:'Izvještaji',aiz:'Izvještaji',asl:'Slobodni dani',ago:'Godišnji odmor',agr:'Gradilišta',ast:'Statistika',aob:'Topli obrok',apo:'Obavijesti radnicima',azh:'Odobreni zahtjevi',aps:'Postavke',aot:'Otpremnice',aev:'Evidencija radnog vremena',aal:'Alat',akt:'Aktivnosti radnika',aup:'Upute za administratore'};
 function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  if(!adm&&page==='hm'&&!window._sp){const u=slreq.concat(gorq,reqs).filter(r=>r.uid===me.id&&r.status!=='open'&&!r.seen);if(u.length){window._sp=1;api('POST','seen').then(()=>u.forEach(r=>r.seen=Date.now())).catch(()=>{}).finally(()=>{window._sp=0})}}
  if(!TIT[page]||(adm!==(page[0]==='a'&&page!==undefined&&page.length===3)))page=home;
  if(!adm&&me.nau&&!['hm','sh','pt','up'].includes(page))page=home;
  if(adm&&!me.full){const need=PGF[page];if(need&&!(need==='ak'?me.ak:EVF.includes(need)?me.evf.includes(need):me.grp.includes(need)))page=home}
  if(adm)$('vod0').classList.toggle('hide',!(me.vod&&!me.grp.length&&!me.ak));
- if(adm)document.querySelectorAll('#ahm [data-pg]').forEach(b=>b.classList.toggle('hide',!me.grp.includes({aot:'ot',aev:'ev',aal:'al',anm:'nm'}[b.dataset.pg])));
- const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt','aup','anm']:['ev','ot','al','sh','go','sl','iz','up','pt','nm'];
+ if(adm)document.querySelectorAll('#ahm [data-pg]').forEach(b=>b.classList.toggle('hide',!me.grp.includes({aot:'ot',aev:'ev',aal:'al',anm:'nm',asv:'sv'}[b.dataset.pg])));
+ const keys=adm?['aiz','asl','ago','agr','apo','azh','ast','aob','aps','aot','aev','aal','akt','aup','anm','asv']:['ev','ot','al','sh','go','sl','iz','up','pt','nm','sv'];
  $('upb').classList.toggle('hide',page==='up'||page==='aup');
  {const U=adm?'aup':'up';if(page===U){const all=upFrom===U;document.querySelectorAll('#p-'+U+' .uh').forEach(d=>d.classList.toggle('hide',!all&&d.dataset.h!==(upFrom===home?home:upFrom)));$(U+'all').classList.toggle('hide',all)}}
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)[['sqw','sl'],['gqw','go'],['rqw','iz'],['srw','gr']].forEach(([i,g])=>$(i).classList.toggle('offpg',page!==home||!me.evf.includes(g)));
  if(adm)document.querySelectorAll('#p-aev [data-pg]').forEach(b=>b.classList.toggle('hide',!me.evf.includes(PGF[b.dataset.pg])));
  if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
- if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='anm'||page==='akt'||page==='aup'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
+ if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='anm'||page==='asv'||page==='akt'||page==='aup'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
  $('nav').classList.toggle('hide',page===home);$('navt').textContent=(page==='up'||page==='aup')&&upFrom!==page?'Upute: '+(upFrom===home?'Početna stranica':TIT[upFrom]):TIT[page]||'';
  $('hdr').classList.toggle('hide',page!==home);
  if(!adm){$('fond').classList.toggle('hide',page!=='ev');$('odl').classList.toggle('hide',page!=='hm');$('por').classList.toggle('hide',page!=='hm');$('snw').classList.toggle('hide',page!=='hm');if(page!=='hm')$('obv').classList.add('hide')}}
@@ -1114,6 +1172,97 @@ $('nmtv').onclick=$('anmtv').onclick=e=>{const b=e.target.closest('[data-nmtp]')
 $('nmtot').onclick=()=>{nmTot.nm=!nmTot.nm;nmRender()};$('anmtot').onclick=()=>{nmTot.anm=!nmTot.anm;nmARender()};
 ['nmhod','nmhdo','nmhfs','nmha','nmhs'].forEach(i=>$(i).onchange=nmRender);['anmod','anmdo','anmfs','anmw','anms'].forEach(i=>$(i).onchange=nmARender);$('anmp').onchange=drawNm;
 $('nmhfx').onclick=()=>{['nmhod','nmhdo','nmhfs','nmha','nmhs'].forEach(i=>$(i).value='');nmRender()};$('anmfx').onclick=()=>{['anmod','anmdo','anmfs','anmw','anms'].forEach(i=>$(i).value='');nmARender()};
+/* SERVIS – RADNI NALOZI: administrator (ili tko ima pravo 'sv') zadaje radni nalog jednom ili više radnika; radnik šalje zapisnik o izvršenom servisu
+   (tekst i fotografije). Statusi: Zadano → Izvršeno (čeka pregled) → Pregledano; izvršeni se može vratiti na doradu, zadani otkazati. */
+let svData={list:[],radnici:[]},svOtv=0,svZid='',svPend=[],svEdit='',svSel=new Set();
+const SVC={open:'#4f46e5',done:'var(--ac)',closed:'var(--ok)',cancelled:'var(--bd)'},svDm=d=>d?d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4)+'.':'';
+const svRank=o=>({done:0,open:1,closed:2,cancelled:3})[o.status],svRok=o=>o.rok||'9999';
+const svSort=(a,b)=>svRank(a)-svRank(b)||(a.status==='open'?(+b.hitno-+a.hitno)||(svRok(a)<svRok(b)?-1:svRok(a)>svRok(b)?1:0):0)||b.updated-a.updated;
+const svBadge=o=>'<span class="badge '+(o.status==='closed'?'b-ok':o.status==='done'?'b-nob':o.status==='cancelled'?'b-no':'')+'"'+(o.status==='open'?' style="background:rgba(79,70,229,.14);color:#4f46e5"':'')+'>'+E(Core.SV_ST[o.status]||o.status)+'</span>';
+const svTel=s=>E(s).replace(/\+?\d[\d \/-]{5,}\d/g,m=>'<a href="tel:'+m.replace(/[^\d+]/g,'')+'">'+m+'</a>');
+const svInfo=o=>'<div style="margin-top:6px"><b>Adresa:</b> '+E(o.adresa)+' · <a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(o.adresa)+'" target="_blank" rel="noopener">karta</a></div>'
+ +(o.kontakt?'<div><b>Kontakt:</b> '+svTel(o.kontakt)+'</div>':'')+(o.rok?'<div><b>Rok:</b> <span'+(o.status==='open'&&o.rok<today()?' style="color:var(--er);font-weight:700"':'')+'>'+svDm(o.rok)+'</span></div>':'')
+ +'<div class="svt">'+E(o.opis)+'</div>';
+const svDor=o=>(o.dorada||[]).map((d,i,a)=>'<div class="svb" style="border-left:4px solid var(--er)"><b>Vraćeno na doradu</b> <span class="mu">'+E(d.name)+', '+nmDt(d.ts)+'</span><div class="svt" style="margin-top:2px">'+E(d.note)+'</div></div>').join('');
+const svFoto=f=>'<a href="'+fotoSrc(f)+'" target="_blank" rel="noopener" style="display:block;width:84px;height:84px"><img src="'+fotoSrc(f)+'" alt="Fotografija" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"></a>';
+const svZapHtml=(o,open)=>{const z=o.zap;if(!z||o.status==='open')return '';const t=(h,v)=>v?'<div style="margin-top:4px"><b>'+h+':</b></div><div class="svt" style="margin-top:0">'+E(v)+'</div>':'';
+ return '<details class="svb"'+(open?' open':'')+'><summary style="cursor:pointer;font-weight:600">Zapisnik · '+E(z.byName)+', '+nmDt(z.ts)+'</summary>'
+ +'<div style="margin-top:6px"><b>Datum izvršenja:</b> '+svDm(z.datum)+' · <b>Utrošeno:</b> '+Core.nmNum(z.sati)+' h</div><div><b>Stanje:</b> <b style="color:var(--'+(z.stanje==='ok'?'ok':'er')+')">'+E(Core.SV_STANJE[z.stanje]||'')+'</b></div>'
+ +t('Izvedeni radovi',z.radovi)+t('Ugrađeni materijal i rezervni dijelovi',z.materijal)+t('Napomena / preporuka',z.napomena)+(z.potvrdio?'<div style="margin-top:4px"><b>Radove potvrdio:</b> '+E(z.potvrdio)+'</div>':'')
+ +(z.files&&z.files.length?'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+z.files.map(svFoto).join('')+'</div>':'')+'</details>'};
+const svCard=(o,adm)=>{const id=E(o.id),btn=adm?(o.status==='open'?'<button class="sm" data-sve="'+id+'">Uredi</button><button class="sm" data-svc="'+id+'" style="color:var(--er);border-color:var(--er)">Otkaži nalog</button>'
+  :o.status==='done'?'<button class="sm pri" data-svg="'+id+'|1">Označi kao pregledano</button><button class="sm" data-svd="'+id+'">Vrati na doradu</button>':o.status==='closed'?'<button class="sm" data-svg="'+id+'|0">Vrati u nepregledano</button>':'')
+  :(o.status==='open'?'<button class="sm pri" data-svz="'+id+'">'+(o.zap?'Uredi zapisnik':'Izradi zapisnik')+'</button>':'');
+ return '<div class="card" style="border-left:5px solid '+SVC[o.status]+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(o.broj)+' · '+E(o.klijent)+'</b>'+(o.hitno&&o.status==='open'?' <span class="badge b-nob">HITNO</span>':'')
+ +'<div class="mu">zadao/la '+E(o.byName)+', '+nmDt(o.ts)+(adm||o.uids.length>1?' · radnici: '+E(o.uidNames.join(', ')):'')+'</div></div>'+svBadge(o)+'</div>'
+ +svInfo(o)+svDor(o)+svZapHtml(o,adm&&o.status==='done')
+ +(o.pregled?'<div class="mu" style="margin-top:6px">Pregledao/la '+E(o.pregled.name)+', '+nmDt(o.pregled.ts)+'</div>':'')
+ +(o.status==='cancelled'&&o.cancel?'<div class="mu" style="margin-top:6px">Otkazao/la '+E(o.cancel.name)+', '+nmDt(o.cancel.ts)+(o.cancel.note?': '+E(o.cancel.note):'')+'</div>':'')
+ +(adm&&o.mailErr&&o.status!=='open'?'<div class="mu" style="margin-top:4px;color:var(--er)">E-mail sa zapisnikom nije poslan: '+E(o.mailErr)+'</div>':'')
+ +'<div class="fl" style="flex-wrap:wrap;margin-top:8px">'+btn+'<button class="sm" data-svp="'+id+'">Preuzmi PDF</button></div></div>'};
+async function drawSv(){const adm=me.role==='admin';try{svData=await api('GET','servisi'+(adm?'?adm=1':''))}catch(e){return}if(adm)svARender();else svRender()}
+const svPdf=id=>{const o=svData.list.find(x=>x.id===id);if(o)saveFile('radni-nalog-'+o.broj+'.pdf',Core.pdf(Core.svDoc(o)),'application/pdf')};
+/* radnik: zadani servisi, izvršeni i obrazac zapisnika (obrazac se ne iscrtava ponovno pri osvježavanju, pa upisano ostaje) */
+function svRender(){const L=svData.list.slice().sort(svSort),op=L.filter(o=>o.status==='open'),rest=L.filter(o=>o.status!=='open').sort((a,b)=>b.updated-a.updated);
+ svOtv=op.length;drawZnW();
+ $('svl').innerHTML=op.length?op.map(o=>svCard(o,false)).join(''):'<div class="card mu">Trenutno nemate zadanih servisa.</div>';
+ $('svh').innerHTML=rest.length?rest.slice(0,100).map(o=>svCard(o,false)).join(''):'<div class="card mu">Još nema izvršenih servisa.</div>';
+ if(svZid){const o=svData.list.find(x=>x.id===svZid);if(!o||o.status!=='open'){svZid='';svPend=[];$('svz').classList.add('hide')}else svZHead(o)}
+ svThumbs()}
+const svZHead=o=>{$('svzi').innerHTML='<div><b>'+E(o.broj)+' · '+E(o.klijent)+'</b>'+(o.hitno?' <span class="badge b-nob">HITNO</span>':'')+'</div><div class="mu">'+E(o.adresa)+'</div>'+(o.status==='open'?svDor({dorada:(o.dorada||[]).slice(-1)}):'')};
+const svDKey=()=>'svDraft-'+me.id,SVZF={datum:'svzd',sati:'svzh',radovi:'svzr',materijal:'svzm',napomena:'svzn',stanje:'svzs',potvrdio:'svzp'};
+const svDGet=()=>{try{return JSON.parse(localStorage.getItem(svDKey()))||{}}catch(e){return {}}},svDSet=v=>{try{if(v)localStorage.setItem(svDKey(),JSON.stringify(v));else localStorage.removeItem(svDKey())}catch(e){}};
+function svZOpen(id){const o=svData.list.find(x=>x.id===id);if(!o)return;svZid=id;const d=svDGet(),z=o.zap||{},src=d.id===id?d:z;
+ for(const k in SVZF)$(SVZF[k]).value=src[k]!=null?(k==='sati'?String(src[k]).replace('.',','):src[k]):'';
+ if(!$('svzd').value)$('svzd').value=today();$('svzd').max=today();if(!$('svzs').value)$('svzs').value='ok';
+ svPend=(z.files||[]).slice();svZHead(o);svThumbs();$('svz').classList.remove('hide');window.scrollTo(0,0)}
+const svZSave=()=>{if(!svZid)return;const v={id:svZid};for(const k in SVZF)v[k]=$(SVZF[k]).value;svDSet(v)};
+Object.values(SVZF).forEach(i=>$(i).addEventListener('input',svZSave));
+function svThumbs(){$('svzth').innerHTML=svPend.map((d,i)=>'<span style="position:relative"><img src="'+(d.startsWith('data:')?d:fotoSrc(d))+'" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"><button class="x" data-svx="'+i+'" aria-label="Makni fotografiju" style="position:absolute;top:-8px;right:-8px;width:30px;height:30px;font-size:16px">✕</button></span>').join('')}
+async function svAdd(files){try{for(const f of files){if(svPend.length>=10){say('svzmsg','Najviše 10 fotografija po zapisniku.');break}svPend.push(await shrink(f))}}catch(x){say('svzmsg',x.message)}svThumbs()}
+$('svzcb').onclick=()=>$('svzc').click();$('svzgb').onclick=()=>$('svzg').click();
+$('svzc').onchange=e=>{svAdd([...e.target.files]);e.target.value=''};$('svzg').onchange=e=>{svAdd([...e.target.files]);e.target.value=''};
+$('svzth').onclick=e=>{const b=e.target.closest('[data-svx]');if(b){svPend.splice(+b.dataset.svx,1);svThumbs()}};
+$('svzx').onclick=()=>{svZid='';svPend=[];$('svz').classList.add('hide')};
+$('svzsend').onclick=async()=>{const o=svData.list.find(x=>x.id===svZid);if(!o)return;const b={};for(const k in SVZF)b[k]=$(SVZF[k]).value;
+ if(!b.datum)return say('svzmsg','Odaberite datum izvršenja.');if(!(parseFloat(b.sati.replace(',','.'))>0))return say('svzmsg','Upišite utrošene sate.');if(!b.radovi.trim())return say('svzmsg','Opišite izvedene radove.');
+ if(!await cf('Poslati zapisnik za nalog '+o.broj+' ('+o.klijent+')? Nakon slanja ga više ne možete mijenjati, osim ako ga administrator vrati na doradu.'))return;
+ const B=$('svzsend');B.disabled=true;try{const files=[];for(let i=0;i<svPend.length;i++){const d=svPend[i];if(d.startsWith('data:')){B.textContent='Šaljem fotografiju '+(i+1)+'/'+svPend.length+'…';const f=(await api('POST','otpremnice/foto',{data:d})).f;svPend[i]=f;files.push(f)}else files.push(d)}
+  B.textContent='Šaljem zapisnik…';const r=await api('POST','servisi/'+o.id+'/zapisnik',{...b,files});svDSet(null);svZid='';svPend=[];$('svz').classList.add('hide');
+  toast('Zapisnik je poslan.'+(r.mail?' '+r.mail:r.mailTo?' E-mail s PDF-om je poslan na '+r.mailTo+'.':''));await load()}
+ catch(x){say('svzmsg',x.message)}finally{B.disabled=false;B.textContent='Pošalji zapisnik'}};
+$('p-sv').addEventListener('click',e=>{const z=e.target.closest('[data-svz]'),p=e.target.closest('[data-svp]');if(z)svZOpen(z.dataset.svz);else if(p)svPdf(p.dataset.svp)});
+function drawZnW(){const b=document.querySelector('#hm .t-sv');if(!b)return;let s=b.querySelector('.zn');const n=me&&me.role!=='admin'?svOtv:0;
+ if(!n){if(s)s.remove();return}if(!s){s=document.createElement('span');s.className='zn';b.appendChild(s)}s.innerHTML=BELL+n;s.title=s.ariaLabel='Zadanih servisa: '+n}
+/* administrator: zadavanje i izmjena naloga, popis s filterima i radnje po statusu */
+function svARender(){const ws=new Map(svData.radnici.map(r=>[r.id,r.name]));svData.list.forEach(o=>o.uids.forEach((id,i)=>{if(!ws.has(id))ws.set(id,o.uidNames[i])}));fill($('asvfw'),[...ws],'Svi radnici');
+ const q=$('asvq').value.trim().toLocaleLowerCase('hr'),st=$('asvfs').value,w=$('asvfw').value,od=$('asvod').value,dO=$('asvdo').value,day=o=>new Date(o.ts).toLocaleDateString('sv');
+ const L=svData.list.filter(o=>(!st||o.status===st)&&(!w||o.uids.includes(w))&&(!od||day(o)>=od)&&(!dO||day(o)<=dO)&&(!q||(o.broj+' '+o.klijent+' '+o.adresa).toLocaleLowerCase('hr').includes(q))).sort(svSort);
+ const n=k=>svData.list.filter(o=>o.status===k).length;
+ $('asvn').textContent='Prikazano: '+L.length+' od '+svData.list.length+' · čeka pregled: '+n('done')+' · zadano: '+n('open');
+ $('asvl').innerHTML=L.length?L.map(o=>svCard(o,true)).join(''):'<div class="card mu">Nema radnih naloga'+(svData.list.length?' za odabrane filtere':'')+'.</div>'}
+const SVAF={klijent:'asvk',adresa:'asva',kontakt:'asvc',opis:'asvo',rok:'asvr'};
+function svWDraw(o){const ws=svData.radnici.slice();if(o)o.uids.forEach((id,i)=>{if(!ws.some(r=>r.id===id))ws.push({id,name:o.uidNames[i]})});ws.sort((a,b)=>abc(a.name,b.name));
+ $('asvw').innerHTML=ws.length?ws.map(r=>'<label><input type="checkbox" value="'+E(r.id)+'"'+(svSel.has(r.id)?' checked':'')+'> '+E(r.name)+'</label>').join(''):'<div class="mu">Nema aktivnih radnika.</div>';svWSum()}
+const svWSum=()=>{const nm=[...$('asvw').querySelectorAll('input:checked')].map(i=>i.parentNode.textContent.trim());$('asvws').textContent=nm.length?nm.join(', '):'– odaberite radnike –'};
+$('asvw').onchange=e=>{if(e.target.type!=='checkbox')return;if(e.target.checked)svSel.add(e.target.value);else svSel.delete(e.target.value);svWSum()};
+function svFOpen(o){svEdit=o?o.id:'';for(const k in SVAF)$(SVAF[k]).value=o?o[k]||'':'';$('asvh').checked=!!(o&&o.hitno);svSel=new Set(o?o.uids:[]);svWDraw(o);
+ $('asvft').textContent=o?'Izmjena radnog naloga '+o.broj:'Novi radni nalog';$('asvsave').textContent=o?'Spremi izmjene':'Spremi i pošalji radnicima';$('asvf').classList.remove('hide');$('asvwd').open=false;window.scrollTo(0,0);$('asvk').focus()}
+const svFClose=()=>{svEdit='';$('asvf').classList.add('hide')};
+$('asvnew').onclick=()=>svFOpen(null);$('asvx').onclick=svFClose;
+$('asvsave').onclick=async()=>{const b={id:svEdit,hitno:$('asvh').checked,uids:[...svSel]};for(const k in SVAF)b[k]=$(SVAF[k]).value;const B=$('asvsave');B.disabled=true;
+ try{const r=await api('POST','servisi',b);toast(svEdit?'Radni nalog '+r.broj+' je spremljen.':'Radni nalog '+r.broj+' je zadan i poslan radnicima.');svFClose();await drawSv()}catch(x){say('asvm',x.message)}finally{B.disabled=false}};
+$('asvl').onclick=async e=>{const t=e.target,g=s=>{const b=t.closest('[data-'+s+']');return b?b.dataset[s]:''},f=id=>svData.list.find(x=>x.id===id);
+ try{let v;
+  if(v=g('svp'))return svPdf(v);
+  if(v=g('sve'))return svFOpen(f(v));
+  if(v=g('svc')){const o=f(v),n=await pr('Otkazati radni nalog '+o.broj+' ('+o.klijent+')? Radnici će dobiti obavijest. Razlog (neobavezno):');if(n===null)return;await api('POST','servisi/'+v+'/otkazi',{note:n});toast('Radni nalog je otkazan.')}
+  else if(v=g('svg')){const[id,x]=v.split('|');await api('POST','servisi/'+id+'/pregled',{val:x==='1'});toast(x==='1'?'Nalog je označen kao pregledan.':'Nalog je vraćen u nepregledane.')}
+  else if(v=g('svd')){const o=f(v),n=await pr('Vratiti zapisnik za '+o.broj+' na doradu? Upišite što radnik treba ispraviti ili dopuniti:');if(!n)return;await api('POST','servisi/'+v+'/dorada',{note:n});toast('Nalog je vraćen radniku na doradu.')}
+  else return;
+  await drawSv();loadZn()}catch(x){toast(x.message)}};
+['asvfs','asvfw','asvod','asvdo'].forEach(i=>$(i).onchange=svARender);$('asvq').oninput=svARender;
+$('asvfx').onclick=()=>{['asvfs','asvfw','asvod','asvdo','asvq'].forEach(i=>$(i).value='');svARender()};
 /* AKTIVNOSTI RADNIKA: administratorov preglednik svakih 10 s dohvaća nove radnje radnika i prikazuje ih kao skočnu obavijest
    u Windowsima (i kad je kartica u pozadini ili prozor smanjen). Uključuje se na stranici zvona; postavka vrijedi za taj preglednik. */
 let akB='',akS=0,akL=[],akU=0,akBusy=0,akUid='';
@@ -1134,7 +1283,7 @@ async function pushOn(){if(Notification.permission!=='granted'&&await Notificati
 async function pushOff(){try{if(pushSub){await api('POST','push/unsub',{endpoint:pushSub.endpoint}).catch(()=>{});await pushSub.unsubscribe()}}catch(e){}pushSub=null;pushDraw()}
 /* stanje push obavijesti na ovom uređaju; full=1 s gumbima Probna/Isključi, inače poziv za uključivanje (početna stranica) */
 function pushHtml(full){const pm=akOk()?Notification.permission:'',ios=isIOS()&&!isStandalone();
- const sto=me&&me.ak?'o radnjama radnika (osim prijava i unosa radnog vremena)':me&&me.role==='user'?'o novoj poruci, odluci o zahtjevu, obrađenoj narudžbi, pitanju o otpremnici i novom gradilištu':'o novim zahtjevima, otpremnicama i narudžbama iz vaših grupa';
+ const sto=me&&me.ak?'o radnjama radnika (osim prijava i unosa radnog vremena)':me&&me.role==='user'?'o novoj poruci, odluci o zahtjevu, novom radnom nalogu, obrađenoj narudžbi, pitanju o otpremnici i novom gradilištu':'o novim zahtjevima, otpremnicama, narudžbama i zapisnicima o servisu iz vaših grupa';
  return '<b>Obavijesti na ovom uređaju</b><div style="margin:6px 0">'+(ios?'<span style="color:var(--er)">Na iPhoneu obavijesti rade samo iz aplikacije dodane na početni zaslon.</span> U Safariju dodirnite <b>Dijeli</b> → <b>Dodaj na početni zaslon</b>, otvorite TiDy Connect s nove ikone, prijavite se i ovdje uključite obavijesti (potreban je iOS 16.4 ili noviji).</div>'+(full?'':'<button class="sm" id="pux">Ne sada</button>')
   :!pushOk()?'<span class="mu">Ovaj preglednik ili adresa ne podržava obavijesti (potrebna je sigurna adresa https://…'+(isIOS()?' i iOS 16.4 ili noviji':'')+').</span></div>'
   :pm==='denied'?'<span style="color:var(--er)">Preglednik je blokirao obavijesti za ovu stranicu.</span> Na računalu kliknite ikonu lijevo od adrese (lokot), a na mobitelu otvorite postavke stranice ili aplikacije; kod <b>Obavijesti</b> odaberite <b>Dopusti</b> i osvježite stranicu.</div>'
