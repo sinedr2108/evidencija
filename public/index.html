@@ -355,6 +355,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
     <div class="svf" style="margin-top:8px"><div><label for="asvfs">Status</label><select id="asvfs"><option value="">Svi</option><option value="done">Izvršeno – čeka pregled</option><option value="open">Zadano</option><option value="closed">Pregledano</option><option value="cancelled">Otkazano</option></select></div><div><label for="asvfw">Radnik</label><select id="asvfw"></select></div>
     <div><label for="asvod">Zadano od</label><input type="date" id="asvod"></div><div><label for="asvdo">Zadano do</label><input type="date" id="asvdo"></div></div>
     <label for="asvq">Traži (broj, naručitelj, adresa)</label><input id="asvq" type="search" maxlength="60">
+    <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--tx);margin:10px 0 0"><input type="checkbox" id="asvsk" style="width:auto"> Prikaži i sakrivene naloge</label>
     <button class="sm" id="asvfx" style="margin-top:8px">Poništi filtere</button></details>
    <div class="mu" id="asvn" style="margin:8px 0 6px"></div><div id="asvl"></div>
   </div>
@@ -447,12 +448,13 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <div class="uh" data-h="asv">
    <h3>SERVIS – RADNI NALOZI</h3>
    <ul><li><b>+ Novi radni nalog</b>: upišite naručitelja, adresu ili lokaciju, kontakt i e-mail naručitelja (neobavezno), opis kvara ili zadatka, po želji rok i oznaku <b>Hitno</b>, te odaberite jednog ili više radnika. <b>Spremi i pošalji radnicima</b> dodjeljuje nalogu broj (npr. RN-2026-001), a radnici ga vide u svom dijelu SERVIS – RADNI NALOZI i dobiju obavijest na mobitel (ako su je uključili).</li>
-   <li>Popis prikazuje sve naloge: prvo izvršene koji <b>čekaju pregled</b>, zatim zadane (hitni i oni s najbližim rokom na vrhu), a na kraju pregledane i otkazane. Nalog kojem je rok prošao, a nije izvršen, ima crveni rok.</li>
+   <li>Svi administratori vide sve naloge. Popis prikazuje: prvo izvršene koji <b>čekaju pregled</b>, zatim zadane (hitni i oni s najbližim rokom na vrhu), a na kraju pregledane i otkazane. Nalog kojem je rok prošao, a nije izvršen, ima crveni rok.</li>
    <li><b>Filteri</b>: status, radnik, razdoblje zadavanja i pretraživanje po broju, naručitelju i adresi.</li>
    <li>Zadani nalog možete <b>Urediti</b> (npr. dodati radnika; novi radnik dobije obavijest) ili <b>Otkazati</b> (radnici dobiju obavijest). Nalozi se ne brišu, pa se brojevi naloga ne ponavljaju.</li>
    <li>Kad radnik pošalje <b>zapisnik o izvršenom servisu</b>, vidite ga ispod naloga (datum, sati, izvedeni radovi, materijal, stanje, napomena, tko je potvrdio i fotografije; klik na fotografiju otvara je u punoj veličini). Onaj tko je zadao nalog dobije i e-mail s PDF-om, a svi s pravom na Servis push obavijest.</li>
    <li><b>Potpis naručitelja</b>: radnik daje naručitelju da se potpiše prstom na mobitelu. Potpisani zapisnik (PDF s potpisom) automatski odlazi na e-mail naručitelja iz naloga ili onaj koji je radnik upisao; ispod zapisnika piše je li i kada poslan. Bez potpisa naručitelj ne dobiva ništa.</li>
    <li><b>Označi kao pregledano</b> zatvara nalog (radnik vidi da je pregledan). <b>Vrati na doradu</b> s napomenom vraća nalog radniku da ispravi zapisnik. <b>Preuzmi PDF</b> daje radni nalog sa zapisnikom za ispis ili slanje naručitelju. U zaglavlju PDF-a su logo i podaci tvrtke iz <b>Postavke → Podaci tvrtke</b>.</li>
+   <li><b>Sakrij</b> (samo kod pregledanih i otkazanih naloga) miče nalog iz <b>vašeg</b> popisa; ostali administratori ga i dalje vide, a nalog se ne briše. Sakrivene naloge vidite uz <b>Filteri → Prikaži i sakrivene naloge</b>, gdje ih tipkom <b>Vrati u moj popis</b> možete vratiti.</li>
    <li>Pravo na ovu grupu daje se u Postavkama → Izmijeni korisnika (radniku <i>Servis – radni nalozi</i>, a voditelju radova istoimena funkcija).</li></ul>
    </div>
    <div class="uh" data-h="aot">
@@ -1207,8 +1209,9 @@ const svZapHtml=(o,open)=>{const z=o.zap;if(!z||o.status==='open')return '';cons
  +(z.files&&z.files.length?'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+z.files.map(svFoto).join('')+'</div>':'')+'</details>'};
 const svCard=(o,adm)=>{const id=E(o.id),btn=adm?(o.status==='open'?'<button class="sm" data-sve="'+id+'">Uredi</button><button class="sm" data-svc="'+id+'" style="color:var(--er);border-color:var(--er)">Otkaži nalog</button>'
   :o.status==='done'?'<button class="sm pri" data-svg="'+id+'|1">Označi kao pregledano</button><button class="sm" data-svd="'+id+'">Vrati na doradu</button>':o.status==='closed'?'<button class="sm" data-svg="'+id+'|0">Vrati u nepregledano</button>':'')
+   +(o.status==='closed'||o.status==='cancelled'?'<button class="sm" data-svh="'+id+'|'+(o.skriven?0:1)+'">'+(o.skriven?'Vrati u moj popis':'Sakrij')+'</button>':'')
   :(o.status==='open'?'<button class="sm pri" data-svz="'+id+'">'+(o.zap?'Uredi zapisnik':'Izradi zapisnik')+'</button>':'');
- return '<div class="card" style="border-left:5px solid '+SVC[o.status]+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(o.broj)+' · '+E(o.klijent)+'</b>'+(o.hitno&&o.status==='open'?' <span class="badge b-nob">HITNO</span>':'')
+ return '<div class="card" style="border-left:5px solid '+SVC[o.status]+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(o.broj)+' · '+E(o.klijent)+'</b>'+(o.hitno&&o.status==='open'?' <span class="badge b-nob">HITNO</span>':'')+(adm&&o.skriven?' <span class="badge">sakriven</span>':'')
  +'<div class="mu">zadao/la '+E(o.byName)+', '+nmDt(o.ts)+(adm||o.uids.length>1?' · radnici: '+E(o.uidNames.join(', ')):'')+'</div></div>'+svBadge(o)+'</div>'
  +svInfo(o)+svDor(o)+svZapHtml(o,adm&&o.status==='done')
  +(o.pregled?'<div class="mu" style="margin-top:6px">Pregledao/la '+E(o.pregled.name)+', '+nmDt(o.pregled.ts)+'</div>':'')
@@ -1291,9 +1294,9 @@ function drawZnW(){const b=document.querySelector('#hm .t-sv');if(!b)return;let 
 /* administrator: zadavanje i izmjena naloga, popis s filterima i radnje po statusu */
 function svARender(){const ws=new Map(svData.radnici.map(r=>[r.id,r.name]));svData.list.forEach(o=>o.uids.forEach((id,i)=>{if(!ws.has(id))ws.set(id,o.uidNames[i])}));fill($('asvfw'),[...ws],'Svi radnici');
  const q=$('asvq').value.trim().toLocaleLowerCase('hr'),st=$('asvfs').value,w=$('asvfw').value,od=$('asvod').value,dO=$('asvdo').value,day=o=>new Date(o.ts).toLocaleDateString('sv');
- const L=svData.list.filter(o=>(!st||o.status===st)&&(!w||o.uids.includes(w))&&(!od||day(o)>=od)&&(!dO||day(o)<=dO)&&(!q||(o.broj+' '+o.klijent+' '+o.adresa).toLocaleLowerCase('hr').includes(q))).sort(svSort);
+ const sk=$('asvsk').checked,L=svData.list.filter(o=>(sk||!o.skriven)&&(!st||o.status===st)&&(!w||o.uids.includes(w))&&(!od||day(o)>=od)&&(!dO||day(o)<=dO)&&(!q||(o.broj+' '+o.klijent+' '+o.adresa).toLocaleLowerCase('hr').includes(q))).sort(svSort);
  const n=k=>svData.list.filter(o=>o.status===k).length;
- $('asvn').textContent='Prikazano: '+L.length+' od '+svData.list.length+' · čeka pregled: '+n('done')+' · zadano: '+n('open');
+ $('asvn').textContent='Prikazano: '+L.length+' od '+svData.list.length+' · čeka pregled: '+n('done')+' · zadano: '+n('open')+(svData.list.some(o=>o.skriven)?' · sakriveno: '+svData.list.filter(o=>o.skriven).length:'');
  $('asvl').innerHTML=L.length?L.map(o=>svCard(o,true)).join(''):'<div class="card mu">Nema radnih naloga'+(svData.list.length?' za odabrane filtere':'')+'.</div>'}
 const SVAF={klijent:'asvk',adresa:'asva',kontakt:'asvc',email:'asve',opis:'asvo',rok:'asvr'};
 function svWDraw(o){const ws=svData.radnici.slice();if(o)o.uids.forEach((id,i)=>{if(!ws.some(r=>r.id===id))ws.push({id,name:o.uidNames[i]})});ws.sort((a,b)=>abc(a.name,b.name));
@@ -1312,11 +1315,12 @@ $('asvl').onclick=async e=>{const t=e.target,g=s=>{const b=t.closest('[data-'+s+
   if(v=g('sve'))return svFOpen(f(v));
   if(v=g('svc')){const o=f(v),n=await pr('Otkazati radni nalog '+o.broj+' ('+o.klijent+')? Radnici će dobiti obavijest. Razlog (neobavezno):');if(n===null)return;await api('POST','servisi/'+v+'/otkazi',{note:n});toast('Radni nalog je otkazan.')}
   else if(v=g('svg')){const[id,x]=v.split('|');await api('POST','servisi/'+id+'/pregled',{val:x==='1'});toast(x==='1'?'Nalog je označen kao pregledan.':'Nalog je vraćen u nepregledane.')}
+  else if(v=g('svh')){const[id,x]=v.split('|');await api('POST','servisi/'+id+'/sakrij',{val:x==='1'});toast(x==='1'?'Nalog je sakriven iz vašeg popisa. Vidi se uz „Prikaži i sakrivene naloge” u Filterima.':'Nalog je vraćen u vaš popis.')}
   else if(v=g('svd')){const o=f(v),n=await pr('Vratiti zapisnik za '+o.broj+' na doradu? Upišite što radnik treba ispraviti ili dopuniti:');if(!n)return;await api('POST','servisi/'+v+'/dorada',{note:n});toast('Nalog je vraćen radniku na doradu.')}
   else return;
   await drawSv();loadZn()}catch(x){toast(x.message)}};
-['asvfs','asvfw','asvod','asvdo'].forEach(i=>$(i).onchange=svARender);$('asvq').oninput=svARender;
-$('asvfx').onclick=()=>{['asvfs','asvfw','asvod','asvdo','asvq'].forEach(i=>$(i).value='');svARender()};
+['asvfs','asvfw','asvod','asvdo','asvsk'].forEach(i=>$(i).onchange=svARender);$('asvq').oninput=svARender;
+$('asvfx').onclick=()=>{['asvfs','asvfw','asvod','asvdo','asvq'].forEach(i=>$(i).value='');$('asvsk').checked=false;svARender()};
 /* AKTIVNOSTI RADNIKA: administratorov preglednik svakih 10 s dohvaća nove radnje radnika i prikazuje ih kao skočnu obavijest
    u Windowsima (i kad je kartica u pozadini ili prozor smanjen). Uključuje se na stranici zvona; postavka vrijedi za taj preglednik. */
 let akB='',akS=0,akL=[],akU=0,akBusy=0,akUid='';

@@ -204,6 +204,7 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='POST servisi'&&s[2]==='zapisnik'){noAdm();const r=C.svZapisnik(U,{...b,id:s[1]},f=>!!DF[f]);if(typeof r==='string')fail(r);out={ok:1,mail:'Demo: e-mail se ovdje ne šalje; na pravom serveru onaj tko je zadao nalog dobiva e-mail s PDF-om'+(r.zap.potpis&&r.zap.emailN?', a naručitelj potpisani PDF na '+r.zap.emailN:'')+'.'}}
  else if(key==='POST servisi'&&s[2]==='otkazi'){svA();const r=C.svOtkazi(U,s[1],b.note);if(typeof r==='string')fail(r)}
  else if(key==='POST servisi'&&s[2]==='pregled'){svA();const r=C.svPregled(U,s[1],!!b.val);if(typeof r==='string')fail(r)}
+ else if(key==='POST servisi'&&s[2]==='sakrij'){svA();const r=C.svSakrij(U,s[1],!!b.val);if(typeof r==='string')fail(r)}
  else if(key==='POST servisi'&&s[2]==='dorada'){svA();const r=C.svDorada(U,s[1],b.note);if(typeof r==='string')fail(r)}
  else if(key==='POST servisi'){svA();const r=C.svSave(U,b);if(typeof r==='string')fail(r);out={ok:1,id:r.o.id,broj:r.o.broj}}
  else if(key==='GET inbox'){out=core().inbox(U.id)}

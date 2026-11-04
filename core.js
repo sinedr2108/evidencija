@@ -440,11 +440,17 @@
       const o = svFind(id); if (!o || o.status !== 'open') return 'Otkazati se može samo nalog koji još nije izvršen.';
       o.status = 'cancelled'; o.cancel = { ts: Date.now(), by: u.id, note: svT(note, 300) }; o.updated = Date.now(); return o;
     }
-    const svView = o => ({ ...o, byName: nameOf(o.by), uidNames: o.uids.map(nameOf), zap: o.zap ? { ...o.zap, byName: nameOf(o.zap.by) } : null,
+    /* "Sakrij": administrator miče pregledani ili otkazani nalog iz SVOG popisa (o.hid = popis id-eva administratora); nalog se ne briše i može se vratiti */
+    function svSakrij(u, id, val) {
+      const o = svFind(id); if (!o) return 'Nalog nije pronađen.';
+      if (val && o.status !== 'closed' && o.status !== 'cancelled') return 'Sakriti se može samo pregledani ili otkazani nalog.';
+      const h = new Set(Array.isArray(o.hid) ? o.hid : []); if (val) h.add(u.id); else h.delete(u.id); o.hid = [...h]; return o;
+    }
+    const svView = (o, u) => ({ ...o, hid: undefined, skriven: !!(u && Array.isArray(o.hid) && o.hid.includes(u.id)), byName: nameOf(o.by), uidNames: o.uids.map(nameOf), zap: o.zap ? { ...o.zap, byName: nameOf(o.zap.by) } : null,
       pregled: o.pregled ? { ...o.pregled, name: nameOf(o.pregled.by) } : null, cancel: o.cancel ? { ...o.cancel, name: nameOf(o.cancel.by) } : null,
       dorada: (o.dorada || []).map(d => ({ ...d, name: nameOf(d.by) })) });
     /* administrator: svi nalozi; radnik: nalozi zadani njemu */
-    const svList = (u, adm) => db.servisi.filter(o => adm || o.uids.includes(u.id)).sort((a, b) => b.ts - a.ts).slice(0, 3000).map(svView);
+    const svList = (u, adm) => db.servisi.filter(o => adm || o.uids.includes(u.id)).sort((a, b) => b.ts - a.ts).slice(0, 3000).map(o => svView(o, u));
     const svCekaPregled = () => db.servisi.filter(o => o.status === 'done').length;
     const svOtvoreni = uid => db.servisi.filter(o => o.status === 'open' && o.uids.includes(uid)).length;
     const svFiles = () => db.servisi.flatMap(o => o.zap ? (o.zap.files || []).concat(o.zap.potpis ? [o.zap.potpis] : []) : []);
@@ -716,7 +722,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svView, svList, svCekaPregled, svOtvoreni, svFiles, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svView, svList, svCekaPregled, svOtvoreni, svFiles, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
