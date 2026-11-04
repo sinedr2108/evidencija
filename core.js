@@ -195,6 +195,8 @@
        osim ako ga administrator upiše ručno (db.prijenosOut). Lanac kreće od prvog mjeseca u kojem radnik ima unos ili ručni prijenos. */
     const hasK = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
     const nextM = m => { let y = +m.slice(0, 4), mo = +m.slice(5, 7) + 1; if (mo > 12) { y++; mo = 1; } return y + '-' + pad(mo); };
+    /* automatski prijenos u sljedeći mjesec je 0 do zadnjeg dana mjeseca, a tada se računa višak sati za slobodan dan */
+    const autoOut = (ents, m, inn, today) => today < m + '-' + pad(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate()) ? 0 : r2(bank(ents, m, inn));
     function prChain(uid, m) {
       const ents = db.entries.filter(e => e.uid === uid), p = uid + '|';
       let f = null; ents.forEach(e => { const x = e.date.slice(0, 7); if (!f || x < f) f = x; });
@@ -204,7 +206,7 @@
       if (!f || m < f) cur = m;
       for (let n = 0; n < 1200; n++) {
         const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (f && cur > f ? carry : 0);
-        const out = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : r2(bank(ents, cur, inn));
+        const out = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : autoOut(ents, cur, inn, todayIso());
         if (cur === m) { res.in = r2(inn); res.out = r2(out); return res; }
         carry = out; cur = nextM(cur);
       }
@@ -222,7 +224,7 @@
         Object.keys(db.prijenos).concat(Object.keys(db.prijenosOut)).forEach(k => { if (k.startsWith(p)) { const x = k.slice(p.length); if (!f || x < f) f = x; } });
         if (!f) return; const ents = db.entries.filter(e => e.uid === uid); let carry = 0;
         for (let cur = f, n = 0; cur <= last && n < 1200; cur = nextM(cur), n++) { const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (cur > f ? carry : 0);
-          if (inn) out[k] = r2(inn); carry = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : r2(bank(ents, cur, inn)); } });
+          if (inn) out[k] = r2(inn); carry = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : autoOut(ents, cur, inn, today); } });
       return out;
     }
     const nameOf = id => (db.users.find(u => u.id === id) || {}).name || '?';
