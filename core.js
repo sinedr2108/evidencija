@@ -373,7 +373,12 @@
         if (!x.ot || !(db.closed.includes(k) || mo < cur)) return;
         const pren = Math.min(x.ot, Math.max(0, fond(mo).sati - (x.h - x.ot)));
         if (pren <= 0) return;
-        m.trans[k] = Math.round(pren * 100) / 100; const f = (x.ot - pren) / x.ot; x.ids.forEach(id => m.set(id, Math.round(m.get(id) * f * 100) / 100)); });
+        m.trans[k] = r2(pren);
+        /* preostali prekovremeni dijele se razmjerno, ali u cijelim satima (pola sata samo ako ga ima u unosima) metodom najvećeg ostatka, da zbroj ostane točan */
+        const ost = r2(x.ot - pren), all = x.ids.map(id => m.get(id)), u = all.concat([ost]).every(Number.isInteger) ? 1 : 0.5, n = Math.round(ost / u);
+        const raw = all.map(o => o * ost / x.ot / u), fl = raw.map(Math.floor); let left = n - fl.reduce((a, b) => a + b, 0);
+        raw.map((v, i) => [v - fl[i], i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]).forEach(([, i]) => { if (left > 0) { fl[i]++; left--; } });
+        x.ids.forEach((id, i) => m.set(id, r2(fl[i] * u))); });
       return m;
     };
     const otv = (m, e) => m.get(e.id) || 0;
