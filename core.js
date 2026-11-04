@@ -406,6 +406,16 @@
       }
       return null;
     }
+    /* Topli obrok se upisuje uz prvi unos dana. Kad se unos s obrokom obriše, premjesti na drugi dan ili promijeni u neradnu vrstu,
+       obrok prelazi na najraniji preostali radni unos tog dana, da dan ne ostane bez toplog obroka. */
+    /* dani u mjesecu s radnim unosima, a bez toplog obroka */
+    const noMealDays = (uid, month) => { const d = {}; db.entries.forEach(e => { if (e.uid === uid && e.date.startsWith(month) && !NERAD.includes(vr(e))) d[e.date] = d[e.date] || !!e.meal; }); return Object.keys(d).filter(k => !d[k]).sort(); };
+    function mealFix(uid, date, meal) {
+      if (!meal) return;
+      const l = db.entries.filter(e => e.uid === uid && e.date === date && !NERAD.includes(vr(e)));
+      if (!l.length || l.some(e => e.meal)) return;
+      l.sort((a, b) => (a.ts || 0) - (b.ts || 0))[0].meal = meal;
+    }
     /* Gradilište koje radnik upiše ručno (nije s administratorova popisa) sprema se velikim slovima. */
     const upSite = s => (db.sites || []).includes(s) ? s : s.toLocaleUpperCase('hr-HR');
     const rec = b => { const v = String(b.vrsta || 'Redovan rad'), n = NERAD.includes(v); return { date: b.date, site: n ? '' : upSite(String(b.site || '').trim()), vrsta: v, hours: NULA_SATI.includes(v) ? 0 : n ? FIKSNI_SATI : parseFloat(b.hours), meal: n ? '' : String(b.meal || ''), teren: n || VRSTE_NAU.includes(v) ? 0 : (b.teren ? 1 : 0) }; };
@@ -586,7 +596,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

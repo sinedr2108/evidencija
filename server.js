@@ -191,11 +191,11 @@ R('POST','/api/entries',1,c=>{if(noAdm(c))return;const er=check(c.u,c.b);if(er)r
   const e={id:crypto.randomUUID(),uid:c.u.id,...rec(c.b),ts:Date.now()};db.entries.push(e);linkSl(e);save();c.send(200,e)});
 R('PUT','/api/entries/:id',1,c=>{if(noAdm(c))return;const e=db.entries.find(x=>x.id===c.p[0]&&x.uid===c.u.id);if(!e)return c.send(404,{e:'Unos nije pronađen.'});
   if(db.closed.includes(c.u.id+'|'+e.date.slice(0,7)))return c.send(400,{e:'Taj je mjesec završen.'});
-  const er=check(c.u,c.b,e.id);if(er)return c.send(400,{e:er});Object.assign(e,rec(c.b));linkSl(e);save();c.send(200,e)});
+  const er=check(c.u,c.b,e.id);if(er)return c.send(400,{e:er});const d0=e.date,m0=e.meal;Object.assign(e,rec(c.b));core.mealFix(e.uid,d0,m0);linkSl(e);save();c.send(200,e)});
 R('DELETE','/api/entries/:id',1,c=>{if(noAdm(c))return;const i=db.entries.findIndex(x=>x.id===c.p[0]&&x.uid===c.u.id);if(i<0)return c.send(404,{e:'Unos nije pronađen.'});
   if(db.closed.includes(c.u.id+'|'+db.entries[i].date.slice(0,7)))return c.send(400,{e:'Taj je mjesec završen.'});
   {const e0=db.entries[i],m=e0.date.slice(0,7),mine=db.entries.filter(x=>x.uid===c.u.id),bef=core.stanje(c.u.id,m,mine),aft=bef+core.bank(mine.filter(x=>x!==e0),m,0)-core.bank(mine,m,0);if(aft<0&&aft<bef)return c.send(400,{e:'Brisanje nije moguće jer je slobodan dan već iskorišten, pa bi Sati za slobodan dan postali negativni.'})}
-  db.slreq.forEach(q=>{if(q.entryId===db.entries[i].id)q.entryId=null});db.entries.splice(i,1);save();c.send(200,{ok:1})});
+  db.slreq.forEach(q=>{if(q.entryId===db.entries[i].id)q.entryId=null});const[e1]=db.entries.splice(i,1);core.mealFix(e1.uid,e1.date,e1.meal);save();c.send(200,{ok:1})});
 R('POST','/api/slreq',1,c=>{if(noAdm(c)||noNau(c))return;const d=String(c.b.date||''),m=d.slice(0,7);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return c.send(400,{e:'Odaberite datum slobodnog dana.'});
   if(db.closed.includes(c.u.id+'|'+m))return c.send(400,{e:'Taj je mjesec završen.'});
@@ -306,6 +306,7 @@ otpSweep();setInterval(otpSweep,6*36e5);
 R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/close',1,c=>{if(noAdm(c))return;if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   const md=core.missingDays(c.u.id,c.b.month);if(md.length)return c.send(400,{e:'Unos se ne može završiti. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.'});
+  const nm=core.noMealDays(c.u.id,c.b.month);if(nm.length)return c.send(400,{e:'Unos se ne može završiti. Odaberite topli obrok (uz bilo koji unos tog dana) za: '+nm.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.'});
   const k=c.u.id+'|'+c.b.month;if(!db.closed.includes(k)){db.closed.push(k);save()}c.send(200,{ok:1})});
 R('POST','/api/reopen','iz',c=>{db.closed=db.closed.filter(k=>k!==c.b.uid+'|'+c.b.month);save();c.send(200,{ok:1})});
 R('POST','/api/requests',1,c=>{if(noAdm(c))return;const m=String(c.b.month||'');if(!valid(m))return c.send(400,{e:'Neispravan mjesec.'});
