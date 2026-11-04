@@ -108,8 +108,10 @@
   const pEnc = s => Array.from(String(s == null ? '' : s)).map(ch => { if (PMAP[ch] !== undefined) return String.fromCharCode(PMAP[ch]); const k = ch.charCodeAt(0); return k >= 32 && k < 127 ? ch : k >= 160 && k < 256 ? ch : '?'; }).join('');
   const pW = (s, size, bold) => Array.from(String(s == null ? '' : s)).reduce((a, ch) => { const b = PBASE[ch] || ch, k = b.charCodeAt(0); return a + (k >= 32 && k < 127 ? HW[k - 32] : 556); }, 0) * size / 1000 * (bold ? 1.06 : 1);
   const pStr = s => '(' + pEnc(s).replace(/[\\()]/g, m => '\\' + m).replace(/[\x7f-\xff]/g, m => '\\' + m.charCodeAt(0).toString(8).padStart(3, '0')) + ')';
+  /* širina, visina i broj boja JPEG slike (oznaka SOF) */
+  const jpgSize = d => { if (!d || d[0] !== 0xFF || d[1] !== 0xD8) return null; let i = 2; while (i + 9 < d.length) { if (d[i] !== 0xFF) { i++; continue; } const m = d[i + 1], L = (d[i + 2] << 8) | d[i + 3]; if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) return { h: (d[i + 5] << 8) | d[i + 6], w: (d[i + 7] << 8) | d[i + 8], c: d[i + 9] }; i += 2 + L; } return null; };
   function pdfDoc(doc) {
-    const W = 595, H = 842, M = 40, pages = []; let ops = [], y = 0;
+    const W = 595, H = 842, M = 40, pages = [], imgs = []; let ops = [], y = 0;
     const newPage = () => { ops = []; pages.push(ops); y = H - M; };
     const text = (x, yy, s, size, bold, gray) => ops.push((gray ? '0.42 g ' : '0 g ') + 'BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x.toFixed(1) + ' ' + yy.toFixed(1) + ' Td ' + pStr(s) + ' Tj ET');
     const line = (x1, y1, x2, y2, g) => ops.push((g || 0.8) + ' G 0.6 w ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' m ' + x2.toFixed(1) + ' ' + y2.toFixed(1) + ' l S');
@@ -121,7 +123,8 @@
     (doc.info || []).forEach(s => { text(M, y - 10, s, 10, false, true); y -= 14; });
     y -= 6; line(M, y, W - M, y, 0.6); y -= 14;
     (doc.blocks || []).forEach(b => {
-      if (b.h) { need(72); y -= 6; text(M, y - 12, b.h, 12.5, true); y -= 20; }
+      if (b.img) { const s = jpgSize(b.img); if (s) { const w = Math.min(b.w || 200, W - 2 * M), h = w * s.h / s.w; need(h + 10); const k = imgs.length; imgs.push({ d: b.img, pw: s.w, ph: s.h, cs: s.c }); ops.push('q ' + w.toFixed(1) + ' 0 0 ' + h.toFixed(1) + ' ' + M + ' ' + (y - h).toFixed(1) + ' cm /Im' + k + ' Do Q'); line(M, y - h - 2, M + w, y - h - 2, 0.6); y -= h + 8; } }
+      else if (b.h) { need(72); y -= 6; text(M, y - 12, b.h, 12.5, true); y -= 20; }
       else if (b.p) { const sz = b.tx ? 10.5 : 9.5; wrap(b.p, W - 2 * M, sz).forEach(l => { need(15); text(M, y - 9, l, sz, false, !b.tx); y -= b.tx ? 14 : 13; }); y -= 2; }
       else if (b.table && b.table.length) {
         const rows = b.table, n = Math.max(...rows.map(r => r.cells.length)), sz = 9.5, pad = 6, avail = W - 2 * M;
@@ -134,9 +137,11 @@
       }
     });
     const N = pages.length, objs = [], add = s => { objs.push(s); return objs.length; };
+    const xo = imgs.map((m, i) => { const bin = Array.from(m.d, b => String.fromCharCode(b)).join(''); return add('<< /Type /XObject /Subtype /Image /Width ' + m.pw + ' /Height ' + m.ph + ' /ColorSpace /' + (m.cs === 1 ? 'DeviceGray' : 'DeviceRGB') + ' /BitsPerComponent 8 /Filter /DCTDecode /Length ' + bin.length + ' >>\nstream\n' + bin + '\nendstream'); });
+    const xr0 = xo.length ? ' /XObject << ' + xo.map((o, i) => '/Im' + i + ' ' + o + ' 0 R').join(' ') + ' >>' : '';
     const enc = '<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [127 /dcroat 129 /Ccaron 141 /ccaron 143 /Cacute 144 /cacute 157 /Dcroat] >>';
     const cat = add(''), pgs = add(''), f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding ' + enc + ' >>'), f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding ' + enc + ' >>');
-    const kids = pages.map((p, i) => { const foot = '0.42 g BT /F1 8 Tf ' + M + ' 22 Td ' + pStr((doc.footer || '') + '   Stranica ' + (i + 1) + ' / ' + N) + ' Tj ET'; const body = p.concat([foot]).join('\n'); const st = add('<< /Length ' + body.length + ' >>\nstream\n' + body + '\nendstream'); return add('<< /Type /Page /Parent ' + pgs + ' 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >> >> /Contents ' + st + ' 0 R >>'); });
+    const kids = pages.map((p, i) => { const foot = '0.42 g BT /F1 8 Tf ' + M + ' 22 Td ' + pStr((doc.footer || '') + '   Stranica ' + (i + 1) + ' / ' + N) + ' Tj ET'; const body = p.concat([foot]).join('\n'); const st = add('<< /Length ' + body.length + ' >>\nstream\n' + body + '\nendstream'); return add('<< /Type /Page /Parent ' + pgs + ' 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >>' + xr0 + ' >> /Contents ' + st + ' 0 R >>'); });
     objs[cat - 1] = '<< /Type /Catalog /Pages ' + pgs + ' 0 R >>'; objs[pgs - 1] = '<< /Type /Pages /Kids [' + kids.map(k => k + ' 0 R').join(' ') + '] /Count ' + N + ' >>';
     const info = add('<< /Title ' + pStr(doc.title || '') + ' /Producer (TiDy Connect) >>');
     let out = '%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'; const off = [];
@@ -173,15 +178,16 @@
   const SV_STANJE = { ok: 'Ispravno, servis završen', dalje: 'Potrebna dodatna intervencija' };
   const svDm = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.' : '';
   const svPar = (h, t) => [{ h }].concat(String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean).map(p => ({ p, tx: true })));
-  const svDoc = o => {
+  const svDoc = (o, potpis) => {
     const z = o.zap, kv = (k, v) => ({ cells: [{ t: k, bold: true }, { t: v || '–' }] });
     const info = ['Broj naloga: ' + o.broj + (o.hitno ? ' · HITNO' : ''), 'Zadao: ' + (o.byName || '') + ', ' + nmDt(o.ts), 'Radnici: ' + (o.uidNames || []).join(', '), 'Status: ' + (SV_ST[o.status] || o.status)];
-    const bl = [{ h: 'Radni nalog' }, { table: [kv('Naručitelj', o.klijent), kv('Adresa / lokacija', o.adresa), kv('Kontakt', o.kontakt), kv('Rok izvršenja', svDm(o.rok))] }].concat(svPar('Opis kvara / zadatak', o.opis));
+    const bl = [{ h: 'Radni nalog' }, { table: [kv('Naručitelj', o.klijent), kv('Adresa / lokacija', o.adresa), kv('Kontakt', o.kontakt), kv('E-mail naručitelja', o.email), kv('Rok izvršenja', svDm(o.rok))] }].concat(svPar('Opis kvara / zadatak', o.opis));
     if (z) {
-      bl.push({ h: 'Zapisnik o izvršenom servisu' }, { table: [kv('Izvršio', z.byName), kv('Datum izvršenja', svDm(z.datum)), kv('Utrošeno sati', nmNum(z.sati) + ' h'), kv('Stanje nakon servisa', SV_STANJE[z.stanje] || ''), kv('Radove potvrdio', z.potvrdio), kv('Zapisnik poslan', nmDt(z.ts)), kv('Fotografija', String((z.files || []).length))] });
+      bl.push({ h: 'Zapisnik o izvršenom servisu' }, { table: [kv('Izvršio', z.byName), kv('Datum izvršenja', svDm(z.datum)), kv('Utrošeno sati', nmNum(z.sati) + ' h'), kv('Stanje nakon servisa', SV_STANJE[z.stanje] || ''), kv('Radove potvrdio', z.potvrdio), kv('Potpis naručitelja', z.potpis ? 'da' : 'ne'), kv('Zapisnik poslan', nmDt(z.ts)), kv('Fotografija', String((z.files || []).length))] });
       bl.push(...svPar('Opis izvedenih radova', z.radovi));
       if (z.materijal) bl.push(...svPar('Ugrađeni materijal i rezervni dijelovi', z.materijal));
       if (z.napomena) bl.push(...svPar('Napomena / preporuka', z.napomena));
+      if (z.potpis && potpis) bl.push({ h: 'Potpis naručitelja' }, { img: potpis, w: 220 }, { p: (z.potvrdio || '') + ', ' + svDm(z.datum), tx: true });
       if (o.pregled) bl.push({ p: 'Pregledao: ' + (o.pregled.name || '') + ', ' + nmDt(o.pregled.ts) });
     }
     if (o.status === 'cancelled' && o.cancel) bl.push({ h: 'Nalog je otkazan' }, { p: (o.cancel.name || '') + ', ' + nmDt(o.cancel.ts) + (o.cancel.note ? ' – ' + o.cancel.note : '') });
@@ -356,25 +362,27 @@
        Nalozi se ne brišu, pa se broj naloga (RN-godina-redni broj) nikad ne ponavlja. */
     const svRadnici = () => db.users.filter(u => u.role === 'user' && !u.nau && !u.deleted && !u.disabled && !u.purged).map(u => ({ id: u.id, name: u.name })).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
     const svT = (v, n) => String(v == null ? '' : v).replace(/\r/g, '').trim().slice(0, n);
+    const svMailOk = s => /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(s);
     const svIso = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z'));
     function svBroj(now) { const y = new Date(now).getFullYear(), p = 'RN-' + y + '-'; let n = 0; db.servisi.forEach(o => { if (String(o.broj || '').startsWith(p)) n = Math.max(n, parseInt(o.broj.slice(p.length), 10) || 0); }); return p + String(n + 1).padStart(3, '0'); }
     function svSave(u, b) {
-      const klijent = svT(b.klijent, 150), adresa = svT(b.adresa, 200), kontakt = svT(b.kontakt, 150), opis = svT(b.opis, 4000), rok = String(b.rok || '');
+      const klijent = svT(b.klijent, 150), adresa = svT(b.adresa, 200), kontakt = svT(b.kontakt, 150), email = svT(b.email, 150), opis = svT(b.opis, 4000), rok = String(b.rok || '');
       const ok = svRadnici().map(x => x.id), uids = [...new Set(Array.isArray(b.uids) ? b.uids.map(String) : [])];
       if (!klijent) return 'Upišite naručitelja (klijenta).';
       if (!adresa) return 'Upišite adresu ili lokaciju servisa.';
       if (!opis) return 'Upišite opis kvara ili zadatka.';
       if (rok && !svIso(rok)) return 'Neispravan rok izvršenja.';
+      if (email && !svMailOk(email)) return 'Neispravna e-mail adresa naručitelja.';
       if (!uids.length) return 'Odaberite barem jednog radnika.';
       const now = Date.now(); let o, prije = [];
       if (b.id) {
         o = db.servisi.find(x => x.id === b.id); if (!o) return 'Radni nalog nije pronađen.';
         if (o.status !== 'open') return 'Mijenjati se može samo nalog koji još nije izvršen.';
         prije = o.uids.slice(); if (uids.some(id => !ok.includes(id) && !prije.includes(id))) return 'Odaberite radnike s popisa.';
-        Object.assign(o, { klijent, adresa, kontakt, opis, rok, hitno: !!b.hitno, uids, updated: now, updatedBy: u.id });
+        Object.assign(o, { klijent, adresa, kontakt, email, opis, rok, hitno: !!b.hitno, uids, updated: now, updatedBy: u.id });
       } else {
         if (uids.some(id => !ok.includes(id))) return 'Odaberite radnike s popisa.';
-        o = { id: Math.random().toString(36).slice(2) + now.toString(36), broj: svBroj(now), by: u.id, ts: now, klijent, adresa, kontakt, opis, rok, hitno: !!b.hitno, uids, status: 'open', updated: now, zap: null, pregled: null, cancel: null, dorada: [] };
+        o = { id: Math.random().toString(36).slice(2) + now.toString(36), broj: svBroj(now), by: u.id, ts: now, klijent, adresa, kontakt, email, opis, rok, hitno: !!b.hitno, uids, status: 'open', updated: now, zap: null, pregled: null, cancel: null, dorada: [] };
         db.servisi.push(o);
       }
       return { o, novi: uids.filter(id => !prije.includes(id)) };
@@ -391,7 +399,11 @@
       const files = [...new Set(Array.isArray(b.files) ? b.files.map(String) : [])];
       if (files.length > 10) return 'Najviše 10 fotografija po zapisniku.';
       if (files.some(f => !otpOwn(u.id, f) || (exists && !exists(f)))) return 'Fotografija nije pronađena. Dodajte je ponovno.';
-      o.zap = { ts: Date.now(), by: u.id, datum, sati, radovi, materijal: svT(b.materijal, 2000), napomena: svT(b.napomena, 2000), stanje, potvrdio: svT(b.potvrdio, 100), files };
+      const potpis = String(b.potpis || ''), potvrdio = svT(b.potvrdio, 100), emailN = svT(b.emailN, 150);
+      if (potpis && (!otpName(potpis) || (exists && !exists(potpis)) || !(otpOwn(u.id, potpis) || (o.zap && o.zap.potpis === potpis)))) return 'Potpis nije pronađen. Neka se naručitelj ponovno potpiše.';
+      if (potpis && !potvrdio) return 'Upišite ime i prezime osobe koja se potpisala.';
+      if (emailN && !svMailOk(emailN)) return 'Neispravna e-mail adresa naručitelja.';
+      o.zap = { ts: Date.now(), by: u.id, datum, sati, radovi, materijal: svT(b.materijal, 2000), napomena: svT(b.napomena, 2000), stanje, potvrdio, files, potpis, emailN };
       o.status = 'done'; o.updated = o.zap.ts; o.pregled = null; return o;
     }
     function svPregled(u, id, val) {
@@ -415,7 +427,7 @@
     const svList = (u, adm) => db.servisi.filter(o => adm || o.uids.includes(u.id)).sort((a, b) => b.ts - a.ts).slice(0, 3000).map(svView);
     const svCekaPregled = () => db.servisi.filter(o => o.status === 'done').length;
     const svOtvoreni = uid => db.servisi.filter(o => o.status === 'open' && o.uids.includes(uid)).length;
-    const svFiles = () => db.servisi.flatMap(o => o.zap ? o.zap.files || [] : []);
+    const svFiles = () => db.servisi.flatMap(o => o.zap ? (o.zap.files || []).concat(o.zap.potpis ? [o.zap.potpis] : []) : []);
     function otpSetSite(u, id, f, site) {
       const o = db.otpremnice.find(x => x.id === id); if (!o || !o.files.includes(f)) return 'Fotografija nije pronađena.';
       site = String(site || '').trim().slice(0, 100); if (!site) return 'Odaberite ili upišite gradilište.';

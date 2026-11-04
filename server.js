@@ -363,10 +363,17 @@ async function svMail(o){const a=db.users.find(x=>x.id===o.by);
   const M=mailer();if(M.err)return{mail:'E-mail nije poslan: '+M.err};const v=core.svView(o);
   try{await M.t.sendMail({from:M.from,to:a.email,subject:'Zapisnik o izvršenom servisu '+o.broj+' – '+o.klijent,
       text:v.zap.byName+' je poslao/la zapisnik o izvršenom servisu.\n\nNalog: '+o.broj+'\nNaručitelj: '+o.klijent+'\nAdresa: '+o.adresa+'\nStanje: '+Core.SV_STANJE[o.zap.stanje]+'\n\nZapisnik je u privitku (PDF). Fotografije su u aplikaciji: SERVIS – RADNI NALOZI.',
-      attachments:[{filename:'zapisnik-'+o.broj+'.pdf',content:Buffer.from(Core.pdf(Core.svDoc(v)))}]});o.mailTs=Date.now();delete o.mailErr;save();return{mail:'',mailTo:a.email}}
+      attachments:[{filename:'zapisnik-'+o.broj+'.pdf',content:svPdfBuf(v)}]});o.mailTs=Date.now();delete o.mailErr;save();return{mail:'',mailTo:a.email}}
   catch(e){o.mailErr=String(e.message).slice(0,200);save();return{mail:'E-mail nije poslan: '+e.message}}}
+const svPdfBuf=v=>{let s=null;try{if(v.zap&&v.zap.potpis)s=new Uint8Array(fs.readFileSync(otpPath(v.zap.potpis)))}catch(e){}return Buffer.from(Core.pdf(Core.svDoc(v,s)))};
+/* nakon potpisa naručitelja: PDF zapisnika na e-mail naručitelja */
+async function svMailN(o){const z=o.zap;if(!z||!z.potpis||!z.emailN)return{};const M=mailer();if(M.err){z.mailNErr=M.err;save();return{mailN:'PDF naručitelju nije poslan: '+M.err}}const v=core.svView(o);
+  try{await M.t.sendMail({from:M.from,to:z.emailN,subject:'Zapisnik o izvršenom servisu '+o.broj,
+      text:'Poštovani,\n\nu privitku je zapisnik o izvršenom servisu (radni nalog '+o.broj+', '+o.adresa+'), izvršen '+core.dfmt(z.datum)+' i potpisan od '+z.potvrdio+'.\n\nLijep pozdrav,\nTiD',
+      attachments:[{filename:'zapisnik-'+o.broj+'.pdf',content:svPdfBuf(v)}]});z.mailNTs=Date.now();delete z.mailNErr;save();return{mailNTo:z.emailN}}
+  catch(e){z.mailNErr=String(e.message).slice(0,200);save();return{mailN:'PDF naručitelju nije poslan: '+e.message}}}
 R('POST','/api/servisi/:id/zapisnik',1,async c=>{if(noAdm(c)||noNau(c))return;const o=core.svZapisnik(c.u,{...c.b,id:c.p[0]},f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});save();
-  const r=await svMail(o);c.send(200,{ok:1,mail:r.mail,mailTo:r.mailTo||''})});
+  const r=await svMail(o),n=await svMailN(o);c.send(200,{ok:1,mail:r.mail,mailTo:r.mailTo||'',mailN:n.mailN||'',mailNTo:n.mailNTo||''})});
 /* ZNAČKE na tipkama početne stranice administracije: broj primljenih, a neobrađenih stavki po grupi (samo ono što korisnik smije vidjeti) */
 R('GET','/api/znacke',1,c=>{const u=c.u,z={};
   if(can(u,'ot'))z.aot=db.otpremnice.filter(o=>o.ts>(u.otpSeen||0)&&o.uid!==u.id).length;

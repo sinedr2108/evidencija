@@ -138,7 +138,10 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
     <label for="svzm">Ugrađeni materijal i rezervni dijelovi (neobavezno)</label><textarea id="svzm" rows="3" maxlength="2000"></textarea>
     <label for="svzs">Stanje nakon servisa</label><select id="svzs"><option value="ok">Ispravno, servis završen</option><option value="dalje">Potrebna dodatna intervencija</option></select>
     <label for="svzn">Napomena ili preporuka (neobavezno)</label><textarea id="svzn" rows="2" maxlength="2000"></textarea>
-    <label for="svzp">Radove potvrdio kod naručitelja (ime i prezime, neobavezno)</label><input id="svzp" maxlength="100">
+    <label for="svzp">Radove potvrdio kod naručitelja (ime i prezime)</label><input id="svzp" maxlength="100">
+    <label for="svzsig">Potpis naručitelja (prstom u okviru)</label><canvas id="svzsig" style="display:block;width:100%;height:180px;background:#fff;border:1px solid var(--bd);border-radius:10px;touch-action:none;cursor:crosshair"></canvas>
+    <div class="fl" style="justify-content:space-between;align-items:center;margin-top:6px"><span class="mu" id="svzsigs">Naručitelj se potpisuje na kraju, kad je sve upisano.</span><button class="sm" id="svzsigx">Obriši potpis</button></div>
+    <label for="svze">E-mail naručitelja (nakon potpisa dobiva PDF zapisnika)</label><input id="svze" type="email" autocapitalize="none" maxlength="150">
     <label>Fotografije (neobavezno, najviše 10)</label><input type="file" id="svzc" accept="image/*" capture="environment" class="hide"><input type="file" id="svzg" accept="image/*" multiple class="hide">
     <div class="fl" style="flex-wrap:wrap"><button class="sm" id="svzcb">Fotografiraj</button><button class="sm" id="svzgb">Odaberi iz galerije</button></div>
     <div id="svzth" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>
@@ -227,6 +230,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <h3>SERVIS – RADNI NALOZI</h3>
    <ol><li>Pod <b>Zadani servisi</b> su radni nalozi koje vam je zadao administrator: broj naloga, naručitelj, adresa, kontakt, opis kvara ili zadatka i rok. <b style="color:var(--er)">HITNO</b> i nalozi s najbližim rokom su na vrhu. Telefon u kontaktu možete dodirnuti i odmah nazvati.</li>
    <li>Kad završite servis, kliknite <b>Izradi zapisnik</b> uz taj nalog. Upišite <b>datum izvršenja</b>, <b>utrošene sate</b> i <b>opis izvedenih radova</b>, a po potrebi ugrađeni materijal, napomenu i ime osobe koja je kod naručitelja potvrdila radove. Odaberite <b>stanje nakon servisa</b>: ispravno ili potrebna dodatna intervencija.</li>
+   <li>Na kraju dajte mobitel naručitelju da se <b>potpiše prstom</b> u bijelom okviru (<b>Obriši potpis</b> ako treba ponoviti) i upišite njegovo <b>ime i prezime</b>. U polju <b>E-mail naručitelja</b> je adresa iz naloga; možete je promijeniti ili upisati. Potpisani zapisnik naručitelj nakon slanja dobije na taj e-mail kao PDF s potpisom.</li>
    <li>Gumbima <b>Fotografiraj</b> i <b>Odaberi iz galerije</b> dodajte do 10 fotografija (npr. prije i poslije, pločica uređaja). Pogrešnu fotografiju maknite gumbom ✕.</li>
    <li>Kliknite <b>Pošalji zapisnik</b>. Zapisnik odmah stiže administratoru u aplikaciju i na njegov e-mail kao PDF. Nedovršen zapisnik (tekst) ostaje spremljen na ovom uređaju dok ga ne pošaljete; fotografije treba dodati ponovno ako zatvorite aplikaciju.</li>
    <li>Ako je nalog zadan za više radnika, zapisnik šalje jedan od vas, a ostali ga vide pod <b>Izvršeni servisi</b>.</li>
@@ -337,6 +341,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
     <label for="asvk">Naručitelj (klijent)</label><input id="asvk" maxlength="150">
     <label for="asva">Adresa / lokacija</label><input id="asva" maxlength="200">
     <label for="asvc">Kontakt osoba i telefon (neobavezno)</label><input id="asvc" maxlength="150">
+    <label for="asve">E-mail naručitelja (neobavezno, na njega ide potpisani zapisnik)</label><input id="asve" type="email" autocapitalize="none" maxlength="150">
     <label for="asvo">Opis kvara / zadatak</label><textarea id="asvo" rows="4" maxlength="4000"></textarea>
     <div class="svf"><div><label for="asvr">Rok izvršenja (neobavezno)</label><input type="date" id="asvr"></div><div><label>&nbsp;</label><label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--tx);margin:12px 0 0"><input type="checkbox" id="asvh" style="width:auto"> Hitno</label></div></div>
     <label>Radnici (jedan ili više)</label><details class="ms" id="asvwd"><summary id="asvws"></summary><div id="asvw"></div></details>
@@ -437,11 +442,12 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    </div>
    <div class="uh" data-h="asv">
    <h3>SERVIS – RADNI NALOZI</h3>
-   <ul><li><b>+ Novi radni nalog</b>: upišite naručitelja, adresu ili lokaciju, kontakt (neobavezno), opis kvara ili zadatka, po želji rok i oznaku <b>Hitno</b>, te odaberite jednog ili više radnika. <b>Spremi i pošalji radnicima</b> dodjeljuje nalogu broj (npr. RN-2026-001), a radnici ga vide u svom dijelu SERVIS – RADNI NALOZI i dobiju obavijest na mobitel (ako su je uključili).</li>
+   <ul><li><b>+ Novi radni nalog</b>: upišite naručitelja, adresu ili lokaciju, kontakt i e-mail naručitelja (neobavezno), opis kvara ili zadatka, po želji rok i oznaku <b>Hitno</b>, te odaberite jednog ili više radnika. <b>Spremi i pošalji radnicima</b> dodjeljuje nalogu broj (npr. RN-2026-001), a radnici ga vide u svom dijelu SERVIS – RADNI NALOZI i dobiju obavijest na mobitel (ako su je uključili).</li>
    <li>Popis prikazuje sve naloge: prvo izvršene koji <b>čekaju pregled</b>, zatim zadane (hitni i oni s najbližim rokom na vrhu), a na kraju pregledane i otkazane. Nalog kojem je rok prošao, a nije izvršen, ima crveni rok.</li>
    <li><b>Filteri</b>: status, radnik, razdoblje zadavanja i pretraživanje po broju, naručitelju i adresi.</li>
    <li>Zadani nalog možete <b>Urediti</b> (npr. dodati radnika; novi radnik dobije obavijest) ili <b>Otkazati</b> (radnici dobiju obavijest). Nalozi se ne brišu, pa se brojevi naloga ne ponavljaju.</li>
    <li>Kad radnik pošalje <b>zapisnik o izvršenom servisu</b>, vidite ga ispod naloga (datum, sati, izvedeni radovi, materijal, stanje, napomena, tko je potvrdio i fotografije; klik na fotografiju otvara je u punoj veličini). Onaj tko je zadao nalog dobije i e-mail s PDF-om, a svi s pravom na Servis push obavijest.</li>
+   <li><b>Potpis naručitelja</b>: radnik daje naručitelju da se potpiše prstom na mobitelu. Potpisani zapisnik (PDF s potpisom) automatski odlazi na e-mail naručitelja iz naloga ili onaj koji je radnik upisao; ispod zapisnika piše je li i kada poslan. Bez potpisa naručitelj ne dobiva ništa.</li>
    <li><b>Označi kao pregledano</b> zatvara nalog (radnik vidi da je pregledan). <b>Vrati na doradu</b> s napomenom vraća nalog radniku da ispravi zapisnik. <b>Preuzmi PDF</b> daje radni nalog sa zapisnikom za ispis ili slanje naručitelju.</li>
    <li>Pravo na ovu grupu daje se u Postavkama → Izmijeni korisnika (radniku <i>Servis – radni nalozi</i>, a voditelju radova istoimena funkcija).</li></ul>
    </div>
@@ -1181,14 +1187,14 @@ const svSort=(a,b)=>svRank(a)-svRank(b)||(a.status==='open'?(+b.hitno-+a.hitno)|
 const svBadge=o=>'<span class="badge '+(o.status==='closed'?'b-ok':o.status==='done'?'b-nob':o.status==='cancelled'?'b-no':'')+'"'+(o.status==='open'?' style="background:rgba(79,70,229,.14);color:#4f46e5"':'')+'>'+E(Core.SV_ST[o.status]||o.status)+'</span>';
 const svTel=s=>E(s).replace(/\+?\d[\d \/-]{5,}\d/g,m=>'<a href="tel:'+m.replace(/[^\d+]/g,'')+'">'+m+'</a>');
 const svInfo=o=>'<div style="margin-top:6px"><b>Adresa:</b> '+E(o.adresa)+' · <a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(o.adresa)+'" target="_blank" rel="noopener">karta</a></div>'
- +(o.kontakt?'<div><b>Kontakt:</b> '+svTel(o.kontakt)+'</div>':'')+(o.rok?'<div><b>Rok:</b> <span'+(o.status==='open'&&o.rok<today()?' style="color:var(--er);font-weight:700"':'')+'>'+svDm(o.rok)+'</span></div>':'')
+ +(o.kontakt?'<div><b>Kontakt:</b> '+svTel(o.kontakt)+'</div>':'')+(o.email?'<div><b>E-mail:</b> '+E(o.email)+'</div>':'')+(o.rok?'<div><b>Rok:</b> <span'+(o.status==='open'&&o.rok<today()?' style="color:var(--er);font-weight:700"':'')+'>'+svDm(o.rok)+'</span></div>':'')
  +'<div class="svt">'+E(o.opis)+'</div>';
 const svDor=o=>(o.dorada||[]).map((d,i,a)=>'<div class="svb" style="border-left:4px solid var(--er)"><b>Vraćeno na doradu</b> <span class="mu">'+E(d.name)+', '+nmDt(d.ts)+'</span><div class="svt" style="margin-top:2px">'+E(d.note)+'</div></div>').join('');
 const svFoto=f=>'<a href="'+fotoSrc(f)+'" target="_blank" rel="noopener" style="display:block;width:84px;height:84px"><img src="'+fotoSrc(f)+'" alt="Fotografija" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"></a>';
 const svZapHtml=(o,open)=>{const z=o.zap;if(!z||o.status==='open')return '';const t=(h,v)=>v?'<div style="margin-top:4px"><b>'+h+':</b></div><div class="svt" style="margin-top:0">'+E(v)+'</div>':'';
  return '<details class="svb"'+(open?' open':'')+'><summary style="cursor:pointer;font-weight:600">Zapisnik · '+E(z.byName)+', '+nmDt(z.ts)+'</summary>'
  +'<div style="margin-top:6px"><b>Datum izvršenja:</b> '+svDm(z.datum)+' · <b>Utrošeno:</b> '+Core.nmNum(z.sati)+' h</div><div><b>Stanje:</b> <b style="color:var(--'+(z.stanje==='ok'?'ok':'er')+')">'+E(Core.SV_STANJE[z.stanje]||'')+'</b></div>'
- +t('Izvedeni radovi',z.radovi)+t('Ugrađeni materijal i rezervni dijelovi',z.materijal)+t('Napomena / preporuka',z.napomena)+(z.potvrdio?'<div style="margin-top:4px"><b>Radove potvrdio:</b> '+E(z.potvrdio)+'</div>':'')
+ +t('Izvedeni radovi',z.radovi)+t('Ugrađeni materijal i rezervni dijelovi',z.materijal)+t('Napomena / preporuka',z.napomena)+(z.potvrdio?'<div style="margin-top:4px"><b>Radove potvrdio:</b> '+E(z.potvrdio)+'</div>':'')+(z.potpis?'<div style="margin-top:6px"><b>Potpis naručitelja:</b><br><img src="'+fotoSrc(z.potpis)+'" alt="Potpis naručitelja" style="max-width:240px;width:100%;background:#fff;border:1px solid var(--bd);border-radius:8px;margin-top:4px"></div>':'')+(z.emailN&&z.potpis?'<div class="mu" style="margin-top:4px'+(z.mailNErr?';color:var(--er)':'')+'">'+(z.mailNTs?'PDF poslan naručitelju na '+E(z.emailN)+', '+nmDt(z.mailNTs):z.mailNErr?'PDF naručitelju ('+E(z.emailN)+') nije poslan: '+E(z.mailNErr):'PDF naručitelju: '+E(z.emailN))+'</div>':'')
  +(z.files&&z.files.length?'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+z.files.map(svFoto).join('')+'</div>':'')+'</details>'};
 const svCard=(o,adm)=>{const id=E(o.id),btn=adm?(o.status==='open'?'<button class="sm" data-sve="'+id+'">Uredi</button><button class="sm" data-svc="'+id+'" style="color:var(--er);border-color:var(--er)">Otkaži nalog</button>'
   :o.status==='done'?'<button class="sm pri" data-svg="'+id+'|1">Označi kao pregledano</button><button class="sm" data-svd="'+id+'">Vrati na doradu</button>':o.status==='closed'?'<button class="sm" data-svg="'+id+'|0">Vrati u nepregledano</button>':'')
@@ -1201,7 +1207,7 @@ const svCard=(o,adm)=>{const id=E(o.id),btn=adm?(o.status==='open'?'<button clas
  +(adm&&o.mailErr&&o.status!=='open'?'<div class="mu" style="margin-top:4px;color:var(--er)">E-mail sa zapisnikom nije poslan: '+E(o.mailErr)+'</div>':'')
  +'<div class="fl" style="flex-wrap:wrap;margin-top:8px">'+btn+'<button class="sm" data-svp="'+id+'">Preuzmi PDF</button></div></div>'};
 async function drawSv(){const adm=me.role==='admin';try{svData=await api('GET','servisi'+(adm?'?adm=1':''))}catch(e){return}if(adm)svARender();else svRender()}
-const svPdf=id=>{const o=svData.list.find(x=>x.id===id);if(o)saveFile('radni-nalog-'+o.broj+'.pdf',Core.pdf(Core.svDoc(o)),'application/pdf')};
+const svPdf=async id=>{const o=svData.list.find(x=>x.id===id);if(!o)return;let s=null;if(o.zap&&o.zap.potpis)try{s=new Uint8Array(await (await fetch(fotoSrc(o.zap.potpis))).arrayBuffer())}catch(e){}saveFile('radni-nalog-'+o.broj+'.pdf',Core.pdf(Core.svDoc(o,s)),'application/pdf')};
 /* radnik: zadani servisi, izvršeni i obrazac zapisnika (obrazac se ne iscrtava ponovno pri osvježavanju, pa upisano ostaje) */
 function svRender(){const L=svData.list.slice().sort(svSort),op=L.filter(o=>o.status==='open'),rest=L.filter(o=>o.status!=='open').sort((a,b)=>b.updated-a.updated);
  svOtv=op.length;drawZnW();
@@ -1210,12 +1216,23 @@ function svRender(){const L=svData.list.slice().sort(svSort),op=L.filter(o=>o.st
  if(svZid){const o=svData.list.find(x=>x.id===svZid);if(!o||o.status!=='open'){svZid='';svPend=[];$('svz').classList.add('hide')}else svZHead(o)}
  svThumbs()}
 const svZHead=o=>{$('svzi').innerHTML='<div><b>'+E(o.broj)+' · '+E(o.klijent)+'</b>'+(o.hitno?' <span class="badge b-nob">HITNO</span>':'')+'</div><div class="mu">'+E(o.adresa)+'</div>'+(o.status==='open'?svDor({dorada:(o.dorada||[]).slice(-1)}):'')};
-const svDKey=()=>'svDraft-'+me.id,SVZF={datum:'svzd',sati:'svzh',radovi:'svzr',materijal:'svzm',napomena:'svzn',stanje:'svzs',potvrdio:'svzp'};
+const svDKey=()=>'svDraft-'+me.id,SVZF={datum:'svzd',sati:'svzh',radovi:'svzr',materijal:'svzm',napomena:'svzn',stanje:'svzs',potvrdio:'svzp',emailN:'svze'};
 const svDGet=()=>{try{return JSON.parse(localStorage.getItem(svDKey()))||{}}catch(e){return {}}},svDSet=v=>{try{if(v)localStorage.setItem(svDKey(),JSON.stringify(v));else localStorage.removeItem(svDKey())}catch(e){}};
 function svZOpen(id){const o=svData.list.find(x=>x.id===id);if(!o)return;svZid=id;const d=svDGet(),z=o.zap||{},src=d.id===id?d:z;
  for(const k in SVZF)$(SVZF[k]).value=src[k]!=null?(k==='sati'?String(src[k]).replace('.',','):src[k]):'';
  if(!$('svzd').value)$('svzd').value=today();$('svzd').max=today();if(!$('svzs').value)$('svzs').value='ok';
- svPend=(z.files||[]).slice();svZHead(o);svThumbs();$('svz').classList.remove('hide');window.scrollTo(0,0)}
+ if(!$('svze').value)$('svze').value=o.email||'';svPend=(z.files||[]).slice();svZHead(o);svThumbs();$('svz').classList.remove('hide');svSigInit(z.potpis||'');window.scrollTo(0,0)}
+/* POTPIS NARUČITELJA: crta se prstom (ili mišem) na bijelom platnu; šalje se kao JPEG slika zajedno sa zapisnikom */
+let svSigOld='',svSigDirty=false,svSigDown=false,svSigLast=null;
+function svSigInit(old){const cv=$('svzsig'),r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=Math.max(300,Math.round(r.width*d));cv.height=Math.round(180*d);const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);
+ svSigDirty=false;svSigOld=old;if(old){const i=new Image();i.onload=()=>{if(svSigOld===old&&!svSigDirty){const k=Math.min(cv.width/i.width,cv.height/i.height);x.drawImage(i,(cv.width-i.width*k)/2,(cv.height-i.height*k)/2,i.width*k,i.height*k)}};i.src=fotoSrc(old)}svSigTxt()}
+const svSigTxt=()=>{$('svzsigs').textContent=svSigDirty?'Potpisano.':svSigOld?'Ranije poslani potpis (obrišite ga ako se naručitelj treba ponovno potpisati).':'Naručitelj se potpisuje na kraju, kad je sve upisano.'};
+{const cv=$('svzsig'),pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height]};
+ cv.addEventListener('pointerdown',e=>{e.preventDefault();if(svSigOld&&!svSigDirty){svSigInit('');}svSigDown=true;svSigLast=pt(e);try{cv.setPointerCapture(e.pointerId)}catch(x){}});
+ cv.addEventListener('pointermove',e=>{if(!svSigDown)return;e.preventDefault();const p=pt(e),x=cv.getContext('2d');x.strokeStyle='#111';x.lineWidth=Math.max(2.5,cv.width/220);x.lineCap=x.lineJoin='round';x.beginPath();x.moveTo(svSigLast[0],svSigLast[1]);x.lineTo(p[0],p[1]);x.stroke();svSigLast=p;if(!svSigDirty){svSigDirty=true;svSigTxt()}});
+ const up=()=>{svSigDown=false};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);cv.addEventListener('pointerleave',up)}
+$('svzsigx').onclick=()=>svSigInit('');
+const svSigJpg=()=>{const cv=$('svzsig'),k=Math.min(1,700/cv.width),t=document.createElement('canvas');t.width=Math.round(cv.width*k);t.height=Math.round(cv.height*k);const x=t.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,t.width,t.height);x.drawImage(cv,0,0,t.width,t.height);return t.toDataURL('image/jpeg',.85)};
 const svZSave=()=>{if(!svZid)return;const v={id:svZid};for(const k in SVZF)v[k]=$(SVZF[k]).value;svDSet(v)};
 Object.values(SVZF).forEach(i=>$(i).addEventListener('input',svZSave));
 function svThumbs(){$('svzth').innerHTML=svPend.map((d,i)=>'<span style="position:relative"><img src="'+(d.startsWith('data:')?d:fotoSrc(d))+'" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"><button class="x" data-svx="'+i+'" aria-label="Makni fotografiju" style="position:absolute;top:-8px;right:-8px;width:30px;height:30px;font-size:16px">✕</button></span>').join('')}
@@ -1226,10 +1243,12 @@ $('svzth').onclick=e=>{const b=e.target.closest('[data-svx]');if(b){svPend.splic
 $('svzx').onclick=()=>{svZid='';svPend=[];$('svz').classList.add('hide')};
 $('svzsend').onclick=async()=>{const o=svData.list.find(x=>x.id===svZid);if(!o)return;const b={};for(const k in SVZF)b[k]=$(SVZF[k]).value;
  if(!b.datum)return say('svzmsg','Odaberite datum izvršenja.');if(!(parseFloat(b.sati.replace(',','.'))>0))return say('svzmsg','Upišite utrošene sate.');if(!b.radovi.trim())return say('svzmsg','Opišite izvedene radove.');
- if(!await cf('Poslati zapisnik za nalog '+o.broj+' ('+o.klijent+')? Nakon slanja ga više ne možete mijenjati, osim ako ga administrator vrati na doradu.'))return;
+ const sig=svSigDirty||!!svSigOld;if(sig&&!b.potvrdio.trim())return say('svzmsg','Upišite ime i prezime osobe koja se potpisala.');
+ if(!await cf('Poslati zapisnik za nalog '+o.broj+' ('+o.klijent+')?'+(sig&&b.emailN.trim()?' Naručitelj će dobiti PDF na '+b.emailN.trim()+'.':!sig?' Zapisnik nije potpisan, pa se naručitelju ništa ne šalje.':'')+' Nakon slanja zapisnik više ne možete mijenjati, osim ako ga administrator vrati na doradu.'))return;
  const B=$('svzsend');B.disabled=true;try{const files=[];for(let i=0;i<svPend.length;i++){const d=svPend[i];if(d.startsWith('data:')){B.textContent='Šaljem fotografiju '+(i+1)+'/'+svPend.length+'…';const f=(await api('POST','otpremnice/foto',{data:d})).f;svPend[i]=f;files.push(f)}else files.push(d)}
-  B.textContent='Šaljem zapisnik…';const r=await api('POST','servisi/'+o.id+'/zapisnik',{...b,files});svDSet(null);svZid='';svPend=[];$('svz').classList.add('hide');
-  toast('Zapisnik je poslan.'+(r.mail?' '+r.mail:r.mailTo?' E-mail s PDF-om je poslan na '+r.mailTo+'.':''));await load()}
+  let potpis=svSigOld;if(svSigDirty){B.textContent='Šaljem potpis…';potpis=(await api('POST','otpremnice/foto',{data:svSigJpg()})).f;svSigOld=potpis;svSigDirty=false}
+  B.textContent='Šaljem zapisnik…';const r=await api('POST','servisi/'+o.id+'/zapisnik',{...b,files,potpis});svDSet(null);svZid='';svPend=[];$('svz').classList.add('hide');
+  toast('Zapisnik je poslan.'+(r.mailNTo?' Naručitelj je dobio PDF na '+r.mailNTo+'.':r.mailN?' '+r.mailN:'')+(r.mail?' '+r.mail:r.mailTo?' E-mail s PDF-om je poslan na '+r.mailTo+'.':''));await load()}
  catch(x){say('svzmsg',x.message)}finally{B.disabled=false;B.textContent='Pošalji zapisnik'}};
 $('p-sv').addEventListener('click',e=>{const z=e.target.closest('[data-svz]'),p=e.target.closest('[data-svp]');if(z)svZOpen(z.dataset.svz);else if(p)svPdf(p.dataset.svp)});
 function drawZnW(){const b=document.querySelector('#hm .t-sv');if(!b)return;let s=b.querySelector('.zn');const n=me&&me.role!=='admin'?svOtv:0;
@@ -1241,7 +1260,7 @@ function svARender(){const ws=new Map(svData.radnici.map(r=>[r.id,r.name]));svDa
  const n=k=>svData.list.filter(o=>o.status===k).length;
  $('asvn').textContent='Prikazano: '+L.length+' od '+svData.list.length+' · čeka pregled: '+n('done')+' · zadano: '+n('open');
  $('asvl').innerHTML=L.length?L.map(o=>svCard(o,true)).join(''):'<div class="card mu">Nema radnih naloga'+(svData.list.length?' za odabrane filtere':'')+'.</div>'}
-const SVAF={klijent:'asvk',adresa:'asva',kontakt:'asvc',opis:'asvo',rok:'asvr'};
+const SVAF={klijent:'asvk',adresa:'asva',kontakt:'asvc',email:'asve',opis:'asvo',rok:'asvr'};
 function svWDraw(o){const ws=svData.radnici.slice();if(o)o.uids.forEach((id,i)=>{if(!ws.some(r=>r.id===id))ws.push({id,name:o.uidNames[i]})});ws.sort((a,b)=>abc(a.name,b.name));
  $('asvw').innerHTML=ws.length?ws.map(r=>'<label><input type="checkbox" value="'+E(r.id)+'"'+(svSel.has(r.id)?' checked':'')+'> '+E(r.name)+'</label>').join(''):'<div class="mu">Nema aktivnih radnika.</div>';svWSum()}
 const svWSum=()=>{const nm=[...$('asvw').querySelectorAll('input:checked')].map(i=>i.parentNode.textContent.trim());$('asvws').textContent=nm.length?nm.join(', '):'– odaberite radnike –'};
