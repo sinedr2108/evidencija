@@ -14,6 +14,8 @@
   const vr = e => e.vrsta || 'Redovan rad';
   /* Prekovremeni rad: po radniku i danu zbroj sati rada (bez bolovanja, godišnjeg, slobodnog dana i praznika) iznad 9 h (pon-čet), iznad 8 h (petak),
      a subotom i nedjeljom svi sati; svi sati 'Rada na praznik' uvijek su prekovremeni. Višak se raspoređuje na unose redom unosa (prvo redovni dio, ostatak na kasnije unose). */
+  /* Slobodan dan, Bolest i Odobren izostanak uvijek se broje kao 0 h (i stari unosi spremljeni s 8 h) */
+  const hrs = e => NULA_SATI.includes(vr(e)) ? 0 : (+e.hours || 0);
   const otLimit = d => { const w = new Date(d + 'T00:00:00Z').getUTCDay(); return w === 0 || w === 6 ? 0 : w === 5 ? 8 : 9; };
   function otMap(entries) {
     const g = {}, out = new Map();
@@ -508,11 +510,13 @@
       const E = ents(month, f), fd = fond(month), wd = fd.dani, dn = fd.dnevno, applies = !f.site && !f.vrsta, norma = fd.sati, rows = {};
       const om = OT(), mk = id => rows[id] = rows[id] || { uid: id, name: nameOf(id), h: 0, ot: 0, t: 0, days: new Set(), m: {}, v: {} };
       if (applies) db.users.filter(u => u.role === 'user' && !u.deleted && (!f.uid || u.id === f.uid)).forEach(u => mk(u.id));
-      E.forEach(e => { const r = mk(e.uid); r.h += e.hours; r.ot += otv(om, e); r.t += e.teren; r.days.add(e.date); r.v[vr(e)] = (r.v[vr(e)] || 0) + e.hours; if (e.meal) r.m[e.meal] = (r.m[e.meal] || 0) + 1; });
+      E.forEach(e => { const r = mk(e.uid), hh = hrs(e); r.h += hh; r.ot += otv(om, e); r.t += e.teren; r.days.add(e.date); r.v[vr(e)] = (r.v[vr(e)] || 0) + hh; if (e.meal) r.m[e.meal] = (r.m[e.meal] || 0) + 1; });
       const cols = [...db.meals]; E.forEach(e => { if (e.meal && !cols.includes(e.meal)) cols.push(e.meal); });
       const list = Object.values(rows).map(r => {
         const v = Object.fromEntries(Object.entries(r.v).map(([k, x]) => [k, r2(x)]));
-        return { uid: r.uid, name: r.name, h: r2(r.h), ot: r2(r.ot), pren: applies ? om.trans[r.uid + '|' + month] || 0 : 0, t: r.t, m: r.m, v, days: r.days.size, closed: db.closed.includes(r.uid + '|' + month),
+        /* kao u šihterici: REDOVNI RAD = svi sati + prijenos iz prošlog − prijenos u sljedeći mjesec; PREKOVREMENI = redovni rad − fond (ako je barem 1 h) */
+        const pin = pr(r.uid, month), pout = prOut(r.uid, month).v, red = r2(r.h + pin - pout), u = db.users.find(x => x.id === r.uid) || {}, fs = u.nau ? 0 : norma;
+        return { uid: r.uid, name: r.name, h: r2(r.h), redovni: applies ? red : null, ot: applies ? (red - fs < 1 ? 0 : r2(red - fs)) : r2(r.ot), otDan: r2(r.ot), pren: applies ? om.trans[r.uid + '|' + month] || 0 : 0, t: r.t, m: r.m, v, days: r.days.size, closed: db.closed.includes(r.uid + '|' + month),
           prijenos: pr(r.uid, month), prRucno: hasK(db.prijenos, r.uid + '|' + month), bank: stanje(r.uid, month), out: prOut(r.uid, month).v, outRucno: prOut(r.uid, month).rucno, norma: applies ? norma : null, razlika: applies ? r2(r2(r.h) - norma) : null };
       }).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
       return { cols, vrste: VRSTE, list, norma: { dani: wd, dnevna: dn, sati: norma, applies } };
@@ -627,16 +631,16 @@
     const todayIso = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
     function tables(month, f, today) {
       const s = summary(month, f), d = daily(month, f), st = sitesRep(month, f), l = rowsList(month, f), sl = slobodni(month, f), ms = missing(month, f, today), nm = s.norma.applies;
-      const sumHead = ['Radnik', 'Dani', 'Sati ukupno', 'Prekovremeni sati', 'Preneseno u redovan rad', ...VRSTE.map(v => 'Sati – ' + v), 'Fond sati', 'Razlika', 'Prijenos iz prošlog mjeseca', 'Sati za slobodan dan', 'Prijenos u sljedeći mjesec', 'Terenski dodatak', ...s.cols];
+      const sumHead = ['Radnik', 'Dani', 'Sati ukupno', 'Redovni rad', 'Prekovremeni sati', ...VRSTE.map(v => 'Sati – ' + v), 'Fond sati', 'Razlika', 'Prijenos iz prošlog mjeseca', 'Sati za slobodan dan', 'Prijenos u sljedeći mjesec', 'Terenski dodatak', ...s.cols];
       return {
         sum: { name: 'Sažetak', head: sumHead,
-          rows: s.list.map(r => [r.name, r.days, r.h, r.ot, r.pren, ...VRSTE.map(v => r.v[v] || 0), nm ? r.norma : '', nm ? r.razlika : '', r.prijenos, r.bank, r.out, r.t, ...s.cols.map(c => r.m[c] || 0)]),
-          total: ['Ukupno u mjesecu', '', r2(S(s.list, r => r.h)), r2(S(s.list, r => r.ot)), r2(S(s.list, r => r.pren)), ...VRSTE.map(v => r2(S(s.list, r => r.v[v] || 0))), nm ? r2(S(s.list, r => r.norma)) : '', nm ? r2(S(s.list, r => r.razlika)) : '', r2(S(s.list, r => r.prijenos)), r2(S(s.list, r => r.bank)), r2(S(s.list, r => r.out)), S(s.list, r => r.t), ...s.cols.map(c => S(s.list, r => r.m[c] || 0))] },
-        day: { name: 'Sati po danima', head: ['Datum', 'Radnik', 'Vrsta', 'Gradilišta', 'Ukupno sati', 'Prekovremeni sati'],
+          rows: s.list.map(r => [r.name, r.days, r.h, r.redovni === null ? '' : r.redovni, r.ot, ...VRSTE.map(v => r.v[v] || 0), nm ? r.norma : '', nm ? r.razlika : '', r.prijenos, r.bank, r.out, r.t, ...s.cols.map(c => r.m[c] || 0)]),
+          total: ['Ukupno u mjesecu', '', r2(S(s.list, r => r.h)), nm ? r2(S(s.list, r => r.redovni || 0)) : '', r2(S(s.list, r => r.ot)), ...VRSTE.map(v => r2(S(s.list, r => r.v[v] || 0))), nm ? r2(S(s.list, r => r.norma)) : '', nm ? r2(S(s.list, r => r.razlika)) : '', r2(S(s.list, r => r.prijenos)), r2(S(s.list, r => r.bank)), r2(S(s.list, r => r.out)), S(s.list, r => r.t), ...s.cols.map(c => S(s.list, r => r.m[c] || 0))] },
+        day: { name: 'Sati po danima', head: ['Datum', 'Radnik', 'Vrsta', 'Gradilišta', 'Ukupno sati', 'Prekovremeno u danu'],
           rows: d.map(r => [r.date, r.name, r.vrste.join(', '), r.sites.join(', '), r.h, r.ot]), total: ['Ukupno u mjesecu', '', '', '', r2(S(d, r => r.h)), r2(S(d, r => r.ot))] },
-        site: { name: 'Po gradilištima', head: ['Gradilište', 'Sati', 'Prekovremeni sati', 'Radnika', 'Radnici'],
+        site: { name: 'Po gradilištima', head: ['Gradilište', 'Sati', 'Prekovremeno u danu', 'Radnika', 'Radnici'],
           rows: st.map(r => [r.site, r.h, r.ot, r.radnika, r.radnici.map(w => w.name + ' ' + fmtNum(w.h) + ' h' + (w.ot ? ' (prekovremeno ' + fmtNum(w.ot) + ' h)' : '')).join('; ')]), total: ['Ukupno', r2(S(st, r => r.h)), r2(S(st, r => r.ot)), '', ''] },
-        det: { name: 'Svi unosi', head: ['Datum', 'Radnik', 'Vrsta', 'Gradilište', 'Sati', 'Prekovremeni sati', 'Topli obrok', 'Terenski dodatak'],
+        det: { name: 'Svi unosi', head: ['Datum', 'Radnik', 'Vrsta', 'Gradilište', 'Sati', 'Prekovremeno u danu', 'Topli obrok', 'Terenski dodatak'],
           rows: l.map(e => [e.date, e.name, e.vrsta, e.site, e.hours, e.ot, e.meal, e.teren || 0]), total: ['Ukupno u mjesecu', '', '', '', r2(S(l, e => e.hours)), r2(S(l, e => e.ot)), '', S(l, e => e.teren || 0)] },
         sl: { name: 'Slobodni dani', head: ['Datum', 'Radnik', 'Uz odobren zahtjev'], rows: sl.map(e => [e.date, e.name, e.odobren ? 'Da' : 'Ne']), total: ['Ukupno u mjesecu', sl.length, ''] },
         mis: { name: 'Bez unosa', head: ['Radnik', 'Broj dana', 'Datumi'], rows: ms.map(r => [r.name, r.dates.length, r.dates.join(', ')]), total: null }
