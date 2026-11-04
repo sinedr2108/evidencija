@@ -474,7 +474,9 @@ http.createServer((req,res)=>{
   const raw=(code,t,h)=>{h=h||{};if(url.pathname.startsWith('/api/')&&!h['Cache-Control'])h['Cache-Control']='no-store';res.writeHead(code,h);res.end(t)};
   const send=(code,o,h)=>raw(code,JSON.stringify(o),{'Content-Type':'application/json; charset=utf-8',...h});
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))
-    return raw(200,fs.readFileSync(path.join(__dirname,'public','index.html')),{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache'});
+    {/* core.js s oznakom verzije (hash sadržaja): preglednik nakon nadogradnje ne može koristiti staru kopiju */
+    const cv=require('crypto').createHash('sha1').update(fs.readFileSync(path.join(__dirname,'core.js'))).digest('hex').slice(0,10);
+    return raw(200,fs.readFileSync(path.join(__dirname,'public','index.html'),'utf8').replace('<script src="/core.js"></script>','<script src="/core.js?v='+cv+'"></script>'),{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache'});}
   /* ikone za početni zaslon mobitela (logo tvrtke) i manifest */
   {const IK={'/icon-192.png':'image/png','/icon-512.png':'image/png','/icon-maskable-512.png':'image/png','/apple-touch-icon.png':'image/png','/apple-touch-icon-precomposed.png':'image/png','/favicon.png':'image/png','/badge-96.png':'image/png','/logo-pdf.jpg':'image/jpeg','/favicon.ico':'image/png','/manifest.webmanifest':'application/manifest+json'},t=req.method==='GET'&&IK[url.pathname];
    if(t){const f=url.pathname==='/apple-touch-icon-precomposed.png'?'apple-touch-icon.png':url.pathname==='/favicon.ico'?'favicon.png':url.pathname.slice(1);return raw(200,fs.readFileSync(path.join(__dirname,'public',f)),{'Content-Type':t,'Cache-Control':'public, max-age=86400'})}}
