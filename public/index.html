@@ -452,7 +452,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <li>Zadani nalog možete <b>Urediti</b> (npr. dodati radnika; novi radnik dobije obavijest) ili <b>Otkazati</b> (radnici dobiju obavijest). Nalozi se ne brišu, pa se brojevi naloga ne ponavljaju.</li>
    <li>Kad radnik pošalje <b>zapisnik o izvršenom servisu</b>, vidite ga ispod naloga (datum, sati, izvedeni radovi, materijal, stanje, napomena, tko je potvrdio i fotografije; klik na fotografiju otvara je u punoj veličini). Onaj tko je zadao nalog dobije i e-mail s PDF-om, a svi s pravom na Servis push obavijest.</li>
    <li><b>Potpis naručitelja</b>: radnik daje naručitelju da se potpiše prstom na mobitelu. Potpisani zapisnik (PDF s potpisom) automatski odlazi na e-mail naručitelja iz naloga ili onaj koji je radnik upisao; ispod zapisnika piše je li i kada poslan. Bez potpisa naručitelj ne dobiva ništa.</li>
-   <li><b>Označi kao pregledano</b> zatvara nalog (radnik vidi da je pregledan). <b>Vrati na doradu</b> s napomenom vraća nalog radniku da ispravi zapisnik. <b>Preuzmi PDF</b> daje radni nalog sa zapisnikom za ispis ili slanje naručitelju.</li>
+   <li><b>Označi kao pregledano</b> zatvara nalog (radnik vidi da je pregledan). <b>Vrati na doradu</b> s napomenom vraća nalog radniku da ispravi zapisnik. <b>Preuzmi PDF</b> daje radni nalog sa zapisnikom za ispis ili slanje naručitelju. U zaglavlju PDF-a su logo i podaci tvrtke iz <b>Postavke → Podaci tvrtke</b>.</li>
    <li>Pravo na ovu grupu daje se u Postavkama → Izmijeni korisnika (radniku <i>Servis – radni nalozi</i>, a voditelju radova istoimena funkcija).</li></ul>
    </div>
    <div class="uh" data-h="aot">
@@ -568,6 +568,11 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <label for="un">Ime i prezime</label><input id="un"><label for="uu">Korisničko ime</label><input id="uu" autocapitalize="none"><label for="up">Lozinka (min. 6 znakova)</label><input id="up">
    <label for="ur">Uloga</label><select id="ur"><option value="user">Korisnik</option><option value="nau">Naučnik</option><option value="vod">Voditelj radova</option><option value="admin">Administrator</option></select><div class="mu">Naučnik koristi samo šihtericu (Praktična nastava, Bolest, Odobren izostanak). Voditelj radova prijavom ulazi u administratorski dio; funkcije koje smije koristiti odaberite nakon dodavanja, gumbom Izmijeni.</div>
    <label for="ue">E-mail (za slanje login podataka; administratorima i za izvještaje)</label><input id="ue" type="email" autocapitalize="none"><button class="big" id="ua">Dodaj korisnika</button><div class="msg" id="um"></div></div>
+  <h2>Podaci tvrtke (zaglavlje zapisnika o servisu)</h2><div class="card"><div class="mu">Ispisuju se desno od logotipa u zaglavlju PDF-a zapisnika. Prazna polja se ne ispisuju.</div>
+   <label for="tvn">Naziv</label><input id="tvn" maxlength="150"><label for="tva">Adresa</label><input id="tva" maxlength="150" placeholder="Ulica i broj, poštanski broj i mjesto">
+   <div class="svf"><div><label for="tvo">OIB</label><input id="tvo" maxlength="20" inputmode="numeric"></div><div><label for="tvt">Telefon</label><input id="tvt" maxlength="60"></div>
+   <div><label for="tve">E-mail</label><input id="tve" type="email" autocapitalize="none" maxlength="100"></div><div><label for="tvw">Web</label><input id="tvw" autocapitalize="none" maxlength="100"></div></div>
+   <label for="tvi">IBAN (neobavezno)</label><input id="tvi" maxlength="40"><button class="sm pri" id="tvs" style="margin-top:10px">Spremi podatke tvrtke</button><div class="msg" id="tvm"></div></div>
   <h2>E-mail i adresa aplikacije</h2><div class="card">
    <div class="mu">Potrebno za gumb „Pošalji login podatke“ i mjesečni izvještaj e-mailom. Podaci su kod vašeg pružatelja e-pošte (npr. Microsoft 365: smtp.office365.com, port 587; Gmail: smtp.gmail.com, port 587 uz lozinku za aplikacije).</div>
    <label for="sa">Adresa aplikacije (link u e-mailu)</label><input id="sa" type="url" placeholder="https://sati.vasadomena.hr" autocapitalize="none"><div class="mu" id="sad"></div>
@@ -692,7 +697,7 @@ function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
  $(home).classList.toggle('hide',page!==home);for(const k of keys)$('p-'+k).classList.toggle('hide',k!==page);
  if(adm)[['sqw','sl'],['gqw','go'],['rqw','iz'],['srw','gr']].forEach(([i,g])=>$(i).classList.toggle('offpg',page!==home||!me.evf.includes(g)));
  if(adm)document.querySelectorAll('#p-aev [data-pg]').forEach(b=>b.classList.toggle('hide',!me.evf.includes(PGF[b.dataset.pg])));
- if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp()}
+ if(adm&&page==='aps'&&!window._smtpL){window._smtpL=1;drawSmtp();drawTv()}
  if(adm)$('af').classList.toggle('hide',page===home||page==='aps'||page==='aot'||page==='aev'||page==='aal'||page==='anm'||page==='asv'||page==='akt'||page==='aup'||page==='aob'||page==='asl'||page==='azh'||page==='apo');
  $('nav').classList.toggle('hide',page===home);$('navt').textContent=(page==='up'||page==='aup')&&upFrom!==page?'Upute: '+(upFrom===home?'Početna stranica':TIT[upFrom]):TIT[page]||'';
  $('hdr').classList.toggle('hide',page!==home);
@@ -1211,7 +1216,12 @@ const svCard=(o,adm)=>{const id=E(o.id),btn=adm?(o.status==='open'?'<button clas
  +(adm&&o.mailErr&&o.status!=='open'?'<div class="mu" style="margin-top:4px;color:var(--er)">E-mail sa zapisnikom nije poslan: '+E(o.mailErr)+'</div>':'')
  +'<div class="fl" style="flex-wrap:wrap;margin-top:8px">'+btn+'<button class="sm" data-svp="'+id+'">Preuzmi PDF</button></div></div>'};
 async function drawSv(){const adm=me.role==='admin';try{svData=await api('GET','servisi'+(adm?'?adm=1':''))}catch(e){return}if(adm)svARender();else svRender()}
-const svPdf=async id=>{const o=svData.list.find(x=>x.id===id);if(!o)return;let s=null;if(o.zap&&o.zap.potpis)try{s=new Uint8Array(await (await fetch(fotoSrc(o.zap.potpis))).arrayBuffer())}catch(e){}saveFile('radni-nalog-'+o.broj+'.pdf',Core.pdf(Core.svDoc(o,s)),'application/pdf')};
+const TVF={naziv:'tvn',adresa:'tva',oib:'tvo',tel:'tvt',email:'tve',web:'tvw',iban:'tvi'},LOGO_PDF='/logo-pdf.jpg';
+async function drawTv(){try{const t=await api('GET','tvrtka');for(const k in TVF)$(TVF[k]).value=t[k]||''}catch(e){}}
+$('tvs').onclick=async()=>{const b={};for(const k in TVF)b[k]=$(TVF[k]).value;try{await api('PUT','tvrtka',b);say('tvm','Podaci tvrtke su spremljeni.',1)}catch(x){say('tvm',x.message)}};
+const svBytes=async u=>{try{return new Uint8Array(await (await fetch(u)).arrayBuffer())}catch(e){return null}};
+const svPdf=async id=>{const o=svData.list.find(x=>x.id===id);if(!o)return;const s=o.zap&&o.zap.potpis?await svBytes(fotoSrc(o.zap.potpis)):null;let f={};try{f=await api('GET','tvrtka')}catch(e){}f.logo=await svBytes(LOGO_PDF);
+ saveFile('radni-nalog-'+o.broj+'.pdf',Core.pdf(Core.svDoc(o,s,f)),'application/pdf')};
 /* radnik: zadani servisi, izvršeni i obrazac zapisnika (obrazac se ne iscrtava ponovno pri osvježavanju, pa upisano ostaje) */
 function svRender(){const L=svData.list.slice().sort(svSort),op=L.filter(o=>o.status==='open'),rest=L.filter(o=>o.status!=='open').sort((a,b)=>b.updated-a.updated);
  svOtv=op.length;drawZnW();

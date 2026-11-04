@@ -39,7 +39,7 @@ const MIGRATIONS={
   13:d=>{ /* PUSH OBAVIJESTI: ključevi poslužitelja (VAPID) i pretplate preglednika {uid,endpoint,keys,prijava,ts} */ if(!Array.isArray(d.push))d.push=[];if(!d.vapid||!d.vapid.pub)d.vapid=Push.vapidKeys() },
   14:d=>{ /* NAUČNIK: Bolest i Odobren izostanak vrijede 0 sati */ (d.entries||[]).forEach(e=>{if(e.vrsta==='Bolest'||e.vrsta==='Odobren izostanak')e.hours=0}) },
   15:d=>{ /* PRIJENOS U SLJEDEĆI MJESEC: ručna vrijednost administratora {uid|mjesec: sati}; bez nje vrijedi višak sati za slobodan dan na kraju mjeseca */ if(!d.prijenosOut||typeof d.prijenosOut!=='object')d.prijenosOut={} },
-  16:d=>{ /* SERVIS – RADNI NALOZI: nalozi koje administrator zadaje radnicima i zapisnici o izvršenom servisu; pravo grupe 'sv' */ if(!Array.isArray(d.servisi))d.servisi=[] }
+  16:d=>{ /* SERVIS – RADNI NALOZI: nalozi koje administrator zadaje radnicima i zapisnici o izvršenom servisu; pravo grupe 'sv' */ if(!Array.isArray(d.servisi))d.servisi=[];if(!d.tvrtka||typeof d.tvrtka!=='object')d.tvrtka={naziv:'TiD-INTEL d.o.o.',adresa:'',oib:'',tel:'',email:'',web:'www.tid-intel.hr',iban:''} }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -365,7 +365,12 @@ async function svMail(o){const a=db.users.find(x=>x.id===o.by);
       text:v.zap.byName+' je poslao/la zapisnik o izvršenom servisu.\n\nNalog: '+o.broj+'\nNaručitelj: '+o.klijent+'\nAdresa: '+o.adresa+'\nStanje: '+Core.SV_STANJE[o.zap.stanje]+'\n\nZapisnik je u privitku (PDF). Fotografije su u aplikaciji: SERVIS – RADNI NALOZI.',
       attachments:[{filename:'zapisnik-'+o.broj+'.pdf',content:svPdfBuf(v)}]});o.mailTs=Date.now();delete o.mailErr;save();return{mail:'',mailTo:a.email}}
   catch(e){o.mailErr=String(e.message).slice(0,200);save();return{mail:'E-mail nije poslan: '+e.message}}}
-const svPdfBuf=v=>{let s=null;try{if(v.zap&&v.zap.potpis)s=new Uint8Array(fs.readFileSync(otpPath(v.zap.potpis)))}catch(e){}return Buffer.from(Core.pdf(Core.svDoc(v,s)))};
+const LOGO_PDF=(()=>{try{return new Uint8Array(fs.readFileSync(path.join(__dirname,'public','logo-pdf.jpg')))}catch(e){return null}})();
+const firma=()=>({...(db.tvrtka||{}),logo:LOGO_PDF});
+const svPdfBuf=v=>{let s=null;try{if(v.zap&&v.zap.potpis)s=new Uint8Array(fs.readFileSync(otpPath(v.zap.potpis)))}catch(e){}return Buffer.from(Core.pdf(Core.svDoc(v,s,firma())))};
+/* PODACI TVRTKE za zaglavlje zapisnika (logo je public/logo-pdf.jpg) */
+R('GET','/api/tvrtka',1,c=>c.send(200,Object.fromEntries(Core.TVRTKA.map(k=>[k,String((db.tvrtka||{})[k]||'')]))));
+R('PUT','/api/tvrtka',2,c=>{const t=db.tvrtka=db.tvrtka||{};Core.TVRTKA.forEach(k=>{if(c.b[k]!==undefined)t[k]=String(c.b[k]).trim().slice(0,150)});save();c.send(200,{ok:1})});
 /* nakon potpisa naručitelja: PDF zapisnika na e-mail naručitelja */
 async function svMailN(o){const z=o.zap;if(!z||!z.potpis||!z.emailN)return{};const M=mailer();if(M.err){z.mailNErr=M.err;save();return{mailN:'PDF naručitelju nije poslan: '+M.err}}const v=core.svView(o);
   try{await M.t.sendMail({from:M.from,to:z.emailN,subject:'Zapisnik o izvršenom servisu '+o.broj,
@@ -471,7 +476,7 @@ http.createServer((req,res)=>{
   if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/index.html'))
     return raw(200,fs.readFileSync(path.join(__dirname,'public','index.html')),{'Content-Type':'text/html; charset=utf-8'});
   /* ikone za početni zaslon mobitela (logo tvrtke) i manifest */
-  {const IK={'/icon-192.png':'image/png','/icon-512.png':'image/png','/icon-maskable-512.png':'image/png','/apple-touch-icon.png':'image/png','/apple-touch-icon-precomposed.png':'image/png','/favicon.png':'image/png','/badge-96.png':'image/png','/favicon.ico':'image/png','/manifest.webmanifest':'application/manifest+json'},t=req.method==='GET'&&IK[url.pathname];
+  {const IK={'/icon-192.png':'image/png','/icon-512.png':'image/png','/icon-maskable-512.png':'image/png','/apple-touch-icon.png':'image/png','/apple-touch-icon-precomposed.png':'image/png','/favicon.png':'image/png','/badge-96.png':'image/png','/logo-pdf.jpg':'image/jpeg','/favicon.ico':'image/png','/manifest.webmanifest':'application/manifest+json'},t=req.method==='GET'&&IK[url.pathname];
    if(t){const f=url.pathname==='/apple-touch-icon-precomposed.png'?'apple-touch-icon.png':url.pathname==='/favicon.ico'?'favicon.png':url.pathname.slice(1);return raw(200,fs.readFileSync(path.join(__dirname,'public',f)),{'Content-Type':t,'Cache-Control':'public, max-age=86400'})}}
   if(req.method==='GET'&&url.pathname==='/sw.js')
     return raw(200,fs.readFileSync(path.join(__dirname,'public','sw.js')),{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-cache','Service-Worker-Allowed':'/'});

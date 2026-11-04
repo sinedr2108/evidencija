@@ -112,12 +112,20 @@
   const jpgSize = d => { if (!d || d[0] !== 0xFF || d[1] !== 0xD8) return null; let i = 2; while (i + 9 < d.length) { if (d[i] !== 0xFF) { i++; continue; } const m = d[i + 1], L = (d[i + 2] << 8) | d[i + 3]; if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) return { h: (d[i + 5] << 8) | d[i + 6], w: (d[i + 7] << 8) | d[i + 8], c: d[i + 9] }; i += 2 + L; } return null; };
   function pdfDoc(doc) {
     const W = 595, H = 842, M = 40, pages = [], imgs = []; let ops = [], y = 0;
-    const newPage = () => { ops = []; pages.push(ops); y = H - M; };
+    let newPage = () => { ops = []; pages.push(ops); y = H - M; };
     const text = (x, yy, s, size, bold, gray) => ops.push((gray ? '0.42 g ' : '0 g ') + 'BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x.toFixed(1) + ' ' + yy.toFixed(1) + ' Td ' + pStr(s) + ' Tj ET');
     const line = (x1, y1, x2, y2, g) => ops.push((g || 0.8) + ' G 0.6 w ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' m ' + x2.toFixed(1) + ' ' + y2.toFixed(1) + ' l S');
     const fit = (s, w, size, bold) => { s = String(s); if (pW(s, size, bold) <= w) return s; while (s.length > 1 && pW(s + '…', size, bold) > w) s = s.slice(0, -1); return s + '…'; };
     const wrap = (s, w, size, bold) => { const out = []; let cur = ''; String(s).split(/\s+/).forEach(word => { const t = cur ? cur + ' ' + word : word; if (pW(t, size, bold) > w && cur) { out.push(cur); cur = word; } else cur = t; }); if (cur) out.push(cur); return out; };
     const need = h => { if (y - h < M + 20) newPage(); };
+    /* zaglavlje na svakoj stranici: logo lijevo, podaci tvrtke desno */
+    const hdr = doc.header; let hk = -1;
+    if (hdr && hdr.img) { const s = jpgSize(hdr.img); if (s) { hk = imgs.length; imgs.push({ d: hdr.img, pw: s.w, ph: s.h, cs: s.c }); } }
+    if (hdr) { const nl = (hdr.lines || []).length, lh = 46, hh = Math.max(hk >= 0 ? lh : 0, nl ? 12 + 10 * (nl - 1) : 0);
+      const draw0 = () => { if (hk >= 0) { const im = imgs[hk], w = lh * im.pw / im.ph; ops.push('q ' + w.toFixed(1) + ' 0 0 ' + lh + ' ' + M + ' ' + (y - lh).toFixed(1) + ' cm /Im' + hk + ' Do Q'); }
+        let ty = y - 10; (hdr.lines || []).forEach((s, i) => { const sz = i ? 8 : 10, b = !i; text(W - M - pW(s, sz, b), ty, s, sz, b, !!i); ty -= i ? 10 : 12; });
+        y -= hh + 8; line(M, y, W - M, y, 0.75); y -= 12; };
+      const np0 = newPage; newPage = () => { np0(); draw0(); }; }
     newPage();
     text(M, y - 16, doc.title || '', 16, true); y -= 26;
     (doc.info || []).forEach(s => { text(M, y - 10, s, 10, false, true); y -= 14; });
@@ -174,11 +182,14 @@
   /* zbroj istog materijala (naziv bez obzira na velika/mala slova) u istoj jediničnoj mjeri */
   const nmTotal = list => { const m = new Map(); list.forEach(o => o.items.forEach(it => { const k = it.naziv.trim().toLocaleLowerCase('hr') + '|' + it.jm; const x = m.get(k) || { naziv: it.naziv.trim(), jm: it.jm, kol: 0, n: 0 }; x.kol += it.kol; x.n++; m.set(k, x); })); return [...m.values()].sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr') || a.jm.localeCompare(b.jm, 'hr')); };
   /* ---- SERVIS – RADNI NALOZI: statusi i PDF radnog naloga sa zapisnikom (dijele server, preglednik i demo) ---- */
+  /* podaci tvrtke u zaglavlju dokumenata (uređuju se u Postavkama) */
+  const TVRTKA = ['naziv', 'adresa', 'oib', 'tel', 'email', 'web', 'iban'];
   const SV_ST = { open: 'Zadano', done: 'Izvršeno – čeka pregled', closed: 'Pregledano', cancelled: 'Otkazano' };
   const SV_STANJE = { ok: 'Ispravno, servis završen', dalje: 'Potrebna dodatna intervencija' };
   const svDm = d => /^\d{4}-\d{2}-\d{2}$/.test(d || '') ? d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.' : '';
   const svPar = (h, t) => [{ h }].concat(String(t || '').split(/\n+/).map(s => s.trim()).filter(Boolean).map(p => ({ p, tx: true })));
-  const svDoc = (o, potpis) => {
+  const svHeader = f => f ? { img: f.logo || null, lines: [f.naziv, f.adresa, f.oib ? 'OIB: ' + f.oib : '', [f.tel ? 'Tel: ' + f.tel : '', f.email ? 'E-mail: ' + f.email : ''].filter(Boolean).join(' · '), f.web, f.iban ? 'IBAN: ' + f.iban : ''].filter(Boolean) } : null;
+  const svDoc = (o, potpis, firma) => {
     const z = o.zap, kv = (k, v) => ({ cells: [{ t: k, bold: true }, { t: v || '–' }] });
     const info = ['Broj naloga: ' + o.broj + (o.hitno ? ' · HITNO' : ''), 'Zadao: ' + (o.byName || '') + ', ' + nmDt(o.ts), 'Radnici: ' + (o.uidNames || []).join(', '), 'Status: ' + (SV_ST[o.status] || o.status)];
     const bl = [{ h: 'Radni nalog' }, { table: [kv('Naručitelj', o.klijent), kv('Adresa / lokacija', o.adresa), kv('Kontakt', o.kontakt), kv('E-mail naručitelja', o.email), kv('Rok izvršenja', svDm(o.rok))] }].concat(svPar('Opis kvara / zadatak', o.opis));
@@ -192,7 +203,7 @@
       if (o.pregled) bl.push({ p: 'Pregledao: ' + (o.pregled.name || '') + ', ' + nmDt(o.pregled.ts) });
     }
     if (o.status === 'cancelled' && o.cancel) bl.push({ h: 'Nalog je otkazan' }, { p: (o.cancel.name || '') + ', ' + nmDt(o.cancel.ts) + (o.cancel.note ? ' – ' + o.cancel.note : '') });
-    return { title: 'Radni nalog ' + o.broj + ' – ' + o.klijent, footer: 'TiDy Connect – servis, radni nalog ' + o.broj, info, blocks: bl };
+    return { title: 'Radni nalog ' + o.broj + ' – ' + o.klijent, footer: ((firma && firma.naziv) || 'TiDy Connect') + ' – servis, radni nalog ' + o.broj, info, blocks: bl, header: svHeader(firma) };
   };
   function Core(db) {
     db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = [];
@@ -707,6 +718,6 @@
     }
     return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svView, svList, svCekaPregled, svOtvoreni, svFiles, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
-  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE;
+  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
 })(typeof window !== 'undefined' ? window : this);

@@ -198,6 +198,8 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='GET narudzbe'){out={list:C.nmList(U,!!Q.adm&&C.canG(U,'nm'),!!Q.svi),primatelji:C.nmPrimatelji(),jm:Core.NM_JM}}
  else if(key==='POST narudzbe'){noAdm();const o=C.nmSave(U,b);if(typeof o==='string')fail(o);if(o.status==='sent'){o.obr=null;o.fwd=[]}out={ok:1,id:o.id,mail:o.status==='sent'?'Demo: e-mail se ovdje ne šalje; na pravom serveru primatelj dobiva e-mail s PDF-om.':''}}
  else if(key==='DELETE narudzbe'){noAdm();const r=C.nmDelete(U,s[1]);if(typeof r==='string')fail(r);out={ok:1}}
+ else if(key==='GET tvrtka'){out=Object.assign({naziv:'TiD-INTEL d.o.o.',adresa:'',oib:'',tel:'',email:'',web:'www.tid-intel.hr',iban:''},db.tvrtka||{})}
+ else if(key==='PUT tvrtka'){adm();db.tvrtka={};Core.TVRTKA.forEach(k=>db.tvrtka[k]=String(b[k]||'').trim())}
  else if(key==='GET servisi'){const A=U.role==='admin'||(!!Q.adm&&PR.includes('sv'));out={list:C.svList(U,A),radnici:A?C.svRadnici():[]}}
  else if(key==='POST servisi'&&s[2]==='zapisnik'){noAdm();const r=C.svZapisnik(U,{...b,id:s[1]},f=>!!DF[f]);if(typeof r==='string')fail(r);out={ok:1,mail:'Demo: e-mail se ovdje ne šalje; na pravom serveru onaj tko je zadao nalog dobiva e-mail s PDF-om'+(r.zap.potpis&&r.zap.emailN?', a naručitelj potpisani PDF na '+r.zap.emailN:'')+'.'}}
  else if(key==='POST servisi'&&s[2]==='otkazi'){svA();const r=C.svOtkazi(U,s[1],b.note);if(typeof r==='string')fail(r)}
@@ -228,6 +230,7 @@ m=re.search(r'/\*API\*/.*?/\*/API\*/',script,re.S)
 script=script[:m.start()]+script[m.end():]
 
 import base64
+script=script.replace("LOGO_PDF='/logo-pdf.jpg'","LOGO_PDF='data:image/jpeg;base64,"+base64.b64encode(open(P+'public/logo-pdf.jpg','rb').read()).decode()+"'")
 html=html.replace('src="/logo.png"','src="data:image/png;base64,'+base64.b64encode(open(P+'public/logo.png','rb').read()).decode()+'"')
 script+="\nsaveFile=async(name,data)=>{try{const d=await claude.use('downloads');if(!d){toast('Preuzimanje nije dostupno u ovom prikazu.');return}await d.save({filename:name,data})}catch(e){toast('Preuzimanje nije uspjelo.')}};\n"
 import json,os
