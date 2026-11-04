@@ -388,7 +388,7 @@
       const d = String(b.date || ''), h = parseFloat(b.hours), vrsta = String(b.vrsta || 'Redovan rad'), site = String(b.site || '').trim(), meal = NERAD.includes(vrsta) ? '' : String(b.meal || '');
       if (!vrsteOf(u).includes(vrsta)) return 'Odaberite vrstu upisa.';
       if (PRAZNIK_VRSTE.includes(vrsta) && !(holidays(+d.slice(0, 4)).has(d))) return 'Praznik i Rad na praznik mogu se upisati samo na dan državnog praznika u RH.';
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || (!NERAD.includes(vrsta) && !(h > 0 && h <= 24))) return 'Unesite datum i sate (0,5–24).';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || (!NERAD.includes(vrsta) && !(Number.isInteger(h) && h > 0 && h <= 24))) return 'Unesite datum i sate (cijeli broj od 1 do 24).';
       if (!site && !NERAD.includes(vrsta)) return 'Odaberite gradilište.';
       /* gradilište mora biti s administratorova popisa (stari ručni unosi ostaju valjani pri izmjeni) */
       if (site && !NERAD.includes(vrsta) && !(db.sites || []).includes(site) && !(exceptId && db.entries.some(e => e.id === exceptId && e.site === site))) return 'Gradilište nije na popisu. Pošaljite administratoru zahtjev za novo gradilište.';

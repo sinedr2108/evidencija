@@ -135,7 +135,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
    <label for="datum">Datum: <b id="cals" style="color:var(--tx)"></b></label><input type="date" id="datum" class="hide"><div id="cal" class="cal"></div>
    <label for="vrsta">Vrsta upisa</label><select id="vrsta"></select><div class="mu" id="vn"></div>
    <div id="grw"><label for="grs">Gradilište</label><select id="grs"></select><button type="button" class="sm" id="srb" style="margin-top:8px">Zahtjev za novo gradilište</button><div id="srs"></div></div>
-   <label for="sati" id="sl">Odrađeni sati</label><input type="number" id="sati" inputmode="decimal" min="0" max="24" step="0.5" value="0">
+   <label for="sati" id="sl">Odrađeni sati</label><input type="number" id="sati" inputmode="numeric" min="0" max="24" step="1" value="0">
    <div id="wrk"><label for="obrok">Topli obrok (obavezno)</label><select id="obrok"></select><div class="mu" id="obn" style="margin-top:6px"></div>
    <label for="teren" id="terl">Terenski dodatak (neobavezno)</label><select id="teren"><option value="0">Ne</option><option value="1">Da</option></select></div>
    <button class="big" id="spremi">Spremi unos</button><button class="sm hide" id="otkazi" style="width:100%;margin-top:8px">Odustani od izmjene</button><div class="msg" id="msg"></div>
@@ -238,7 +238,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--er)}
      <li>Godišnji odmor može se odabrati samo za dane koje je administrator odobrio.</li>
      <li>Rad se ne može upisati za buduće dane.</li></ul></li>
    <li>Odaberite <b>gradilište</b> s popisa. Ako ga nema na popisu, kliknite <b>Zahtjev za novo gradilište</b>, upišite opisni naziv (npr. „Kuća Horvat, Ulica 5, Split“) i pošaljite. Kad ga administrator doda, na početnoj stranici pojavit će se obavijest i gradilište će biti na popisu. Od zahtjeva možete odustati dok čeka odgovor.</li>
-   <li>Upišite <b>odrađene sate</b>.</li>
+   <li>Upišite <b>odrađene sate</b> (samo cijeli sati, npr. 8).</li>
    <li><b>Topli obrok</b> je obavezan za redovan rad i rad na praznik (samo jednom na dan – ako ste isti dan radili na dva gradilišta, drugi put se ne traži). Ako obrišete unos s toplim obrokom, premjestite ga na drugi dan ili mu promijenite vrstu, topli obrok sam prelazi na prvi preostali unos tog dana. Mjesec se ne može završiti dok neki dan s radom nema topli obrok.</li>
    <li>Po potrebi označite <b>terenski dodatak</b> i kliknite <b>Spremi</b>.</li></ol>
    <ul><li><b>Moji unosi</b> – popis svih unosa u mjesecu. Olovka ✎ otvara unos za izmjenu, ✕ ga briše.</li>
