@@ -212,11 +212,14 @@
     }
     const pr = (uid, m) => prChain(uid, m).in;
     const prOut = (uid, m) => { const c = prChain(uid, m); return { v: c.out, rucno: c.outRucno }; };
+    /* stanje sati za slobodan dan u mjesecu: ručno upisan prijenos u sljedeći mjesec ima prednost pred izračunom */
+    const stanje = (uid, m, ents) => hasK(db.prijenosOut, uid + '|' + m) ? +db.prijenosOut[uid + '|' + m] : bank(ents || db.entries.filter(e => e.uid === uid), m, pr(uid, m));
+    const prOutMap = uids => { const o = {}; Object.keys(db.prijenosOut).forEach(k => { if (uids.includes(k.split('|')[0])) o[k] = +db.prijenosOut[k]; }); return o; };
     /* učinkoviti prijenosi za klijenta: svaki mjesec od prvog do sljedećeg mjeseca */
     function prMap(uids, today) {
       const out = {}, last = nextM(today.slice(0, 7));
       uids.forEach(uid => { const p = uid + '|'; let f = null; db.entries.forEach(e => { if (e.uid === uid) { const x = e.date.slice(0, 7); if (!f || x < f) f = x; } });
-        Object.keys(db.prijenos).forEach(k => { if (k.startsWith(p)) { const x = k.slice(p.length); if (!f || x < f) f = x; } });
+        Object.keys(db.prijenos).concat(Object.keys(db.prijenosOut)).forEach(k => { if (k.startsWith(p)) { const x = k.slice(p.length); if (!f || x < f) f = x; } });
         if (!f) return; const ents = db.entries.filter(e => e.uid === uid); let carry = 0;
         for (let cur = f, n = 0; cur <= last && n < 1200; cur = nextM(cur), n++) { const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (cur > f ? carry : 0);
           if (inn) out[k] = r2(inn); carry = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : r2(bank(ents, cur, inn)); } });
@@ -391,7 +394,7 @@
       if (meal && db.entries.some(e => e.uid === u.id && e.date === d && e.meal && e.id !== exceptId)) return 'Topli obrok za taj datum već je upisan.';
       const mine = db.entries.filter(e => e.uid === u.id), others = mine.filter(e => e.id !== exceptId), nr = rec(b);
       for (const m of new Set([d.slice(0, 7)].concat(old ? [old.date.slice(0, 7)] : []))) {
-        const before = bank(mine, m, pr(u.id, m)), after = bank(others.concat([nr]), m, pr(u.id, m));
+        const before = stanje(u.id, m, mine), after = r2(before + bank(others.concat([nr]), m, 0) - bank(mine, m, 0));
         if (after < 0 && after < before) { if (vrsta === 'Slobodan dan' && approval(u.id, d, exceptId)) continue; return vrsta === 'Slobodan dan' ? 'Za Slobodan dan potrebno je barem 8 sati u polju Sati za slobodan dan (trenutno ' + Math.max(0, before) + ' h).' : 'Promjena nije moguća jer je slobodan dan već iskorišten, pa bi Sati za slobodan dan postali negativni.'; };
       }
       return null;
@@ -409,7 +412,7 @@
       const list = Object.values(rows).map(r => {
         const v = Object.fromEntries(Object.entries(r.v).map(([k, x]) => [k, r2(x)]));
         return { uid: r.uid, name: r.name, h: r2(r.h), ot: r2(r.ot), pren: applies ? om.trans[r.uid + '|' + month] || 0 : 0, t: r.t, m: r.m, v, days: r.days.size, closed: db.closed.includes(r.uid + '|' + month),
-          prijenos: pr(r.uid, month), prRucno: hasK(db.prijenos, r.uid + '|' + month), bank: bank(db.entries.filter(e => e.uid === r.uid), month, pr(r.uid, month)), out: prOut(r.uid, month).v, outRucno: prOut(r.uid, month).rucno, norma: applies ? norma : null, razlika: applies ? r2(r2(r.h) - norma) : null };
+          prijenos: pr(r.uid, month), prRucno: hasK(db.prijenos, r.uid + '|' + month), bank: stanje(r.uid, month), out: prOut(r.uid, month).v, outRucno: prOut(r.uid, month).rucno, norma: applies ? norma : null, razlika: applies ? r2(r2(r.h) - norma) : null };
       }).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
       return { cols, vrste: VRSTE, list, norma: { dani: wd, dnevna: dn, sati: norma, applies } };
     }
@@ -509,7 +512,7 @@
       const mealNames = [...new Set(db.meals.concat(E.map(e => e.meal).filter(Boolean)))];
       mealNames.forEach(mn => rank('ob:' + mn, 'Topli obrok – ' + mn, 'obroka', U(p => p.ob[mn] || 0)));
       if (!isYear) {
-        rank('bank', 'Najviše sati za slobodan dan (stanje)', 'h', users.map(u => ({ name: u.name, v: bank(db.entries.filter(e => e.uid === u.id), period, pr(u.id, period)) })).filter(x => x.v !== 0), { all: true });
+        rank('bank', 'Najviše sati za slobodan dan (stanje)', 'h', users.map(u => ({ name: u.name, v: stanje(u.id, period) })).filter(x => x.v !== 0), { all: true });
         rank('miss', 'Najviše radnih dana bez unosa', 'dana', ms.map(x => ({ name: x.name, v: x.dates.length })));
       }
       const pairs = []; users.forEach(u => P[u.id] && Object.entries(P[u.id].site).forEach(([s, h]) => pairs.push({ name: u.name + ' · ' + s, v: h })));
@@ -576,7 +579,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { sihterice, prMap, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

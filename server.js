@@ -178,7 +178,7 @@ R('POST','/api/logout',0,c=>c.send(200,{ok:1},{'Set-Cookie':'t=; HttpOnly; Path=
 R('GET','/api/me',1,c=>c.send(200,{id:c.u.id,name:c.u.name,role:c.u.role,prava:pravaOf(c.u),nau:!!c.u.nau,sites:db.sites,meals:db.meals,vrste:core.vrsteOf(c.u)}));
 R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'));
   c.send(200,{entries:db.entries.filter(e=>a||e.uid===c.u.id).map(e=>({...e,vrsta:e.vrsta||'Redovan rad',name:core.nameOf(e.uid)})),closed:db.closed.filter(k=>a||k.startsWith(c.u.id+'|')),
-    requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),prijenos:core.prMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id],todayStr()),
+    requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),prijenos:core.prMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id],todayStr()),prOut:core.prOutMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id]),
     gorq:db.gorq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
     sitereq:db.sitereq.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
     poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,fromName:core.nameOf(p.from)})),
@@ -186,7 +186,7 @@ R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'))
 R('GET','/api/rev',1,c=>c.send(200,{rev}));
 function linkSl(e){db.slreq.forEach(q=>{if(q.entryId===e.id)q.entryId=null});if(e.vrsta!=='Slobodan dan')return;
   const m=e.date.slice(0,7),mine=db.entries.filter(x=>x.uid===e.uid&&x!==e);
-  if(core.bank(mine,m,core.pr(e.uid,m))<8){const ap=core.approval(e.uid,e.date,null);if(ap)ap.entryId=e.id}}
+  if(core.stanje(e.uid,m)+core.bank(mine,m,0)-core.bank(mine.concat([e]),m,0)<8){const ap=core.approval(e.uid,e.date,null);if(ap)ap.entryId=e.id}}
 R('POST','/api/entries',1,c=>{if(noAdm(c))return;const er=check(c.u,c.b);if(er)return c.send(400,{e:er});
   const e={id:crypto.randomUUID(),uid:c.u.id,...rec(c.b),ts:Date.now()};db.entries.push(e);linkSl(e);save();c.send(200,e)});
 R('PUT','/api/entries/:id',1,c=>{if(noAdm(c))return;const e=db.entries.find(x=>x.id===c.p[0]&&x.uid===c.u.id);if(!e)return c.send(404,{e:'Unos nije pronađen.'});
@@ -194,12 +194,12 @@ R('PUT','/api/entries/:id',1,c=>{if(noAdm(c))return;const e=db.entries.find(x=>x
   const er=check(c.u,c.b,e.id);if(er)return c.send(400,{e:er});Object.assign(e,rec(c.b));linkSl(e);save();c.send(200,e)});
 R('DELETE','/api/entries/:id',1,c=>{if(noAdm(c))return;const i=db.entries.findIndex(x=>x.id===c.p[0]&&x.uid===c.u.id);if(i<0)return c.send(404,{e:'Unos nije pronađen.'});
   if(db.closed.includes(c.u.id+'|'+db.entries[i].date.slice(0,7)))return c.send(400,{e:'Taj je mjesec završen.'});
-  {const e0=db.entries[i],m=e0.date.slice(0,7),mine=db.entries.filter(x=>x.uid===c.u.id),aft=core.bank(mine.filter(x=>x!==e0),m,core.pr(c.u.id,m));if(aft<0&&aft<core.bank(mine,m,core.pr(c.u.id,m)))return c.send(400,{e:'Brisanje nije moguće jer je slobodan dan već iskorišten, pa bi Sati za slobodan dan postali negativni.'})}
+  {const e0=db.entries[i],m=e0.date.slice(0,7),mine=db.entries.filter(x=>x.uid===c.u.id),bef=core.stanje(c.u.id,m,mine),aft=bef+core.bank(mine.filter(x=>x!==e0),m,0)-core.bank(mine,m,0);if(aft<0&&aft<bef)return c.send(400,{e:'Brisanje nije moguće jer je slobodan dan već iskorišten, pa bi Sati za slobodan dan postali negativni.'})}
   db.slreq.forEach(q=>{if(q.entryId===db.entries[i].id)q.entryId=null});db.entries.splice(i,1);save();c.send(200,{ok:1})});
 R('POST','/api/slreq',1,c=>{if(noAdm(c)||noNau(c))return;const d=String(c.b.date||''),m=d.slice(0,7);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return c.send(400,{e:'Odaberite datum slobodnog dana.'});
   if(db.closed.includes(c.u.id+'|'+m))return c.send(400,{e:'Taj je mjesec završen.'});
-  if(core.bank(db.entries.filter(x=>x.uid===c.u.id),m,core.pr(c.u.id,m))>=8)return c.send(400,{e:'Imate barem 8 sati za slobodan dan, zahtjev nije potreban.'});
+  if(core.stanje(c.u.id,m)>=8)return c.send(400,{e:'Imate barem 8 sati za slobodan dan, zahtjev nije potreban.'});
   if(db.slreq.some(q=>q.uid===c.u.id&&q.date===d&&(q.status==='open'||(q.status==='approved'&&!q.entryId))))return c.send(400,{e:'Za taj datum već postoji zahtjev.'});
   db.slreq.push({id:crypto.randomUUID(),uid:c.u.id,date:d,reason:String(c.b.reason||'').trim().slice(0,200),ts:Date.now(),status:'open',entryId:null});save();c.send(200,{ok:1})});
 R('POST','/api/slreq/:id/decide','sl',c=>{const q=db.slreq.find(x=>x.id===c.p[0]);if(!q||q.status!=='open')return c.send(404,{e:'Zahtjev nije pronađen ili je već riješen.'});
