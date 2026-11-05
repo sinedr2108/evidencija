@@ -445,6 +445,7 @@
     function svObrisi(u, id) {
       const i = db.servisi.findIndex(x => x.id === id); if (i < 0) return 'Nalog nije pronađen.';
       const o = db.servisi[i]; if (o.status !== 'cancelled') return 'Obrisati se može samo otkazani nalog.';
+      { const m = /^RN-(\d{4})-(\d+)$/.exec(String(o.broj || '')); if (m) db.svZadnji[m[1]] = Math.max(+db.svZadnji[m[1]] || 0, +m[2]); } /* broj obrisanog naloga ne smije se ponovno dodijeliti */
       db.servisi.splice(i, 1); const used = new Set(svFiles());
       return { o, files: (o.zap ? (o.zap.files || []).concat(o.zap.potpis ? [o.zap.potpis] : []) : []).filter(f => !used.has(f)) };
     }
