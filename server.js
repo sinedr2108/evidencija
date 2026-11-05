@@ -354,6 +354,8 @@ R('POST','/api/servisi','sv',c=>{const r=core.svSave(c.u,c.b);if(typeof r==='str
   if(r.novi.length)pushU(r.novi,(o.hitno?'HITNO · ':'')+'Novi radni nalog '+o.broj,o.klijent+' · '+o.adresa+(o.rok?' · rok '+core.dfmt(o.rok):''),'/#sv')});
 R('POST','/api/servisi/:id/otkazi','sv',c=>{const o=core.svOtkazi(c.u,c.p[0],c.b.note);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});
   pushU(o.uids,'Radni nalog '+o.broj+' je otkazan',o.klijent+(o.cancel.note?' · '+o.cancel.note:''),'/#sv')});
+R('DELETE','/api/servisi/:id','sv',c=>{const r=core.svObrisi(c.u,c.p[0]);if(typeof r==='string')return c.send(400,{e:r});
+  const otpU=new Set(db.otpremnice.flatMap(o=>o.files||[]));r.files.filter(f=>!otpU.has(f)).forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();c.send(200,{ok:1})});
 R('POST','/api/servisi/:id/sakrij','sv',c=>{const o=core.svSakrij(c.u,c.p[0],!!c.b.val);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1})});
 R('POST','/api/servisi/:id/pregled','sv',c=>{const o=core.svPregled(c.u,c.p[0],!!c.b.val);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1})});
 R('POST','/api/servisi/:id/dorada','sv',c=>{const o=core.svDorada(c.u,c.p[0],c.b.note);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});

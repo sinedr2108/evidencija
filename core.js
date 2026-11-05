@@ -206,7 +206,7 @@
     return { title: 'Radni nalog ' + o.broj + ' – ' + o.klijent, footer: ((firma && firma.naziv) || 'TiDy Connect') + ' – servis, radni nalog ' + o.broj, info, blocks: bl, header: svHeader(firma) };
   };
   function Core(db) {
-    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = [];
+    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {};
     db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {};
     db.slreq = db.slreq || [];
     db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
@@ -376,7 +376,8 @@
     const svT = (v, n) => String(v == null ? '' : v).replace(/\r/g, '').trim().slice(0, n);
     const svMailOk = s => /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(s);
     const svIso = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s + 'T00:00:00Z'));
-    function svBroj(now) { const y = new Date(now).getFullYear(), p = 'RN-' + y + '-'; let n = 0; db.servisi.forEach(o => { if (String(o.broj || '').startsWith(p)) n = Math.max(n, parseInt(o.broj.slice(p.length), 10) || 0); }); return p + String(n + 1).padStart(3, '0'); }
+    function svBroj(now) { const y = new Date(now).getFullYear(), p = 'RN-' + y + '-'; let n = 0; db.servisi.forEach(o => { if (String(o.broj || '').startsWith(p)) n = Math.max(n, parseInt(o.broj.slice(p.length), 10) || 0); });
+      /* db.svZadnji pamti zadnji broj po godini, pa se broj obrisanog naloga ne dodjeljuje ponovno */ n = Math.max(n, +db.svZadnji[y] || 0); db.svZadnji[y] = n + 1; return p + String(n + 1).padStart(3, '0'); }
     function svSave(u, b) {
       const klijent = svT(b.klijent, 150), adresa = svT(b.adresa, 200), kontakt = svT(b.kontakt, 150), email = svT(b.email, 150), opis = svT(b.opis, 4000), rok = String(b.rok || '');
       const ok = svRadnici().map(x => x.id), uids = [...new Set(Array.isArray(b.uids) ? b.uids.map(String) : [])];
@@ -439,6 +440,13 @@
     function svOtkazi(u, id, note) {
       const o = svFind(id); if (!o || o.status !== 'open') return 'Otkazati se može samo nalog koji još nije izvršen.';
       o.status = 'cancelled'; o.cancel = { ts: Date.now(), by: u.id, note: svT(note, 300) }; o.updated = Date.now(); return o;
+    }
+    /* brisanje: samo otkazani nalog; vraća datoteke (fotografije, potpis) koje treba obrisati s diska */
+    function svObrisi(u, id) {
+      const i = db.servisi.findIndex(x => x.id === id); if (i < 0) return 'Nalog nije pronađen.';
+      const o = db.servisi[i]; if (o.status !== 'cancelled') return 'Obrisati se može samo otkazani nalog.';
+      db.servisi.splice(i, 1); const used = new Set(svFiles());
+      return { o, files: (o.zap ? (o.zap.files || []).concat(o.zap.potpis ? [o.zap.potpis] : []) : []).filter(f => !used.has(f)) };
     }
     /* "Sakrij": administrator miče pregledani ili otkazani nalog iz SVOG popisa (o.hid = popis id-eva administratora); nalog se ne briše i može se vratiti */
     function svSakrij(u, id, val) {
@@ -722,7 +730,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svView, svList, svCekaPregled, svOtvoreni, svFiles, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
