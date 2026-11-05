@@ -26,6 +26,8 @@ button{font:inherit;cursor:pointer;touch-action:manipulation}
 table{border-collapse:collapse;width:100%;font-size:13px;min-width:480px}th,td{padding:7px 6px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{color:var(--mu)}.n{text-align:right}
 td.pos{color:var(--ok)}td.neg{color:var(--er)}
 .note{font-size:13px;color:var(--mu);margin:-4px 0 8px}
+#otvc{height:min(78vh,calc((100vw - 24px)*1.4143));aspect-ratio:210/297;max-width:100%;background:#fff;border-radius:6px;overflow:hidden}#otvi{width:100%;height:100%;object-fit:contain;display:block}
+#otvc.zm{width:100%;height:78vh;aspect-ratio:auto;overflow:auto;-webkit-overflow-scrolling:touch}#otvc.zm #otvi{width:250%;max-width:none;height:auto}
 #dlg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
 #dlg .card{width:100%;max-width:380px;margin:0}
 #note{position:fixed;left:14px;right:14px;bottom:20px;z-index:60;margin:0;color:var(--er)}
@@ -225,7 +227,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <ol><li>Kliknite <b>FOTOGRAFIRAJ OTPREMNICU</b> – otvara se kamera mobitela. Fotografirajte otpremnicu ravno i čitljivo. Ako ima više stranica, fotografirajte svaku (najviše 10). Već snimljenu fotografiju možete odabrati gumbom <b>Odaberi iz galerije</b>.</li>
    <li>Pogrešnu fotografiju maknite gumbom ✕ na sličici.</li>
    <li>Odaberite <b>gradilište</b> i <b>datum otpremnice</b>, po želji upišite napomenu i kliknite <b>POŠALJI OTPREMNICU</b>. Ako ne znate na koje gradilište otpremnica ide, na kraju popisa odaberite <b>Odluka administratora</b>.</li>
-   <li>Ispod su vaše poslane otpremnice. Klik na sličicu otvara fotografiju u A4 obliku (strelicama listate stranice, <b>Puna veličina</b> za povećanje). Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li>
+   <li>Ispod su vaše poslane otpremnice. Klik na sličicu otvara fotografiju u A4 obliku (strelicama listate stranice, <b>Povećaj</b> za povećanje, <b>✕ Natrag</b> ili tipka natrag na mobitelu za povratak). Na dan slanja možete obrisati pogrešno poslanu (✕); kasnije se javite administratoru.</li>
    <li>Ako administrator zatraži <b>dodatno objašnjenje</b>, dobit ćete obavijest. Pitanje je ispod te otpremnice: upišite odgovor i kliknite <b>Pošalji odgovor</b>. Ako administrator promijeni gradilište, to piše uz otpremnicu.</li>
    <li>Poslane otpremnice s fotografijama automatski se brišu <b>60 dana nakon slanja</b>.</li></ol>
    </div>
@@ -459,7 +461,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    </div>
    <div class="uh" data-h="aot">
    <h3>OTPREMNICE</h3>
-   <ul><li>Svaka fotografija prikazuje se zasebno u A4 okviru, a ispod piše tko ju je poslao i kada, gradilište, datum otpremnice i napomena. Klik na fotografiju otvara je u punoj veličini.</li>
+   <ul><li>Svaka fotografija prikazuje se zasebno u A4 okviru, a ispod piše tko ju je poslao i kada, gradilište, datum otpremnice i napomena. Klik na fotografiju otvara je u pregledu unutar aplikacije (<b>Povećaj</b>, <b>Preuzmi</b>, <b>✕ Natrag</b>).</li>
    <li><b>Filteri</b>: datum otpremnice od–do te višestruki odabir gradilišta i pošiljatelja (označite jedno ili više). <b>Poništi filtere</b> vraća sve.</li>
    <li><b>Promijeni gradilište</b>: odaberite gradilište s popisa ili <i>+ Upiši novo gradilište…</i>. Ručno upisano gradilište vrijedi samo u Otpremnicama i ne pojavljuje se radnicima u šihterici. Radnik vidi da ste promijenili gradilište.</li>
    <li><b>Zatraži objašnjenje</b>: upišite pitanje. Radnik dobiva obavijest i odgovara ispod otpremnice, a pitanje i odgovor vidite ispod fotografije.</li>
@@ -589,9 +591,14 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
 </div></main>
 <div id="dlg" class="hide"><div class="card"><div id="dtx" style="font-weight:600"></div><input id="din" class="hide" style="margin-top:10px"><div class="fl" style="margin-top:14px"><button class="sm" id="dno" style="flex:1">Odustani</button><button class="big" id="dyes" style="flex:1;margin-top:0">U redu</button></div></div></div>
 <div id="otv" class="hide" role="dialog" aria-modal="true" aria-label="Otpremnica" style="position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px">
- <div style="height:min(78vh,calc((100vw - 24px)*1.4143));aspect-ratio:210/297;max-width:100%;background:#fff;border-radius:6px;overflow:hidden"><img id="otvi" alt="Otpremnica" style="width:100%;height:100%;object-fit:contain;display:block"></div>
+ <div id="otvc"><img id="otvi" alt="Fotografija"></div>
  <div id="otvt" style="color:#fff;margin-top:8px;text-align:center;font-size:14px"></div>
- <div class="fl" style="margin-top:8px;flex-wrap:wrap;justify-content:center"><button class="sm" id="otvp" aria-label="Prethodna">‹ Prethodna</button><a class="sm" id="otvf" target="_blank" rel="noopener" style="text-decoration:none">Puna veličina</a><button class="sm" id="otvn" aria-label="Sljedeća">Sljedeća ›</button><button class="sm pri" id="otvx">Zatvori</button></div></div>
+ <div class="fl" style="margin-top:8px;flex-wrap:wrap;justify-content:center"><button class="sm" id="otvp" aria-label="Prethodna">‹ Prethodna</button><button class="sm" id="otvz">Povećaj</button><button class="sm" id="otvd">Preuzmi</button><button class="sm" id="otvn" aria-label="Sljedeća">Sljedeća ›</button><button class="sm pri" id="otvx">✕ Natrag</button></div></div>
+<div id="fo" class="hide" role="dialog" aria-modal="true" aria-label="Datoteka" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px"><div class="card" style="max-width:420px;width:100%">
+ <div style="font-weight:600">Datoteka je spremna</div><div class="mu" id="fon" style="margin-top:4px;word-break:break-all"></div>
+ <button class="big" id="fos" style="margin-top:14px">Otvori / podijeli</button><button class="sm" id="fod" style="width:100%;margin-top:8px">Spremi na uređaj</button>
+ <div class="mu" id="fost" style="margin-top:8px;font-size:13px">„Otvori / podijeli” nudi aplikacije u kojima se datoteka može otvoriti (npr. Excel), spremiti u Datoteke ili poslati e-mailom. Aplikacija ostaje otvorena.</div>
+ <button class="sm pri" id="fox" style="width:100%;margin-top:12px">✕ Natrag</button></div></div>
 <div id="note" class="card hide"></div>
 <button id="upb" class="hide" aria-label="Upute za korištenje" title="Upute za korištenje">?</button>
 <script src="/core.js"></script>
@@ -728,13 +735,13 @@ const otMs=(el,sum,vals,set,all)=>{for(const v of [...set])if(!vals.some(x=>x[0]
  $(el).innerHTML=vals.map(([v,t])=>'<label><input type="checkbox" value="'+E(v)+'"'+(set.has(v)?' checked':'')+'> '+t+'</label>').join('')||'<div class="mu">Nema podataka.</div>';
  $(sum).textContent=set.size?vals.filter(x=>set.has(x[0])).map(x=>x[0]?x[0]:'Odluka administratora').join(', '):all};
 const otItem=x=>{const o=x.o,f=x.f,qs=o.pitanja.filter(q=>q.f===f),k=o.id+'|'+f,ed=otEdit===k;
- return '<div class="card"><a class="a4" href="'+fotoSrc(f)+'" target="_blank" rel="noopener" title="Otvori u punoj veličini"><img src="'+fotoSrc(f)+'" alt="Otpremnica" loading="lazy"></a>'
+ return '<div class="card"><a class="a4" href="'+fotoSrc(f)+'" data-fv="'+E(f)+'|0" data-fvc="'+E(o.name+' · '+otTs(o.ts))+'" title="Otvori u punoj veličini"><img src="'+fotoSrc(f)+'" alt="Otpremnica" loading="lazy"></a>'
  +'<div style="margin-top:8px"><b>'+E(o.name)+'</b> · poslano '+otTs(o.ts)+'</div>'
  +'<div>Gradilište: <b>'+otSiteTx(x.site)+'</b>'+(o.adminSite[f]?' <span class="mu">(izmijenio administrator; radnik: '+(o.site?E(o.site):'Odluka administratora')+')</span>':'')+'</div>'
  +'<div class="mu">Datum otpremnice '+otDm(o.date)+(o.files.length>1?' · fotografija '+(x.i+1)+'/'+o.files.length:'')+'</div>'+(o.note?'<div style="margin-top:4px">'+E(o.note)+'</div>':'')
  +qs.map(q=>'<div style="margin-top:6px;padding:6px 8px;border-radius:8px;background:var(--bg);font-size:14px"><div><b>Pitanje</b> <span class="mu">'+otTs(q.ts)+'</span>: '+E(q.text)+'</div><div>'+(q.answer?'<b>Odgovor</b> <span class="mu">'+otTs(q.answerTs)+'</span>: '+E(q.answer):'<i class="mu">čeka odgovor radnika</i>')+'</div></div>').join('')
  +(ed?'<div class="otedit" style="margin-top:8px"><select id="oes">'+otSites.map(s=>'<option'+(s===x.site?' selected':'')+'>'+E(s)+'</option>').join('')+'<option value="__new">+ Upiši novo gradilište…</option></select><input id="oen" class="hide" maxlength="100" placeholder="Naziv (vrijedi samo u Otpremnicama)" style="margin-top:6px"><div class="fl" style="margin-top:6px"><button class="sm pri" data-oes="'+E(k)+'">Spremi</button><button class="sm" data-oec="1">Odustani</button></div></div>':'')
- +'<div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm" data-oe="'+E(k)+'">Promijeni gradilište</button><button class="sm" data-oq="'+E(k)+'">Zatraži objašnjenje</button><a class="sm" style="text-decoration:none" href="'+fotoDl(f)+'" download>Preuzmi</a><button class="sm" data-otx="'+E(o.id)+'">Obriši otpremnicu</button></div></div>'};
+ +'<div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm" data-oe="'+E(k)+'">Promijeni gradilište</button><button class="sm" data-oq="'+E(k)+'">Zatraži objašnjenje</button><a class="sm" style="text-decoration:none" href="'+fotoDl(f)+'" data-fdl="'+E(fotoDl(f))+'" data-fdn="otpremnica.jpg" download>Preuzmi</a><button class="sm" data-otx="'+E(o.id)+'">Obriši otpremnicu</button></div></div>'};
 async function drawOt(){const adm=me.role==='admin';
  if(!adm){opts($('ots'),me.sites,'<option value="">– odaberite gradilište –</option>','<option value="__admin__">Odluka administratora</option>');if(!$('otd').value)$('otd').value=today();$('otd').max=today();
   $('otth').innerHTML=otPend.map((d,i)=>'<span style="position:relative"><img src="'+d+'" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"><button class="x" data-otp="'+i+'" aria-label="Makni" style="position:absolute;top:-8px;right:-8px;width:30px;height:30px;font-size:16px">✕</button></span>').join('');
@@ -758,13 +765,26 @@ $('otsb').onclick=async()=>{const site=$('ots').value,date=$('otd').value;if(!ot
  catch(x){say('otm',x.message+' Fotografije su ostale, pokušajte ponovno.')}finally{B.textContent='POŠALJI OTPREMNICU';drawOt()}};
 const otDel=async e=>{const b=e.target.closest('[data-otx]');if(!b)return;if(!await cf('Obrisati ovu otpremnicu i njezine fotografije?'))return;try{await api('DELETE','otpremnice/'+b.dataset.otx);toast('Otpremnica je obrisana.');await load()}catch(x){toast(x.message)}};
 /* pregled poslane fotografije u A4 portret okviru (radnik) */
-let otV=null;const otShow=()=>{const o=otV.o,f=o.files[otV.i];$('otvi').src=fotoSrc(f);$('otvf').href=fotoSrc(f);
- $('otvt').textContent=(o.files.length>1?'Fotografija '+(otV.i+1)+'/'+o.files.length+' · ':'')+'Poslao: '+o.name+' · '+otTs(o.ts)+' · '+(o.site||'Odluka administratora')+', '+otDm(o.date);
- $('otvp').disabled=otV.i===0;$('otvn').disabled=otV.i===o.files.length-1;$('otvp').classList.toggle('hide',o.files.length<2);$('otvn').classList.toggle('hide',o.files.length<2)};
-$('otvx').onclick=()=>{$('otv').classList.add('hide');$('otvi').src='';otV=null};$('otv').onclick=e=>{if(e.target.id==='otv')$('otvx').onclick()};
-$('otvp').onclick=()=>{if(otV.i>0){otV.i--;otShow()}};$('otvn').onclick=()=>{if(otV.i<otV.o.files.length-1){otV.i++;otShow()}};
-document.addEventListener('keydown',e=>{if(!otV)return;if(e.key==='Escape')$('otvx').onclick();if(e.key==='ArrowLeft')$('otvp').onclick();if(e.key==='ArrowRight')$('otvn').onclick()});
-$('otl').onclick=async e=>{const v=e.target.closest('[data-otv]');if(v){const[id,i]=v.dataset.otv.split('|'),o=otList.find(x=>x.id===id);if(o){otV={o,i:+i};otShow();$('otv').classList.remove('hide')}return}
+/* Prozori preko aplikacije (pregled fotografije, preuzimanje datoteke): svaki dodaje korak u povijest, pa tipka Natrag na mobitelu
+   (i gesta povratka) zatvara prozor umjesto da izađe iz aplikacije. U instaliranoj aplikaciji (standalone) nema preglednikove tipke natrag. */
+const ovS=[];let ovSkip=0;
+function ovOpen(close){ovS.push(close);try{history.pushState({ov:ovS.length},'')}catch(e){}}
+function ovClose(){const f=ovS.pop();if(!f)return;f();try{if(history.state&&history.state.ov){ovSkip++;history.back()}}catch(e){}}
+window.addEventListener('popstate',()=>{if(ovSkip){ovSkip--;return}const f=ovS.pop();if(f)f()});
+/* pregled fotografija unutar aplikacije: otV={files,i,cap} */
+let otV=null;const otShow=()=>{const fs=otV.files,f=fs[otV.i];$('otvi').src=fotoSrc(f);$('otvc').classList.remove('zm');$('otvz').textContent='Povećaj';
+ $('otvt').textContent=(fs.length>1?'Fotografija '+(otV.i+1)+'/'+fs.length+(otV.cap?' · ':''):'')+(otV.cap||'');
+ $('otvp').disabled=otV.i===0;$('otvn').disabled=otV.i===fs.length-1;$('otvp').classList.toggle('hide',fs.length<2);$('otvn').classList.toggle('hide',fs.length<2)};
+function fvOpen(files,i,cap){if(!files||!files.length)return;otV={files,i:Math.max(0,Math.min(i||0,files.length-1)),cap:cap||''};otShow();$('otv').classList.remove('hide');
+ ovOpen(()=>{$('otv').classList.add('hide');$('otvi').src='';otV=null})}
+$('otvx').onclick=ovClose;$('otv').onclick=e=>{if(e.target.id==='otv')ovClose()};
+$('otvz').onclick=()=>{const z=$('otvc').classList.toggle('zm');$('otvz').textContent=z?'Smanji':'Povećaj'};
+$('otvd').onclick=()=>{if(otV)fileOut(fotoDl(otV.files[otV.i]),'fotografija.jpg')};
+document.addEventListener('click',e=>{const v=e.target.closest('[data-fv]');if(v){e.preventDefault();const[l,i]=v.dataset.fv.split('|');fvOpen(l.split(','),+i||0,v.dataset.fvc||'');return}
+ const d=e.target.closest('[data-fdl]');if(d){e.preventDefault();fileOut(d.dataset.fdl,d.dataset.fdn||'datoteka')}});
+$('otvp').onclick=()=>{if(otV.i>0){otV.i--;otShow()}};$('otvn').onclick=()=>{if(otV.i<otV.files.length-1){otV.i++;otShow()}};
+document.addEventListener('keydown',e=>{if(!otV)return;if(e.key==='Escape')ovClose();if(e.key==='ArrowLeft')$('otvp').onclick();if(e.key==='ArrowRight')$('otvn').onclick()});
+$('otl').onclick=async e=>{const v=e.target.closest('[data-otv]');if(v){const[id,i]=v.dataset.otv.split('|'),o=otList.find(x=>x.id===id);if(o)fvOpen(o.files,+i,'Poslao: '+o.name+' · '+otTs(o.ts)+' · '+(o.site||'Odluka administratora')+', '+otDm(o.date));return}
  const a=e.target.closest('[data-oa]');if(!a)return otDel(e);const[id,pid]=a.dataset.oa.split('|'),i=$('oa_'+pid);
  try{await api('POST','otpremnice/'+id+'/odgovor',{pid,text:i.value});i.value='';toast('Odgovor je poslan administratoru.');await load()}catch(x){toast(x.message)}};
 $('aol').onclick=async e=>{const t=e.target;
@@ -864,7 +884,22 @@ function cellText(el){let s='';el.childNodes.forEach(n=>{if(n.nodeType===3)s+=n.
 function htmlBlocks(html){const box=document.createElement('div');box.innerHTML=html;const out=[];
  const walk=el=>{[...el.children].forEach(n=>{if(n.tagName==='TABLE'){out.push({table:[...n.rows].map((r,i)=>{const th=[...r.cells].every(c=>c.tagName==='TH');return{head:th&&i===0,foot:th&&i>0,cells:[...r.cells].map(c=>({t:cellText(c),right:c.classList.contains('n'),bold:c.tagName==='TH'||!!c.querySelector('b')}))}})})}
   else if(n.tagName==='B')out.push({h:cellText(n)});else if(n.tagName==='DIV'&&n.children.length&&!n.classList.contains('mu'))walk(n);else{const t=cellText(n);if(t)out.push({p:t})}})};walk(box);return out}
-function saveFile(name,data,mime){const b=new Blob([data],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000)}
+/* Preuzimanje datoteka (Excel, CSV, PDF, fotografije): na mobitelu se datoteka ne otvara preko cijele aplikacije (gdje nema tipke natrag),
+   nego se nudi prozor „Otvori / podijeli” (sustavni izbornik: Excel, Datoteke, e-mail…) i „Spremi na uređaj”, uz tipku Natrag. */
+const isMob=()=>{try{return matchMedia('(pointer:coarse)').matches||matchMedia('(display-mode: standalone)').matches||!!navigator.standalone}catch(e){return false}};
+function blobSave(b,name){const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000)}
+let foB=null;
+function foShow(b,name){const fl=new File([b],name,{type:b.type||'application/octet-stream'});let sh=false;try{sh=!!(navigator.canShare&&navigator.canShare({files:[fl]}))}catch(e){}
+ foB={b,name,fl};$('fon').textContent=name;$('fos').classList.toggle('hide',!sh);$('fost').classList.toggle('hide',!sh);$('fod').className=(sh?'sm':'big')+(sh&&isIOS()?' hide':'');$('fod').style.width='100%';
+ $('fo').classList.remove('hide');ovOpen(()=>{$('fo').classList.add('hide');foB=null})}
+$('fos').onclick=async()=>{if(!foB)return;try{await navigator.share({files:[foB.fl],title:foB.name})}catch(e){if(e&&e.name!=='AbortError')toast('Dijeljenje nije uspjelo. Pokušajte „Spremi na uređaj”.')}};
+$('fod').onclick=()=>{if(foB)blobSave(foB.b,foB.name)};$('fox').onclick=ovClose;$('fo').onclick=e=>{if(e.target.id==='fo')ovClose()};
+async function fileOut(src,name){let b;
+ try{const r=await fetch(src,{credentials:'same-origin'});if(!r.ok){let m='Preuzimanje nije uspjelo.';try{m=(await r.json()).e||m}catch(e){}return toast(m)}
+  b=await r.blob();const cd=r.headers.get('Content-Disposition')||'',m1=/filename\*=UTF-8''([^;]+)/i.exec(cd),m2=/filename="([^"]+)"/i.exec(cd);
+  try{name=m1?decodeURIComponent(m1[1]):m2?m2[1]:name}catch(e){}name=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/[^\w.\- ]+/g,'_')}catch(e){return toast('Preuzimanje nije uspjelo. Provjerite vezu.')}
+ if(isMob())foShow(b,name);else blobSave(b,name)}
+function saveFile(name,data,mime){const b=new Blob([data],{type:mime});if(isMob())foShow(b,name);else blobSave(b,name)}
 $('izpdf').onclick=()=>{const mode=$('izp').value,m=$('izm').value;if(!m)return toast('Odaberite mjesec.');
  const lab=mode==='y'?m.slice(0,4)+'.':m.slice(5)+'.'+m.slice(0,4)+'.',blocks=[];['h','s','b','g'].forEach(t=>blocks.push(...htmlBlocks(izHtml(t))));
  const d=Core.pdf({title:'Izvještaj – '+me.name,info:['Razdoblje: '+(mode==='y'?'cijela godina ':'')+lab,'Izrađeno: '+new Date().toLocaleString('hr-HR')],footer:'TiDy Connect – '+me.name,blocks});
@@ -933,7 +968,7 @@ async function drawSh(){if(!$('rm').value)return;const keep=$('shs').value,all=[
     '<tr><th>Ukupno</th>'+d.months.map(m=>'<th class="n">'+(s.totals.byMonth[m]?f1(s.totals.byMonth[m]):'')+'</th>').join('')+'<th class="n">'+f1(s.totals.total)+'</th></tr></table></div>').join(''):'<span class="mu">Nema sati na gradilištima u ovom razdoblju.</span>'
  }catch(e){$('shh').innerHTML='<span class="mu">'+E(e.message)+'</span>'}}
 $('shp').onchange=drawSh;$('shs').onchange=drawSh;
-$('shx').onclick=()=>{location.href='/api/sitehours.xlsx?'+shq()+'&t='+Date.now()};$('shc2').onclick=()=>{location.href='/api/sitehours.csv?'+shq()+'&t='+Date.now()};
+$('shx').onclick=()=>fileOut('/api/sitehours.xlsx?'+shq()+'&t='+Date.now(),'sati-po-gradilistima.xlsx');$('shc2').onclick=()=>fileOut('/api/sitehours.csv?'+shq()+'&t='+Date.now(),'sati-po-gradilistima.csv');
 function drawSlRep(){
  const m=today().slice(0,7),dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.';
  const L=users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled).map(u=>{const b=stanjeU(u.id,m,entries.filter(e=>e.uid===u.id)),rs=slreq.filter(r=>r.uid===u.id&&((r.status==='approved'&&(r.date.slice(0,7)>=m))||r.status==='open')).sort((a,c)=>a.date<c.date?-1:1);return{u,b,rs}}).filter(x=>x.b>=5||x.rs.some(r=>r.status==='approved')).sort((a,b)=>b.b-a.b||a.u.name.localeCompare(b.u.name,'hr'));
@@ -1058,7 +1093,8 @@ $('nm').oninput=()=>{const i=$('nm'),a=i.selectionStart,b=i.selectionEnd,u=i.val
 $('am2').onclick=()=>{const v=$('nm').value.trim().toLocaleUpperCase('hr-HR');if(v){$('nm').value='';cfg(me.sites,me.meals.concat([v]))}};
 $('ls').onclick=e=>{const b=e.target.closest('[data-k]');if(b)cfg(me.sites.filter((_,i)=>i!==+b.dataset.k),me.meals)};
 $('lm2').onclick=e=>{const b=e.target.closest('[data-k]');if(b)cfg(me.sites,me.meals.filter((_,i)=>i!==+b.dataset.k))};
-/*EXPORT*/async function doExport(kind){if(kind==='sih'){location.href='/api/sihterice.xlsx?month='+$('rm').value+'&uid='+encodeURIComponent($('fw').value)+'&t='+Date.now();return}location.href='/api/report.'+(kind==='xlsx'?'xlsx':'csv')+'?'+qf()+(kind==='xlsx'?'':'&kind='+kind)+'&t='+Date.now()}/*/EXPORT*/
+/*EXPORT*/async function doExport(kind){if(kind==='sih')return fileOut('/api/sihterice.xlsx?month='+$('rm').value+'&uid='+encodeURIComponent($('fw').value)+'&t='+Date.now(),'sihterice.xlsx');
+ fileOut('/api/report.'+(kind==='xlsx'?'xlsx':'csv')+'?'+qf()+(kind==='xlsx'?'':'&kind='+kind)+'&t='+Date.now(),'izvjestaj.'+(kind==='xlsx'?'xlsx':'csv'))}/*/EXPORT*/
 $('xl').onclick=()=>doExport('xlsx');$('sih').onclick=()=>doExport('sih');$('c1').onclick=()=>doExport('sum');$('c3').onclick=()=>doExport('day');$('c4').onclick=()=>doExport('site');$('c5').onclick=()=>doExport('sl');$('c2').onclick=()=>doExport('det');
 $('pr').onclick=()=>print();
 $('em').onclick=async()=>{try{say('am',(await api('POST','report/send',{month:$('rm').value})).msg,1)}catch(e){say('am',e.message)}};
@@ -1201,7 +1237,7 @@ const svInfo=o=>'<div style="margin-top:6px"><b>Adresa:</b> '+E(o.adresa)+' · <
  +(o.kontakt?'<div><b>Kontakt:</b> '+svTel(o.kontakt)+'</div>':'')+(o.email?'<div><b>E-mail:</b> '+E(o.email)+'</div>':'')+(o.rok?'<div><b>Rok:</b> <span'+(o.status==='open'&&o.rok<today()?' style="color:var(--er);font-weight:700"':'')+'>'+svDm(o.rok)+'</span></div>':'')
  +'<div class="svt">'+E(o.opis)+'</div>';
 const svDor=o=>(o.dorada||[]).map((d,i,a)=>'<div class="svb" style="border-left:4px solid var(--er)"><b>Vraćeno na doradu</b> <span class="mu">'+E(d.name)+', '+nmDt(d.ts)+'</span><div class="svt" style="margin-top:2px">'+E(d.note)+'</div></div>').join('');
-const svFoto=f=>'<a href="'+fotoSrc(f)+'" target="_blank" rel="noopener" style="display:block;width:84px;height:84px"><img src="'+fotoSrc(f)+'" alt="Fotografija" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"></a>';
+const svFoto=(f,i,l)=>'<a href="'+fotoSrc(f)+'" data-fv="'+E(l.join(',')+'|'+i)+'" style="display:block;width:84px;height:84px"><img src="'+fotoSrc(f)+'" alt="Fotografija" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"></a>';
 const svZapHtml=(o,open)=>{const z=o.zap;if(!z||o.status==='open')return '';const t=(h,v)=>v?'<div style="margin-top:4px"><b>'+h+':</b></div><div class="svt" style="margin-top:0">'+E(v)+'</div>':'';
  return '<details class="svb"'+(open?' open':'')+'><summary style="cursor:pointer;font-weight:600">Zapisnik · '+E(z.byName)+', '+nmDt(z.ts)+'</summary>'
  +'<div style="margin-top:6px"><b>Datum izvršenja:</b> '+svDm(z.datum)+' · <b>Utrošeno:</b> '+Core.nmNum(z.sati)+' h</div><div><b>Stanje:</b> <b style="color:var(--'+(z.stanje==='ok'?'ok':'er')+')">'+E(Core.SV_STANJE[z.stanje]||'')+'</b></div>'
