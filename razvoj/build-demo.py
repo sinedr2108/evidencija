@@ -117,12 +117,12 @@ function seed(){
   {id:'al2',naziv:'Kutna brusilica Makita 230',inv:'SA-002',nabava:dd(-80),oznaka:'',opis:'',foto:'',ts:N-20*h,by:'u_admin',uid:null,site:'',since:N-20*h,pred:null,put:[P('p4','','','skl','Skladište alata','Alat unesen u popis','',20)]},
   {id:'al3',naziv:'Laserski nivelir Bosch GLL 3-80',inv:'SA-003',nabava:dd(-120),oznaka:'',opis:'Sa stativom.',foto:'',ts:N-20*h,by:'u_admin',uid:'u_marko',site:'Granosta',since:N-3*h,pred:{id:'pr1',from:'u_marko',to:'u_ivan',site:'Hidropneumat',datum:dd(0),nap:'Stativ je u autu',ts:N-h/6,by:'u_marko',zid:''},put:[P('p5','','','skl','Skladište alata','Alat unesen u popis','',20),P('p6','','skl','u_marko','Granosta','','',3)]},
   {id:'al4',naziv:'Agregat Honda 3 kW',inv:'SA-004',nabava:dd(-160),oznaka:'',opis:'',foto:'',ts:N-20*h,by:'u_admin',uid:'u_ivan',site:'Ugljan',since:N-2*h,pred:null,put:[P('p7','','','skl','Skladište alata','Alat unesen u popis','',20),P('p8','','skl','u_ivan','Ugljan','','',2)]}];
- S.alatZadnji=4;S.alatZah=[{id:'az1',alatId:'al4',uid:'u_marko',site:'Granosta',nap:'Treba mi sutra ujutro',ts:N-h/4,status:'open',to:'u_ivan',odg:null}];S.alatIzd=[];
+ S.alatZadnji=4;S.alatGrupe=[{id:'g1',naziv:'Električni alat'},{id:'g2',naziv:'Mjerni alat'},{id:'g3',naziv:'Strojevi'}];['g1','g1','g2','g3'].forEach((g,i)=>S.alati[i].grupa=g);S.alatZah=[{id:'az1',alatId:'al4',uid:'u_marko',site:'Granosta',nap:'Treba mi sutra ujutro',ts:N-h/4,status:'open',to:'u_ivan',odg:null}];S.alatIzd=[];
  return S}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
 function initDb(){db=null;_c=null;try{const s=localStorage.getItem(KEY);if(s)db=JSON.parse(s)}catch(e){}if(!db){db=seed();persist()}
  /* stari spremljeni demo: dodaj nove primjere korisnika (npr. naučnika) s njihovim unosima */
- else{const S=seed();if(!Array.isArray(db.servisi))db.servisi=S.servisi;if(!Array.isArray(db.alati)){db.alati=S.alati;db.alatZah=S.alatZah;db.alatIzd=[]}S.users.forEach(u=>{if(!db.users.some(x=>x.id===u.id)){db.users.push(u);db.entries.push(...S.entries.filter(e=>e.uid===u.id))}});db.entries.forEach(e=>{if(Core.NULA_SATI.includes(e.vrsta))e.hours=0});persist()}}
+ else{const S=seed();if(!Array.isArray(db.servisi))db.servisi=S.servisi;if(!Array.isArray(db.alati)){db.alati=S.alati;db.alatZah=S.alatZah;db.alatIzd=[]}if(!Array.isArray(db.alatGrupe)){db.alatGrupe=S.alatGrupe;db.alati.forEach(o=>{const x=S.alati.find(y=>y.id===o.id);if(x&&!o.grupa)o.grupa=x.grupa})}S.users.forEach(u=>{if(!db.users.some(x=>x.id===u.id)){db.users.push(u);db.entries.push(...S.entries.filter(e=>e.uid===u.id))}});db.entries.forEach(e=>{if(Core.NULA_SATI.includes(e.vrsta))e.hours=0});persist()}}
 initDb();
 /* demo: fotografije otpremnica samo u memoriji (ne preživljavaju ponovno otvaranje) */
 const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];(db.alati||[]).forEach(o=>{if(o.foto&&!DF[o.foto])o.foto=''});if(!Array.isArray(db.narudzbe))db.narudzbe=[];
@@ -215,7 +215,9 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='POST servisi'&&s[2]==='sakrij'){svA();const r=C.svSakrij(U,s[1],!!b.val);if(typeof r==='string')fail(r)}
  else if(key==='POST servisi'&&s[2]==='dorada'){svA();const r=C.svDorada(U,s[1],b.note);if(typeof r==='string')fail(r)}
  else if(key==='POST servisi'){svA();const r=C.svSave(U,b);if(typeof r==='string')fail(r);out={ok:1,id:r.o.id,broj:r.o.broj}}
- else if(key==='GET alati'){if(U.nau)fail('Naučnik koristi samo šihtericu.');const A=!!Q.adm&&(U.role==='admin'||PR0.includes('al'));out={list:C.alList(U,A),zah:C.alZList(U,A),radnici:C.svRadnici(),izd:C.alIzd(U),izdNames:C.alIzdIds().map(C.nameOf),skl:Core.AL_SKL}}
+ else if(key==='GET alati'){if(U.nau)fail('Naučnik koristi samo šihtericu.');const A=!!Q.adm&&(U.role==='admin'||PR0.includes('al'));out={list:C.alList(U,A),zah:C.alZList(U,A),radnici:C.svRadnici(),izd:C.alIzd(U),izdNames:C.alIzdIds().map(C.nameOf),skl:Core.AL_SKL,grupe:C.alGrupe()}}
+ else if(key==='POST alati-grupe'){alA();const g=alR(C.alGrupaSave(U,b));out={ok:1,id:g.id}}
+ else if(key==='DELETE alati-grupe'){alA();alR(C.alGrupaDelete(U,s[1]))}
  else if(key==='POST alati'&&s[1]==='foto'){alA();if(!C.alIzd(U))fail('Fotografiju alata dodaje izdavatelj alata.');const f='u-'+C.otpKey(U.id)+'-'+uid().replace(/[^0-9a-z]/g,'')+'.jpg';DF[f]=String(b.data||'');out={f}}
  else if(key==='POST alati'&&s[1]==='zahtjev'&&s[3]==='odustani')alR(C.alZOdustani(U,s[2]))
  else if(key==='POST alati'&&s[1]==='zahtjev'&&s[3]==='odbij')alR(C.alZOdbij(U,s[2],b.nap))

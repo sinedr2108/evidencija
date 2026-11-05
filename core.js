@@ -215,7 +215,7 @@
     db.alatZadnji = n;
   }
   function Core(db) {
-    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {}; if (!Array.isArray(db.alati)) db.alati = []; if (!Array.isArray(db.alatZah)) db.alatZah = []; if (!Array.isArray(db.alatIzd)) db.alatIzd = []; alInv(db);
+    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {}; if (!Array.isArray(db.alati)) db.alati = []; if (!Array.isArray(db.alatZah)) db.alatZah = []; if (!Array.isArray(db.alatIzd)) db.alatIzd = []; if (!Array.isArray(db.alatGrupe)) db.alatGrupe = []; alInv(db);
     db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {};
     db.slreq = db.slreq || [];
     db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
@@ -492,14 +492,32 @@
       if (b.id && !o0) return 'Alat nije pronađen.';
       if (!naziv) return 'Upišite naziv alata.';
       if (foto && (!otpName(foto) || (exists && !exists(foto)) || (!(o0 && o0.foto === foto) && !otpOwn(u.id, foto)))) return 'Fotografija nije pronađena. Dodajte je ponovno.';
+      const grupa = String(b.grupa || '');
+      if (db.alatGrupe.length && !grupa) return 'Odaberite grupu alata.';
+      if (grupa && !db.alatGrupe.some(g => g.id === grupa)) return 'Odaberite grupu alata s popisa.';
       if (!o0 && !nabava) return 'Odaberite datum nabave alata.';
       if (nabava && !alIso(nabava)) return svIso(nabava) ? 'Datum nabave ne može biti u budućnosti.' : 'Neispravan datum nabave.';
       const now = Date.now();
-      if (o0) { Object.assign(o0, { naziv, nabava: nabava || o0.nabava || '', opis, foto, updated: now, updatedBy: u.id }); return o0; }
+      if (o0) { Object.assign(o0, { naziv, grupa, nabava: nabava || o0.nabava || '', opis, foto, updated: now, updatedBy: u.id }); return o0; }
       alInv(db); db.alatZadnji = (+db.alatZadnji || 0) + 1;
-      const o = { id: alRid(), inv: alInvBr(db.alatZadnji), naziv, nabava, oznaka: '', opis, foto, ts: now, by: u.id, uid: null, site: '', since: now, pred: null,
+      const o = { id: alRid(), inv: alInvBr(db.alatZadnji), naziv, grupa, nabava, oznaka: '', opis, foto, ts: now, by: u.id, uid: null, site: '', since: now, pred: null,
         put: [{ id: alRid(), ts: now, datum: todayIso(), from: '', to: 'skl', site: AL_SKL, nap: 'Alat unesen u popis', by: u.id, potvBy: u.id, pnap: '' }] };
       db.alati.push(o); return o;
+    }
+    /* GRUPE ALATA: upisuje izdavatelj alata; radnik prvo bira grupu pa vidi alate iz nje */
+    const alGrupe = () => db.alatGrupe.slice().sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr', { numeric: true })).map(g => ({ id: g.id, naziv: g.naziv, n: db.alati.filter(o => o.grupa === g.id).length }));
+    function alGrupaSave(u, b) {
+      if (!alIzd(u)) return 'Grupe alata uređuje izdavatelj alata.';
+      const naziv = svT(b.naziv, 80), id = String(b.id || ''), g0 = id ? db.alatGrupe.find(g => g.id === id) : null;
+      if (id && !g0) return 'Grupa nije pronađena.'; if (!naziv) return 'Upišite naziv grupe alata.';
+      if (db.alatGrupe.some(g => g !== g0 && g.naziv.toLocaleLowerCase('hr') === naziv.toLocaleLowerCase('hr'))) return 'Grupa „' + naziv + '” već postoji.';
+      if (g0) { g0.naziv = naziv; return g0; } const g = { id: alRid(), naziv, ts: Date.now(), by: u.id }; db.alatGrupe.push(g); return g;
+    }
+    function alGrupaDelete(u, id) {
+      if (!alIzd(u)) return 'Grupe alata uređuje izdavatelj alata.';
+      const i = db.alatGrupe.findIndex(g => g.id === id); if (i < 0) return 'Grupa nije pronađena.';
+      const n = db.alati.filter(o => o.grupa === id).length; if (n) return 'Grupa ima alata (' + n + '). Prvo ih premjestite u drugu grupu (Uredi alat).';
+      db.alatGrupe.splice(i, 1); return { ok: 1 };
     }
     function alDelete(u, id) {
       if (!alIzd(u)) return 'Alat briše samo izdavatelj alata.';
@@ -582,7 +600,7 @@
       o.uid = null; o.site = ''; o.since = now; o.pred = null; return { o, from };
     }
     const alPutV = e => ({ ...e, fromName: e.from ? alWho(e.from) : '', toName: alWho(e.to), byName: nameOf(e.by), potvName: nameOf(e.potvBy) });
-    const alView = (o, adm) => ({ id: o.id, inv: o.inv || '', nabava: o.nabava || '', naziv: o.naziv, oznaka: o.oznaka || '', opis: o.opis, foto: o.foto, uid: o.uid, name: o.uid ? nameOf(o.uid) : '', site: o.site, since: o.since,
+    const alView = (o, adm) => ({ id: o.id, inv: o.inv || '', grupa: o.grupa || '', nabava: o.nabava || '', naziv: o.naziv, oznaka: o.oznaka || '', opis: o.opis, foto: o.foto, uid: o.uid, name: o.uid ? nameOf(o.uid) : '', site: o.site, since: o.since,
       lok: o.uid ? o.site : AL_SKL, pred: o.pred ? { ...o.pred, fromName: alWho(o.pred.from), toName: alWho(o.pred.to), byName: nameOf(o.pred.by) } : null,
       put: adm ? (o.put || []).map(alPutV) : undefined });
     const alList = (u, adm) => db.alati.slice().sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr', { numeric: true })).map(o => alView(o, adm));
@@ -865,7 +883,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alGrupe, alGrupaSave, alGrupaDelete, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata'; Core.alInv = alInv;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

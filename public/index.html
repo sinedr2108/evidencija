@@ -158,7 +158,8 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
   <div id="p-al" class="pg hide">
    <div id="alw"></div>
    <div class="card hide" id="alk" style="border-top:5px solid var(--gy)"></div>
-   <div id="all0"><div class="svf"><div><label for="alq">Traži alat</label><input id="alq" type="search" maxlength="60" placeholder="Naziv ili inventarni broj"></div><div><label for="alf">Prikaži</label><select id="alf"><option value="">Svi alati</option><option value="moji">Alati koje ja dužim</option><option value="skl">Alati u skladištu</option></select></div></div>
+   <div id="algw"><label for="alg">1. Odaberite grupu alata</label><select id="alg"></select></div>
+   <div id="all0" class="hide"><div class="svf"><div><label for="alq">Traži alat</label><input id="alq" type="search" maxlength="60" placeholder="Naziv ili inventarni broj"></div><div><label for="alf">Prikaži</label><select id="alf"><option value="">Svi alati</option><option value="moji">Alati koje ja dužim</option><option value="skl">Alati u skladištu</option></select></div></div>
     <div class="mu" id="aln" style="margin:8px 0 6px"></div><div id="all"></div></div>
   </div>
   <div id="p-sh" class="pg hide">
@@ -262,8 +263,8 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    </div>
    <div class="uh" data-h="al">
    <h3>ALAT</h3>
-   <ol><li>Otvara se <b>popis svih alata</b> s fotografijom i mjestom gdje se alat trenutno nalazi (gradilište i tko ga duži, ili <b>Skladište alata</b>). Alat možete potražiti po nazivu ili inventarnom broju (SA-…), a izbornik <b>Prikaži</b> nudi i samo alate koje vi dužite ili samo one u skladištu.</li>
-   <li>Dodirnite alat i otvara se <b>kartica alata</b>: fotografija (dodir je povećava), tipke <b>Zaduži alat</b> i <b>Vrati alat</b> i ispod njih gdje je alat i tko ga duži. <b>← Natrag na popis</b> (ili tipka natrag na mobitelu) vraća na popis.</li>
+   <ol><li>Prvo odaberite <b>grupu alata</b> (npr. Električni alat) ili <b>Svi alati</b>. Tek tada se otvara popis alata iz te grupe s fotografijom i mjestom gdje se alat trenutno nalazi (gradilište i tko ga duži, ili <b>Skladište alata</b>). Alat možete potražiti po nazivu ili inventarnom broju (SA-…), a izbornik <b>Prikaži</b> nudi i samo alate koje vi dužite ili samo one u skladištu.</li>
+   <li>Dodirnite alat i otvara se <b>kartica alata</b>: fotografija (dodir je povećava), tipka <b>Zaduži alat</b> (ili <b>Vrati alat</b> ako taj alat dužite vi) i ispod njih gdje je alat i tko ga duži. <b>← Natrag na popis</b> (ili tipka natrag na mobitelu) vraća na popis.</li>
    <li><b>Zaduži alat</b>: odaberite gradilište na koje vam treba alat (neobavezno), po želji upišite napomenu i kliknite <b>Pošalji zahtjev</b>. Ako je alat u Skladištu alata, zahtjev ide <b>izdavatelju alata</b>; ako ga netko duži, zahtjev ide <b>tom radniku</b>. Dok zahtjev čeka, možete od njega odustati.</li>
    <li>Kad netko traži alat koji vi dužite, na vrhu stranice ALAT (i sa zvonom na tipki ALAT) vidite zahtjev. <b>Predaj alat</b> otvara predaju s već odabranim radnikom i gradilištem; <b>Odbij</b> odbija zahtjev (radnik dobije obavijest).</li>
    <li><b>Vrati alat</b> (samo za alat koji dužite): odaberite <b>kome</b> ga dajete (radnik ili Skladište alata), <b>gradilište</b> i <b>datum predaje</b>, po želji napomenu, i kliknite <b>Predaj alat</b>. Dok primatelj ne potvrdi primitak, alat i dalje dužite vi; predaju do tada možete poništiti.</li>
@@ -378,6 +379,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <div class="card hide" id="aalf" style="border-top:5px solid var(--gy)"><h2 style="margin-top:0" id="aalft">Novi alat</h2>
     <label for="aaln">Naziv alata</label><input id="aaln" maxlength="120" placeholder="npr. Bušilica Hilti TE 30">
     <div class="mu" id="aalinv" style="margin-top:8px"></div>
+    <label for="aalgr">Grupa alata</label><select id="aalgr"></select>
     <label for="aalb">Datum nabave</label><input type="date" id="aalb">
     <label for="aald">Opis (neobavezno)</label><textarea id="aald" rows="2" maxlength="1000"></textarea>
     <label>Fotografija alata</label><input type="file" id="aalc" accept="image/*" capture="environment" class="hide"><input type="file" id="aalg" accept="image/*" class="hide">
@@ -387,9 +389,11 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
     <div class="fl" style="flex-wrap:wrap;margin-top:8px"><button class="sm pri" id="aalsave">Spremi alat</button><button class="sm" id="aalx">Odustani</button></div></div>
    <div class="card hide" id="aalk" style="border-top:5px solid var(--gy)"></div>
    <div id="aal0">
+    <details class="card hide" id="aagw"><summary style="cursor:pointer;font-weight:600">Grupe alata</summary><div class="mu" style="margin-top:6px">Radnik u ALAT-u prvo bira grupu, pa vidi alate iz nje (ili Svi alati). Grupa s alatima ne može se obrisati.</div>
+     <div class="fl" style="margin-top:8px"><input id="aagn" maxlength="80" placeholder="Naziv nove grupe (npr. Električni alat)"><button class="sm pri" id="aaga">Dodaj</button></div><div class="msg" id="aagm"></div><div id="aagl"></div></details>
     <h2>Popis alata</h2>
     <div class="svf"><div><label for="aalq">Traži alat</label><input id="aalq" type="search" maxlength="60" placeholder="Naziv ili inventarni broj"></div><div><label for="aals">Gdje je</label><select id="aals"><option value="">Svi alati</option><option value="skl">U skladištu</option><option value="zad">Zaduženi</option><option value="pred">Predaja čeka potvrdu</option></select></div></div>
-    <label for="aalr">Tko duži</label><select id="aalr"></select>
+    <div class="svf"><div><label for="aalgf">Grupa</label><select id="aalgf"></select></div><div><label for="aalr">Tko duži</label><select id="aalr"></select></div></div>
     <div class="mu" id="aaln2" style="margin:8px 0 6px"></div><div id="aall"></div>
     <h2>Put alata</h2>
     <details class="card" open><summary style="cursor:pointer;font-weight:600">Filteri</summary>
@@ -525,7 +529,8 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <div class="uh" data-h="aal">
    <h3>ALAT</h3>
    <ul><li>Na vrhu piše tko je <b>izdavatelj alata</b> (odabire se u <b>Postavke → Alat – izdavatelji alata</b>; ako nitko nije odabran, to su svi administratori). Izdavatelj prima zahtjeve za alat iz skladišta, izdaje alat, potvrđuje povrat u skladište i jedini unosi, uređuje i briše alate. Ostali s pravom Alat sve vide, ali ne mijenjaju.</li>
-   <li><b>+ Novi alat</b>: naziv, <b>datum nabave</b>, opis i fotografija (<b>Fotografiraj</b> ili <b>Odaberi iz galerije</b>). Aplikacija alatu sama dodjeljuje <b>inventarni broj</b> SA-001, SA-002… redom unosa (broj obrisanog alata se ne dodjeljuje ponovno). Novi alat je u <b>Skladištu alata</b>.</li>
+   <li><b>Grupe alata</b> (iznad popisa, vidi ih samo izdavatelj): dodajte grupe, preimenujte ih ili obrišite praznu grupu. Radnik u ALAT-u prvo bira grupu pa vidi alate iz nje (ili Svi alati). Dok nema nijedne grupe, radnik odmah vidi sve alate.</li>
+   <li><b>+ Novi alat</b>: naziv, <b>grupa alata</b>, <b>datum nabave</b>, opis i fotografija (<b>Fotografiraj</b> ili <b>Odaberi iz galerije</b>). Aplikacija alatu sama dodjeljuje <b>inventarni broj</b> SA-001, SA-002… redom unosa (broj obrisanog alata se ne dodjeljuje ponovno). Novi alat je u <b>Skladištu alata</b>.</li>
    <li>Iznad popisa su <b>zahtjevi za alat iz skladišta</b> (<b>Izdaj alat</b> otvara izdavanje s već odabranim radnikom i gradilištem, <b>Odbij</b> s razlogom), <b>povrati u skladište</b> koji čekaju vašu potvrdu (napomena, <b>Potvrdi primitak</b> ili <b>Nije primljeno</b>) i izdani alati koje radnik još nije potvrdio. Zvono na tipki ALAT pokazuje koliko toga čeka izdavatelja.</li>
    <li>Klik na alat otvara <b>karticu alata</b>: fotografija, gdje je i tko ga duži, tipke <b>Izdaj alat</b> (alat u skladištu: radnik, gradilište, datum; radnik mora potvrditi primitak), <b>Preuzmi u skladište</b> (kad je radnik donio alat, a nije ga predao u aplikaciji), <b>Uredi</b> i <b>Obriši</b>, a ispod put tog alata.</li>
    <li><b>Put alata</b>: svaka potvrđena predaja (datum predaje, tko je predao, kome, gradilište, napomena predaje, tko je i kada potvrdio primitak i njegova napomena), najnovije prvo. Filteri: alat, radnik (predao ili primio), gradilište i razdoblje.</li>
@@ -1407,7 +1412,8 @@ $('asvl').onclick=async e=>{const t=e.target,g=s=>{const b=t.closest('[data-'+s+
 $('asvfx').onclick=()=>{['asvfs','asvfw','asvod','asvdo','asvq'].forEach(i=>$(i).value='');$('asvsk').checked=false;svARender()};
 /* ALAT – ZADUŽIVANJE ALATA: popis alata, kartica alata (fotografija, Zaduži alat, Vrati alat, gdje je i tko duži), zahtjevi i potvrde primitka.
    Administrator s pravom Alat vidi put alata; izdavatelj alata (Postavke → Alat) izdaje alat iz skladišta i uređuje popis. */
-let alData={list:[],zah:[],radnici:[],izd:false,izdNames:[],skl:'Skladište alata'},alZn=0,alKid='',alFm='',alPre={},alOv=false,alEd='',alFoto='',alFBusy=0;
+let alG='';let alData={list:[],zah:[],radnici:[],izd:false,izdNames:[],skl:'Skladište alata',grupe:[]},alZn=0,alKid='',alFm='',alPre={},alOv=false,alEd='',alFoto='',alFBusy=0;
+const alGrN=id=>(alData.grupe.find(g=>g.id===id)||{}).naziv||'',alGrOk=(x,g)=>g==='*'||(g==='-'?!x.grupa:x.grupa===g);
 const alDm=d=>d?d.slice(8,10)+'.'+d.slice(5,7)+'.'+d.slice(0,4)+'.':'',alF=id=>alData.list.find(x=>x.id===id);
 async function drawAl(){const adm=me.role==='admin';try{alData=await api('GET','alati'+(adm?'?adm=1':''))}catch(e){return}
  if(!adm)alZn=alData.list.filter(o=>o.pred&&o.pred.to===me.id).length+alData.zah.filter(z=>z.moj).length;drawZnW();alRender()}
@@ -1422,7 +1428,7 @@ function alActs(adm){const L=[],keep='margin-top:8px';
  alData.list.forEach(o=>{const p=o.pred;if(!p)return;const zaMe=adm?p.to==='skl'&&alData.izd:p.to===me.id,odMe=adm?p.from==='skl'&&alData.izd:p.from===me.id;
   if(zaMe)L.push('<div class="card" style="border-left:5px solid var(--ac)"><b>'+E(p.fromName)+(p.to==='skl'?' vraća alat u skladište: ':' vam predaje alat: ')+'„'+E(o.naziv)+'”</b><div class="mu">'+(p.to==='skl'?'':E(p.site)+' · ')+'datum predaje '+alDm(p.datum)+' · poslano '+alTs(p.ts)+'</div>'+(p.nap?'<div>Napomena: '+E(p.nap)+'</div>':'')
    +'<label for="alpn_'+E(o.id)+'">Napomena uz primitak (neobavezno)</label><input id="alpn_'+E(o.id)+'" maxlength="300" placeholder="npr. oštećenje, nedostaje pribor"><div class="fl" style="flex-wrap:wrap;'+keep+'"><button class="sm pri" data-alpr="'+E(o.id)+'">Potvrdi primitak</button><button class="sm" data-alpo="'+E(o.id)+'">'+(adm?'Nije primljeno':'Nisam primio')+'</button></div></div>');
-  else if(odMe)L.push('<div class="card mu" style="border-left:5px solid var(--gy)">Predali ste alat „'+E(o.naziv)+'” → <b>'+E(p.toName)+'</b>'+(p.to==='skl'?'':' ('+E(p.site)+')')+', '+alDm(p.datum)+'. Čeka potvrdu primitka. <button class="sm" data-alpx="'+E(o.id)+'">Poništi predaju</button></div>')});
+  else if(odMe)L.push('<div class="card mu" style="border-left:5px solid var(--gy)">Predali ste alat „'+E(o.naziv)+'” → <b>'+E(p.toName)+'</b>'+(p.to==='skl'?'':' ('+E(p.site)+')')+', '+alDm(p.datum)+' Čeka potvrdu primitka. <button class="sm" data-alpx="'+E(o.id)+'">Poništi predaju</button></div>')});
  alData.zah.filter(z=>z.status==='open').forEach(z=>{const o=alF(z.alatId);if(!o)return;
   if(z.moj)L.push('<div class="card" style="border-left:5px solid #db2777"><b>'+E(z.name)+' traži alat „'+E(z.naziv)+'”</b>'+(adm?' iz skladišta':' koji dužite')+'<div class="mu">'+(z.site?'za gradilište '+E(z.site)+' · ':'')+alTs(z.ts)+'</div>'+(z.nap?'<div>Napomena: '+E(z.nap)+'</div>':'')
    +(o.pred?'<div class="mu" style="margin-top:6px">Predaja ovog alata već čeka potvrdu ('+E(o.pred.toName)+').</div>':'<div class="fl" style="flex-wrap:wrap;'+keep+'"><button class="sm pri" data-alzp="'+E(z.id)+'">'+(adm?'Izdaj alat':'Predaj alat')+'</button><button class="sm" data-alzo="'+E(z.id)+'">Odbij</button></div>')+'</div>');
@@ -1433,10 +1439,10 @@ function alActs(adm){const L=[],keep='margin-top:8px';
 /* kartica alata */
 function alKHtml(o,adm){const p=o.pred,mine=!adm&&o.uid===me.id,myZ=!adm&&alData.zah.find(z=>z.alatId===o.id&&z.uid===me.id&&z.status==='open'),predMe=!adm&&p&&p.to===me.id,izd=adm&&alData.izd;
  let h='<button class="sm" data-alkx="1">← Natrag na popis</button>'
-  +'<h2 style="margin:10px 0 2px">'+E(o.naziv)+'</h2>'+'<div class="mu">Inventarni broj: <b>'+E(o.inv)+'</b>'+(o.nabava?' · nabavljen '+alDm(o.nabava):'')+(o.oznaka?' · stara oznaka '+E(o.oznaka):'')+'</div>'
+  +'<h2 style="margin:10px 0 2px">'+E(o.naziv)+'</h2>'+'<div class="mu">Inventarni broj: <b>'+E(o.inv)+'</b>'+(o.grupa?' · '+E(alGrN(o.grupa)):'')+(o.nabava?' · nabavljen '+alDm(o.nabava):'')+(o.oznaka?' · stara oznaka '+E(o.oznaka):'')+'</div>'
   +(o.foto?'<a href="'+fotoSrc(o.foto)+'" data-fv="'+E(o.foto)+'|0" data-fvc="'+E(o.naziv)+'" style="display:block;margin-top:10px"><img src="'+fotoSrc(o.foto)+'" alt="Fotografija alata" style="display:block;width:100%;max-height:340px;object-fit:contain;border-radius:10px;background:#fff;border:1px solid var(--bd)"></a>':'<div class="mu" style="margin-top:10px;padding:28px;text-align:center;border:1px dashed var(--bd);border-radius:10px">Alat nema fotografiju.</div>')
   +(o.opis?'<div style="margin-top:8px;white-space:pre-wrap">'+E(o.opis)+'</div>':'');
- if(!adm)h+='<div class="fl" style="flex-wrap:wrap;margin-top:12px"><button class="big" data-alzz="'+E(o.id)+'" style="flex:1;min-width:140px;margin:0;background:var(--gy);color:#fff"'+(mine||myZ||predMe?' disabled':'')+'>Zaduži alat</button><button class="big" data-alvv="'+E(o.id)+'" style="flex:1;min-width:140px;margin:0;background:var(--ac);color:#fff"'+(!mine||p?' disabled':'')+'>Vrati alat</button></div>';
+ if(!adm)h+='<div class="fl" style="flex-wrap:wrap;margin-top:12px">'+(mine?'':'<button class="big" data-alzz="'+E(o.id)+'" style="flex:1;min-width:140px;margin:0;background:var(--gy);color:#fff"'+(myZ||predMe?' disabled':'')+'>Zaduži alat</button>')+(mine?'<button class="big" data-alvv="'+E(o.id)+'" style="flex:1;min-width:140px;margin:0;background:var(--ac);color:#fff"'+(p?' disabled':'')+'>Vrati alat</button>':'')+'</div>';
  else if(izd)h+='<div class="fl" style="flex-wrap:wrap;margin-top:12px">'+(!o.uid&&!p?'<button class="sm pri" data-alii="'+E(o.id)+'">Izdaj alat</button>':'')+(o.uid&&!p?'<button class="sm" data-alpp="'+E(o.id)+'">Preuzmi u skladište</button>':'')+'<button class="sm" data-ale="'+E(o.id)+'">Uredi</button><button class="sm" data-alx="'+E(o.id)+'">Obriši</button></div>';
  h+='<div style="margin-top:12px;padding:10px;border-radius:10px;background:var(--bg)"><div>Trenutno se nalazi: <b>'+E(o.lok)+'</b></div><div>Duži: <b>'+(o.uid?E(o.name):'nitko (alat je u skladištu)')+'</b></div>'+(o.since?'<div class="mu">od '+alTs(o.since)+'</div>':'')
   +(p?'<div style="margin-top:6px;color:var(--ac)">Predaja čeka potvrdu: '+E(p.fromName)+' → <b>'+E(p.toName)+'</b>'+(p.to==='skl'?'':' ('+E(p.site)+')')+', '+alDm(p.datum)+'</div>':'')+'</div>';
@@ -1465,15 +1471,22 @@ function alRender(){const adm=me.role==='admin',P=adm?'aal':'al';
  const keep={};document.querySelectorAll('#'+P+'w input[id^="alpn_"]').forEach(i=>{if(i.value)keep[i.id]=i.value});
  $(P+'w').innerHTML=alActs(adm);for(const k in keep)if($(k))$(k).value=keep[k];
  const o=alKid&&alF(alKid);$(P+'k').classList.toggle('hide',!o);if(o&&!document.querySelector('#'+P+'k .otedit'))$(P+'k').innerHTML=alKHtml(o,adm);else if(o&&!$(P+'k').innerHTML)$(P+'k').innerHTML=alKHtml(o,adm);
- $(adm?'aal0':'all0').classList.toggle('hide',!!o);
- if(!adm){const q=$('alq').value.trim().toLocaleLowerCase('hr'),f=$('alf').value,L=alData.list.filter(x=>(!q||(x.naziv+' '+x.inv+' '+x.oznaka).toLocaleLowerCase('hr').includes(q))&&(!f||(f==='moji'?x.uid===me.id:!x.uid)));
-  $('aln').textContent=alData.list.length?'Prikazano '+L.length+' od '+alData.list.length+' alata. Dodirnite alat za karticu.':'';
-  $('all').innerHTML=L.length?L.map(alRow).join(''):'<div class="card mu">'+(alData.list.length?'Nema alata za odabrane filtere.':'Popis alata je prazan. Alate unosi izdavatelj alata.')+'</div>';return}
+ if(adm)$('aal0').classList.toggle('hide',!!o);
+ if(!adm){const G=alData.grupe,sel=$('alg'),nb=alData.list.filter(x=>!x.grupa).length;
+  sel.innerHTML='<option value="">– odaberite grupu alata –</option>'+G.map(g=>'<option value="'+E(g.id)+'">'+E(g.naziv)+' ('+g.n+')</option>').join('')+(nb&&G.length?'<option value="-">Bez grupe ('+nb+')</option>':'')+'<option value="*">Svi alati ('+alData.list.length+')</option>';
+  if(alG&&[...sel.options].some(x=>x.value===alG))sel.value=alG;else{alG=G.length?'':'*';sel.value=alG}
+  $('algw').classList.toggle('hide',!!o||!G.length);$('all0').classList.toggle('hide',!!o||!alG);
+  const q=$('alq').value.trim().toLocaleLowerCase('hr'),f=$('alf').value,L=alData.list.filter(x=>alGrOk(x,alG||'*')&&(!q||(x.naziv+' '+x.inv+' '+x.oznaka).toLocaleLowerCase('hr').includes(q))&&(!f||(f==='moji'?x.uid===me.id:!x.uid)));
+  $('aln').textContent=alData.list.length?'Prikazano '+L.length+' alata'+(alG&&alG!=='*'?' u grupi '+(alG==='-'?'Bez grupe':alGrN(alG)):'')+'. Dodirnite alat za karticu.':'';
+  $('all').innerHTML=L.length?L.map(alRow).join(''):'<div class="card mu">'+(alData.list.length?(alG&&alG!=='*'?'U ovoj grupi nema alata za odabrane filtere.':'Nema alata za odabrane filtere.'):'Popis alata je prazan. Alate unosi izdavatelj alata.')+'</div>';return}
  $('aali').innerHTML='Izdavatelj alata: <b>'+E(alData.izdNames.join(', ')||'–')+'</b>'+(me.full?' (mijenja se u Postavke → Alat – izdavatelji alata)':'')+(alData.izd?'':'. Popis alata uređuje i zahtjeve za alat iz skladišta rješava izdavatelj alata.');
  $('aalnw').classList.toggle('hide',!alData.izd||!!o);
  {const hs=new Map(alData.radnici.map(r=>[r.id,r.name]));alData.list.forEach(x=>{if(x.uid)hs.set(x.uid,x.name)});fill($('aalr'),[...hs],'Svi')}
- const q=$('aalq').value.trim().toLocaleLowerCase('hr'),st=$('aals').value,hw=$('aalr').value;
- const L=alData.list.filter(x=>(!q||(x.naziv+' '+x.inv+' '+x.oznaka).toLocaleLowerCase('hr').includes(q))&&(!st||(st==='skl'?!x.uid:st==='zad'?!!x.uid:!!x.pred))&&(!hw||x.uid===hw));
+ $('aagw').classList.toggle('hide',!alData.izd);
+ $('aagl').innerHTML=alData.grupe.length?alData.grupe.map(g=>'<div class="row"><div><b>'+E(g.naziv)+'</b> <span class="mu">alata: '+g.n+'</span></div><span><button class="sm" data-aagr="'+E(g.id)+'">Preimenuj</button> <button class="sm" data-aagx="'+E(g.id)+'">Obriši</button></span></div>').join(''):'<div class="mu" style="margin-top:6px">Još nema grupa. Dok ih nema, radnik odmah vidi sve alate.</div>';
+ fill($('aalgf'),alData.grupe.map(g=>[g.id,g.naziv]).concat(alData.list.some(x=>!x.grupa)&&alData.grupe.length?[['-','Bez grupe']]:[]),'Sve grupe');
+ const q=$('aalq').value.trim().toLocaleLowerCase('hr'),st=$('aals').value,hw=$('aalr').value,gf=$('aalgf').value;
+ const L=alData.list.filter(x=>(!q||(x.naziv+' '+x.inv+' '+x.oznaka).toLocaleLowerCase('hr').includes(q))&&(!st||(st==='skl'?!x.uid:st==='zad'?!!x.uid:!!x.pred))&&(!hw||x.uid===hw)&&(!gf||alGrOk(x,gf)));
  $('aaln2').textContent='Prikazano '+L.length+' od '+alData.list.length+' alata · u skladištu: '+alData.list.filter(x=>!x.uid).length+' · zaduženo: '+alData.list.filter(x=>x.uid).length;
  $('aall').innerHTML=L.length?L.map(alRow).join(''):'<div class="card mu">'+(alData.list.length?'Nema alata za odabrane filtere.':'Popis alata je prazan.'+(alData.izd?' Dodajte alat gumbom + Novi alat.':''))+'</div>';
  /* put alata s filterima */
@@ -1515,11 +1528,13 @@ async function alClick(e){const t=e.target,g=s=>{const b=t.closest('[data-'+s+']
   await drawAl();if(adm)loadZn()}catch(x){toast(x.message)}}
 ['p-al','p-aal'].forEach(i=>{$(i).addEventListener('click',alClick);$(i).addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.alk)alKOpen(e.target.dataset.alk)});
  $(i).addEventListener('change',e=>{if(e.target.id==='alvt'){const w=$('alvsw');if(w)w.classList.toggle('hide',e.target.value==='skl')}})});
-$('alq').oninput=alRender;$('alf').onchange=alRender;$('aalq').oninput=alRender;['aals','aalr','aapa','aapw','aaps','aapod','aapdo'].forEach(i=>$(i).onchange=alRender);
+$('alq').oninput=alRender;$('alf').onchange=alRender;$('alg').onchange=()=>{alG=$('alg').value;alRender()};$('aalgf').onchange=alRender;
+$('aaga').onclick=async()=>{try{await api('POST','alati-grupe',{naziv:$('aagn').value});$('aagn').value='';say('aagm','Grupa je dodana.',1);await drawAl()}catch(x){say('aagm',x.message)}};
+$('aagl').onclick=async e=>{const r=e.target.closest('[data-aagr]'),x=e.target.closest('[data-aagx]');try{if(r){const g=alData.grupe.find(y=>y.id===r.dataset.aagr),n=await pr('Novi naziv grupe:',g.naziv);if(n===null)return;await api('POST','alati-grupe',{id:g.id,naziv:n})}else if(x){const g=alData.grupe.find(y=>y.id===x.dataset.aagx);if(!await cf('Obrisati grupu „'+g.naziv+'”?'))return;await api('DELETE','alati-grupe/'+g.id)}else return;await drawAl()}catch(y){say('aagm',y.message)}};$('aalq').oninput=alRender;['aals','aalr','aapa','aapw','aaps','aapod','aapdo'].forEach(i=>$(i).onchange=alRender);
 $('aapfx').onclick=()=>{['aapa','aapw','aaps','aapod','aapdo'].forEach(i=>$(i).value='');alRender()};
 /* izdavatelj: unos i izmjena alata s fotografijom */
 function alFThumb(){$('aalth').innerHTML=alFoto?'<span style="position:relative"><img src="'+(alFoto.startsWith('data:')?alFoto:fotoSrc(alFoto))+'" alt="" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"><button class="x" id="aalfx" aria-label="Makni fotografiju" style="position:absolute;top:-8px;right:-8px;width:30px;height:30px;font-size:16px">✕</button></span>':'<span class="mu">Nema fotografije.</span>'}
-function alFOpen(o){alEd=o?o.id:'';$('aaln').value=o?o.naziv:'';$('aalb').value=o?o.nabava||'':today();$('aalb').max=today();$('aalinv').innerHTML=o?'Inventarni broj: <b>'+E(o.inv)+'</b>':'Inventarni broj (SA-…) dodjeljuje se automatski pri spremanju.';$('aald').value=o?o.opis||'':'';alFoto=o?o.foto||'':'';alFThumb();
+function alFOpen(o){alEd=o?o.id:'';$('aalgr').innerHTML='<option value="">'+(alData.grupe.length?'– odaberite grupu –':'(nema grupa)')+'</option>'+alData.grupe.map(g=>'<option value="'+E(g.id)+'">'+E(g.naziv)+'</option>').join('');$('aalgr').value=o&&o.grupa||'';$('aaln').value=o?o.naziv:'';$('aalb').value=o?o.nabava||'':today();$('aalb').max=today();$('aalinv').innerHTML=o?'Inventarni broj: <b>'+E(o.inv)+'</b>':'Inventarni broj (SA-…) dodjeljuje se automatski pri spremanju.';$('aald').value=o?o.opis||'':'';alFoto=o?o.foto||'':'';alFThumb();
  $('aalft').textContent=o?'Izmjena alata: '+o.naziv:'Novi alat';$('aalf').classList.remove('hide');$('aalf').classList.add('otedit');window.scrollTo(0,0);$('aaln').focus()}
 const alFClose=()=>{alEd='';alFoto='';$('aalf').classList.add('hide');$('aalf').classList.remove('otedit')};
 $('aalnew').onclick=()=>alFOpen(null);$('aalx').onclick=alFClose;
@@ -1528,7 +1543,7 @@ $('aalcb').onclick=()=>$('aalc').click();$('aalgb').onclick=()=>$('aalg').click(
 $('aalth').onclick=e=>{if(e.target.closest('#aalfx')){alFoto='';alFThumb()}};
 $('aalsave').onclick=async()=>{if(alFBusy)return;const B=$('aalsave');if(!$('aaln').value.trim())return say('aalm','Upišite naziv alata.');alFBusy=1;B.disabled=true;
  try{let f=alFoto;if(f&&f.startsWith('data:')){B.textContent='Šaljem fotografiju…';f=(await api('POST','alati/foto',{data:f})).f;alFoto=f}
-  const r=await api('POST','alati',{id:alEd,naziv:$('aaln').value,nabava:$('aalb').value,opis:$('aald').value,foto:f});toast(alEd?'Alat je spremljen.':'Alat je dodan u Skladište alata pod brojem '+r.inv+'.');alFClose();await drawAl()}
+  const r=await api('POST','alati',{id:alEd,naziv:$('aaln').value,grupa:$('aalgr').value,nabava:$('aalb').value,opis:$('aald').value,foto:f});toast(alEd?'Alat je spremljen.':'Alat je dodan u Skladište alata pod brojem '+r.inv+'.');alFClose();await drawAl()}
  catch(x){say('aalm',x.message)}finally{alFBusy=0;B.disabled=false;B.textContent='Spremi alat'}};
 /* Postavke → Alat – izdavatelji alata */
 async function drawAiz(){try{const r=await api('GET','alati-izd'),RL={admin:'administrator',vod:'voditelj radova',user:'radnik'};
