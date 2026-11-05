@@ -887,13 +887,14 @@ function htmlBlocks(html){const box=document.createElement('div');box.innerHTML=
   else if(n.tagName==='B')out.push({h:cellText(n)});else if(n.tagName==='DIV'&&n.children.length&&!n.classList.contains('mu'))walk(n);else{const t=cellText(n);if(t)out.push({p:t})}})};walk(box);return out}
 /* Preuzimanje datoteka (Excel, CSV, PDF, fotografije): na mobitelu se datoteka ne otvara preko cijele aplikacije (gdje nema tipke natrag),
    nego se nudi prozor „Otvori / podijeli” (sustavni izbornik: Excel, Datoteke, e-mail…) i „Spremi na uređaj”, uz tipku Natrag. */
-const isMob=()=>{try{return matchMedia('(pointer:coarse)').matches||matchMedia('(display-mode: standalone)').matches||!!navigator.standalone}catch(e){return false}};
+/* mobitel/tablet = dodirni zaslon bez miša; instalirana aplikacija na računalu (standalone) preuzima kao i preglednik */
+const isMob=()=>{try{return isIOS()||(matchMedia('(pointer:coarse)').matches&&!matchMedia('(any-pointer:fine)').matches)}catch(e){return false}};
 function blobSave(b,name){const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000)}
 let foB=null;
 function foShow(b,name){const fl=new File([b],name,{type:b.type||'application/octet-stream'});let sh=false;try{sh=!!(navigator.canShare&&navigator.canShare({files:[fl]}))}catch(e){}
  foB={b,name,fl};$('fon').textContent=name;$('fos').classList.toggle('hide',!sh);$('fost').classList.toggle('hide',!sh);$('fod').className=(sh?'sm':'big')+(sh&&isIOS()?' hide':'');$('fod').style.width='100%';
  $('fo').classList.remove('hide');ovOpen(()=>{$('fo').classList.add('hide');foB=null})}
-$('fos').onclick=async()=>{if(!foB)return;try{await navigator.share({files:[foB.fl],title:foB.name})}catch(e){if(e&&e.name!=='AbortError')toast('Dijeljenje nije uspjelo. Pokušajte „Spremi na uređaj”.')}};
+$('fos').onclick=async()=>{if(!foB)return;try{await navigator.share({files:[foB.fl],title:foB.name})}catch(e){if(e&&e.name!=='AbortError'&&foB){blobSave(foB.b,foB.name);toast('Dijeljenje nije uspjelo, datoteka je spremljena na uređaj.')}}};
 $('fod').onclick=()=>{if(foB)blobSave(foB.b,foB.name)};$('fox').onclick=ovClose;$('fo').onclick=e=>{if(e.target.id==='fo')ovClose()};
 async function fileOut(src,name){let b;
  try{const r=await fetch(src,{credentials:'same-origin'});if(!r.ok){let m='Preuzimanje nije uspjelo.';try{m=(await r.json()).e||m}catch(e){}return toast(m)}
