@@ -205,8 +205,17 @@
     if (o.status === 'cancelled' && o.cancel) bl.push({ h: 'Nalog je otkazan' }, { p: (o.cancel.name || '') + ', ' + nmDt(o.cancel.ts) + (o.cancel.note ? ' – ' + o.cancel.note : '') });
     return { title: 'Radni nalog ' + o.broj + ' – ' + o.klijent, footer: ((firma && firma.naziv) || 'TiDy Connect') + ' – servis, radni nalog ' + o.broj, info, blocks: bl, header: svHeader(firma) };
   };
+  /* INVENTARNI BROJ ALATA: SA-001, SA-002… redom unosa; db.alatZadnji pamti zadnji dodijeljeni broj, pa se broj obrisanog alata ne dodjeljuje ponovno.
+     Alati bez broja (uneseni prije ove izmjene) dobivaju ga redom unosa. */
+  const alInvBr = n => 'SA-' + String(n).padStart(3, '0');
+  function alInv(db) {
+    if (!Array.isArray(db.alati)) return; let n = +db.alatZadnji || 0;
+    db.alati.forEach(o => { const m = /^SA-(\d+)$/.exec(o.inv || ''); if (m) n = Math.max(n, +m[1]); });
+    db.alati.filter(o => !o.inv).sort((a, b) => a.ts - b.ts).forEach(o => { o.inv = alInvBr(++n); });
+    db.alatZadnji = n;
+  }
   function Core(db) {
-    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {}; if (!Array.isArray(db.alati)) db.alati = []; if (!Array.isArray(db.alatZah)) db.alatZah = []; if (!Array.isArray(db.alatIzd)) db.alatIzd = [];
+    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {}; if (!Array.isArray(db.alati)) db.alati = []; if (!Array.isArray(db.alatZah)) db.alatZah = []; if (!Array.isArray(db.alatIzd)) db.alatIzd = []; alInv(db);
     db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {};
     db.slreq = db.slreq || [];
     db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
@@ -479,14 +488,16 @@
     const alSmije = (u, o) => o.uid ? o.uid === u.id : alIzd(u);
     function alSave(u, b, exists) {
       if (!alIzd(u)) return 'Popis alata uređuje samo izdavatelj alata (Postavke → Alat).';
-      const naziv = svT(b.naziv, 120), oznaka = svT(b.oznaka, 60), opis = svT(b.opis, 1000), foto = String(b.foto || ''), o0 = b.id ? alFind(String(b.id)) : null;
+      const naziv = svT(b.naziv, 120), nabava = String(b.nabava || ''), opis = svT(b.opis, 1000), foto = String(b.foto || ''), o0 = b.id ? alFind(String(b.id)) : null;
       if (b.id && !o0) return 'Alat nije pronađen.';
       if (!naziv) return 'Upišite naziv alata.';
       if (foto && (!otpName(foto) || (exists && !exists(foto)) || (!(o0 && o0.foto === foto) && !otpOwn(u.id, foto)))) return 'Fotografija nije pronađena. Dodajte je ponovno.';
-      if (oznaka && db.alati.some(x => x !== o0 && x.oznaka && x.oznaka.toLocaleLowerCase('hr') === oznaka.toLocaleLowerCase('hr'))) return 'Alat s oznakom „' + oznaka + '” već postoji.';
+      if (!o0 && !nabava) return 'Odaberite datum nabave alata.';
+      if (nabava && !alIso(nabava)) return svIso(nabava) ? 'Datum nabave ne može biti u budućnosti.' : 'Neispravan datum nabave.';
       const now = Date.now();
-      if (o0) { Object.assign(o0, { naziv, oznaka, opis, foto, updated: now, updatedBy: u.id }); return o0; }
-      const o = { id: alRid(), naziv, oznaka, opis, foto, ts: now, by: u.id, uid: null, site: '', since: now, pred: null,
+      if (o0) { Object.assign(o0, { naziv, nabava: nabava || o0.nabava || '', opis, foto, updated: now, updatedBy: u.id }); return o0; }
+      alInv(db); db.alatZadnji = (+db.alatZadnji || 0) + 1;
+      const o = { id: alRid(), inv: alInvBr(db.alatZadnji), naziv, nabava, oznaka: '', opis, foto, ts: now, by: u.id, uid: null, site: '', since: now, pred: null,
         put: [{ id: alRid(), ts: now, datum: todayIso(), from: '', to: 'skl', site: AL_SKL, nap: 'Alat unesen u popis', by: u.id, potvBy: u.id, pnap: '' }] };
       db.alati.push(o); return o;
     }
@@ -571,7 +582,7 @@
       o.uid = null; o.site = ''; o.since = now; o.pred = null; return { o, from };
     }
     const alPutV = e => ({ ...e, fromName: e.from ? alWho(e.from) : '', toName: alWho(e.to), byName: nameOf(e.by), potvName: nameOf(e.potvBy) });
-    const alView = (o, adm) => ({ id: o.id, naziv: o.naziv, oznaka: o.oznaka, opis: o.opis, foto: o.foto, uid: o.uid, name: o.uid ? nameOf(o.uid) : '', site: o.site, since: o.since,
+    const alView = (o, adm) => ({ id: o.id, inv: o.inv || '', nabava: o.nabava || '', naziv: o.naziv, oznaka: o.oznaka || '', opis: o.opis, foto: o.foto, uid: o.uid, name: o.uid ? nameOf(o.uid) : '', site: o.site, since: o.since,
       lok: o.uid ? o.site : AL_SKL, pred: o.pred ? { ...o.pred, fromName: alWho(o.pred.from), toName: alWho(o.pred.to), byName: nameOf(o.pred.by) } : null,
       put: adm ? (o.put || []).map(alPutV) : undefined });
     const alList = (u, adm) => db.alati.slice().sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr', { numeric: true })).map(o => alView(o, adm));
@@ -579,7 +590,7 @@
     function alZList(u, adm) {
       const t = Date.now() - 30 * 864e5;
       return db.alatZah.filter(z => { const o = alFind(z.alatId); if (adm) return z.status === 'open' && !!o; if (z.uid === u.id) return z.status === 'open' || (z.odg && z.odg.ts > t); return z.status === 'open' && o && o.uid === u.id; })
-        .sort((a, b) => b.ts - a.ts).slice(0, 500).map(z => { const o = alFind(z.alatId) || {}; return { ...z, name: nameOf(z.uid), naziv: o.naziv || '(obrisan alat)', oznaka: o.oznaka || '', toName: o.uid ? nameOf(o.uid) : AL_SKL, toSkl: !o.uid, moj: !!o.id && z.status === 'open' && alSmije(u, o), odg: z.odg ? { ...z.odg, name: nameOf(z.odg.by) } : null }; });
+        .sort((a, b) => b.ts - a.ts).slice(0, 500).map(z => { const o = alFind(z.alatId) || {}; return { ...z, name: nameOf(z.uid), naziv: o.naziv || '(obrisan alat)', oznaka: o.inv || '', toName: o.uid ? nameOf(o.uid) : AL_SKL, toSkl: !o.uid, moj: !!o.id && z.status === 'open' && alSmije(u, o), odg: z.odg ? { ...z.odg, name: nameOf(z.odg.by) } : null }; });
     }
     /* značke: radniku zahtjevi za alat koji duži i predaje koje čekaju njegovu potvrdu; izdavatelju isto za skladište */
     const alZnW = uid => db.alatZah.filter(z => { const o = z.status === 'open' && alFind(z.alatId); return o && o.uid === uid; }).length + db.alati.filter(o => o.pred && o.pred.to === uid).length;
@@ -856,6 +867,6 @@
     }
     return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
-  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata';
+  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata'; Core.alInv = alInv;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
 })(typeof window !== 'undefined' ? window : this);

@@ -113,11 +113,11 @@ function seed(){
    zap:{ts:N-h,by:'u_marko',datum:dd(-1),sati:2.5,radovi:'Očišćen izmjenjivač vanjske jedinice, zamijenjen senzor temperature, resetirana greška.\nUređaj radi ispravno.',items:[{naziv:'Senzor temperature NTC 10k',jm:'kom',kol:1},{naziv:'Rashladni plin R32',jm:'kg',kol:0.5}],napomena:'Preporuka: servis vanjske jedinice svakih 6 mjeseci.',stanje:'ok',potvrdio:'Ivo Perković',files:[]},pregled:null,cancel:null,dorada:[]}];
  /* primjeri alata (bez fotografija): u skladištu, kod Ivana, kod Marka, predaja Marko → Ivan čeka potvrdu, zahtjev Marka za Ivanov alat */
  const P=(id,dat,from,to,site,nap,pnap,x)=>({id,ts:N-x*h,datum:dd(-x),from,to,site,nap,by:from==='skl'||!from?'u_admin':from,pts:N-x*h,potvBy:to==='skl'?'u_admin':to,pnap});
- S.alati=[{id:'al1',naziv:'Bušilica Hilti TE 30',oznaka:'AL-001',opis:'S kovčegom i 3 svrdla SDS-plus.',foto:'',ts:N-20*h,by:'u_admin',uid:'u_ivan',site:'Ugljan',since:N-6*h,pred:null,put:[P('p1','', '', 'skl','Skladište alata','Alat unesen u popis','',20),P('p2','','skl','u_marko','Granosta','','',12),P('p3','','u_marko','u_ivan','Ugljan','Treba nova svrdla','Kovčeg malo oštećen',6)]},
-  {id:'al2',naziv:'Kutna brusilica Makita 230',oznaka:'AL-002',opis:'',foto:'',ts:N-20*h,by:'u_admin',uid:null,site:'',since:N-20*h,pred:null,put:[P('p4','','','skl','Skladište alata','Alat unesen u popis','',20)]},
-  {id:'al3',naziv:'Laserski nivelir Bosch GLL 3-80',oznaka:'AL-003',opis:'Sa stativom.',foto:'',ts:N-20*h,by:'u_admin',uid:'u_marko',site:'Granosta',since:N-3*h,pred:{id:'pr1',from:'u_marko',to:'u_ivan',site:'Hidropneumat',datum:dd(0),nap:'Stativ je u autu',ts:N-h/6,by:'u_marko',zid:''},put:[P('p5','','','skl','Skladište alata','Alat unesen u popis','',20),P('p6','','skl','u_marko','Granosta','','',3)]},
-  {id:'al4',naziv:'Agregat Honda 3 kW',oznaka:'AL-004',opis:'',foto:'',ts:N-20*h,by:'u_admin',uid:'u_ivan',site:'Ugljan',since:N-2*h,pred:null,put:[P('p7','','','skl','Skladište alata','Alat unesen u popis','',20),P('p8','','skl','u_ivan','Ugljan','','',2)]}];
- S.alatZah=[{id:'az1',alatId:'al4',uid:'u_marko',site:'Granosta',nap:'Treba mi sutra ujutro',ts:N-h/4,status:'open',to:'u_ivan',odg:null}];S.alatIzd=[];
+ S.alati=[{id:'al1',naziv:'Bušilica Hilti TE 30',inv:'SA-001',nabava:dd(-40),oznaka:'',opis:'S kovčegom i 3 svrdla SDS-plus.',foto:'',ts:N-20*h,by:'u_admin',uid:'u_ivan',site:'Ugljan',since:N-6*h,pred:null,put:[P('p1','', '', 'skl','Skladište alata','Alat unesen u popis','',20),P('p2','','skl','u_marko','Granosta','','',12),P('p3','','u_marko','u_ivan','Ugljan','Treba nova svrdla','Kovčeg malo oštećen',6)]},
+  {id:'al2',naziv:'Kutna brusilica Makita 230',inv:'SA-002',nabava:dd(-80),oznaka:'',opis:'',foto:'',ts:N-20*h,by:'u_admin',uid:null,site:'',since:N-20*h,pred:null,put:[P('p4','','','skl','Skladište alata','Alat unesen u popis','',20)]},
+  {id:'al3',naziv:'Laserski nivelir Bosch GLL 3-80',inv:'SA-003',nabava:dd(-120),oznaka:'',opis:'Sa stativom.',foto:'',ts:N-20*h,by:'u_admin',uid:'u_marko',site:'Granosta',since:N-3*h,pred:{id:'pr1',from:'u_marko',to:'u_ivan',site:'Hidropneumat',datum:dd(0),nap:'Stativ je u autu',ts:N-h/6,by:'u_marko',zid:''},put:[P('p5','','','skl','Skladište alata','Alat unesen u popis','',20),P('p6','','skl','u_marko','Granosta','','',3)]},
+  {id:'al4',naziv:'Agregat Honda 3 kW',inv:'SA-004',nabava:dd(-160),oznaka:'',opis:'',foto:'',ts:N-20*h,by:'u_admin',uid:'u_ivan',site:'Ugljan',since:N-2*h,pred:null,put:[P('p7','','','skl','Skladište alata','Alat unesen u popis','',20),P('p8','','skl','u_ivan','Ugljan','','',2)]}];
+ S.alatZadnji=4;S.alatZah=[{id:'az1',alatId:'al4',uid:'u_marko',site:'Granosta',nap:'Treba mi sutra ujutro',ts:N-h/4,status:'open',to:'u_ivan',odg:null}];S.alatIzd=[];
  return S}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}
 function initDb(){db=null;_c=null;try{const s=localStorage.getItem(KEY);if(s)db=JSON.parse(s)}catch(e){}if(!db){db=seed();persist()}
@@ -225,7 +225,7 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='POST alati'&&s[2]==='primi')alR(C.alPrimi(U,s[1],b.nap))
  else if(key==='POST alati'&&s[2]==='odbij')alR(C.alPOdbij(U,s[1],b.nap))
  else if(key==='POST alati'&&s[2]==='preuzmi'){alA();alR(C.alPreuzmi(U,s[1],b))}
- else if(key==='POST alati'){alA();const o=alR(C.alSave(U,b,f=>!!DF[f]));out={ok:1,id:o.id}}
+ else if(key==='POST alati'){alA();const o=alR(C.alSave(U,b,f=>!!DF[f]));out={ok:1,id:o.id,inv:o.inv}}
  else if(key==='DELETE alati'){alA();alR(C.alDelete(U,s[1]))}
  else if(key==='GET alati-izd'){if(U.role!=='admin')fail('Samo za administratore.');out={kand:C.alIzdKand(),ids:db.alatIzd||[]}}
  else if(key==='PUT alati-izd'){if(U.role!=='admin')fail('Samo za administratore.');const k=C.alIzdKand().map(x=>x.id);db.alatIzd=[...new Set((b.ids||[]).map(String))].filter(id=>k.includes(id))}

@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=17;
+const DATA_VERSION=18;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -40,7 +40,8 @@ const MIGRATIONS={
   14:d=>{ /* NAUČNIK: Bolest i Odobren izostanak vrijede 0 sati */ (d.entries||[]).forEach(e=>{if(e.vrsta==='Bolest'||e.vrsta==='Odobren izostanak')e.hours=0}) },
   15:d=>{ /* PRIJENOS U SLJEDEĆI MJESEC: ručna vrijednost administratora {uid|mjesec: sati}; bez nje vrijedi višak sati za slobodan dan na kraju mjeseca */ if(!d.prijenosOut||typeof d.prijenosOut!=='object')d.prijenosOut={} },
   16:d=>{ /* SERVIS – RADNI NALOZI: nalozi koje administrator zadaje radnicima i zapisnici o izvršenom servisu; pravo grupe 'sv' */ if(!Array.isArray(d.servisi))d.servisi=[];if(!d.tvrtka||typeof d.tvrtka!=='object')d.tvrtka={naziv:'TiD-INTEL d.o.o.',adresa:'',oib:'',tel:'',email:'',web:'www.tid-intel.hr',iban:''} },
-  17:d=>{ /* ALAT – ZADUŽIVANJE ALATA: popis alata s putem alata, zahtjevi za zaduženje i izdavatelji alata (Postavke → Alat); pravo grupe 'al' */ if(!Array.isArray(d.alati))d.alati=[];if(!Array.isArray(d.alatZah))d.alatZah=[];if(!Array.isArray(d.alatIzd))d.alatIzd=[] }
+  17:d=>{ /* ALAT – ZADUŽIVANJE ALATA: popis alata s putem alata, zahtjevi za zaduženje i izdavatelji alata (Postavke → Alat); pravo grupe 'al' */ if(!Array.isArray(d.alati))d.alati=[];if(!Array.isArray(d.alatZah))d.alatZah=[];if(!Array.isArray(d.alatIzd))d.alatIzd=[] },
+  18:d=>{ /* ALAT: inventarni broj SA-001… (redom unosa, db.alatZadnji) i datum nabave (alat.nabava) */ require('./core.js').alInv(d);(d.alati||[]).forEach(o=>{if(o.nabava===undefined)o.nabava=''}) }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -397,7 +398,7 @@ R('GET','/api/alati',1,c=>{if(noNau(c))return;const adm=!!c.q.adm&&can(c.u,'al')
 R('POST','/api/alati/foto','al',c=>{if(!core.alIzd(c.u))return c.send(403,{e:'Fotografiju alata dodaje izdavatelj alata.'});const m=/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(c.b.data||''));
   const buf=m&&Buffer.from(m[1],'base64');if(!buf||buf.length<500||buf[0]!==0xFF||buf[1]!==0xD8)return c.send(400,{e:'Neispravna fotografija.'});
   const f='u-'+core.otpKey(c.u.id)+'-'+crypto.randomBytes(8).toString('hex')+'.jpg';fs.writeFileSync(otpPath(f),buf);c.send(200,{f})});
-R('POST','/api/alati','al',c=>{const o=core.alSave(c.u,c.b,f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1,id:o.id})});
+R('POST','/api/alati','al',c=>{const o=core.alSave(c.u,c.b,f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1,id:o.id,inv:o.inv})});
 R('DELETE','/api/alati/:id','al',c=>{const o=core.alDelete(c.u,c.p[0]);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1})});
 R('POST','/api/alati/:id/zahtjev',1,c=>{if(noAdm(c)||noNau(c))return;const r=core.alZahtjev(c.u,c.p[0],c.b);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1,toName:r.o.uid?core.nameOf(r.o.uid):'izdavatelj alata'});
   alPush(r.to,c.u.name+': zahtjev za zaduženje alata',r.o.naziv+(r.z.site?' · za gradilište '+r.z.site:'')+(r.z.nap?'\n'+r.z.nap:''))});
