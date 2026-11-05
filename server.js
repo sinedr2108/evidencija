@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=16;
+const DATA_VERSION=17;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -39,7 +39,8 @@ const MIGRATIONS={
   13:d=>{ /* PUSH OBAVIJESTI: ključevi poslužitelja (VAPID) i pretplate preglednika {uid,endpoint,keys,prijava,ts} */ if(!Array.isArray(d.push))d.push=[];if(!d.vapid||!d.vapid.pub)d.vapid=Push.vapidKeys() },
   14:d=>{ /* NAUČNIK: Bolest i Odobren izostanak vrijede 0 sati */ (d.entries||[]).forEach(e=>{if(e.vrsta==='Bolest'||e.vrsta==='Odobren izostanak')e.hours=0}) },
   15:d=>{ /* PRIJENOS U SLJEDEĆI MJESEC: ručna vrijednost administratora {uid|mjesec: sati}; bez nje vrijedi višak sati za slobodan dan na kraju mjeseca */ if(!d.prijenosOut||typeof d.prijenosOut!=='object')d.prijenosOut={} },
-  16:d=>{ /* SERVIS – RADNI NALOZI: nalozi koje administrator zadaje radnicima i zapisnici o izvršenom servisu; pravo grupe 'sv' */ if(!Array.isArray(d.servisi))d.servisi=[];if(!d.tvrtka||typeof d.tvrtka!=='object')d.tvrtka={naziv:'TiD-INTEL d.o.o.',adresa:'',oib:'',tel:'',email:'',web:'www.tid-intel.hr',iban:''} }
+  16:d=>{ /* SERVIS – RADNI NALOZI: nalozi koje administrator zadaje radnicima i zapisnici o izvršenom servisu; pravo grupe 'sv' */ if(!Array.isArray(d.servisi))d.servisi=[];if(!d.tvrtka||typeof d.tvrtka!=='object')d.tvrtka={naziv:'TiD-INTEL d.o.o.',adresa:'',oib:'',tel:'',email:'',web:'www.tid-intel.hr',iban:''} },
+  17:d=>{ /* ALAT – ZADUŽIVANJE ALATA: popis alata s putem alata, zahtjevi za zaduženje i izdavatelji alata (Postavke → Alat); pravo grupe 'al' */ if(!Array.isArray(d.alati))d.alati=[];if(!Array.isArray(d.alatZah))d.alatZah=[];if(!Array.isArray(d.alatIzd))d.alatIzd=[] }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -137,6 +138,9 @@ const AKT={
   'POST /api/narudzbe':{f:(c,_,o)=>[c.b.send?'Narudžba materijala poslana':'Narudžba materijala spremljena (nije poslana)',String(c.b.site||'')+' · primatelj: '+core.nameOf(String(c.b.adminId||''))+' · stavki: '+(Array.isArray(c.b.items)?c.b.items.length:0)]},
   'DELETE /api/narudzbe/:id':{pre:c=>db.narudzbe.find(x=>x.id===c.p[0]&&x.uid===c.u.id),f:(c,o)=>['Obrisana neposlana narudžba materijala',o?o.site+' · stavki: '+o.items.length:'']},
   'POST /api/servisi/:id/zapisnik':{pre:c=>db.servisi.find(x=>x.id===c.p[0]),f:(c,o)=>['Zapisnik o izvršenom servisu',o?o.broj+' · '+o.klijent+' · '+o.adresa+(c.b.stanje==='dalje'?'\nPotrebna dodatna intervencija':''):'']},
+  'POST /api/alati/:id/zahtjev':{pre:c=>db.alati.find(x=>x.id===c.p[0]),f:(c,o)=>['Zahtjev za zaduženje alata',(o?o.naziv+' · trenutno: '+(o.uid?core.nameOf(o.uid)+' · '+o.site:Core.AL_SKL):'')+(c.b.site?'\nZa gradilište: '+aktS(c.b.site):'')+aktN(aktS(c.b.nap))]},
+  'POST /api/alati/:id/predaj':{pre:c=>db.alati.find(x=>x.id===c.p[0]),f:(c,o)=>['Predaja alata (čeka potvrdu)',(o?o.naziv:'')+' → '+(c.b.to==='skl'?Core.AL_SKL:core.nameOf(String(c.b.to||''))+' · '+aktS(c.b.site))+' · '+aktD(c.b.datum)+aktN(aktS(c.b.nap))]},
+  'POST /api/alati/:id/primi':{pre:c=>{const o=db.alati.find(x=>x.id===c.p[0]);return o&&o.pred?{n:o.naziv,p:{...o.pred}}:null},f:(c,x)=>['Potvrđen primitak alata',x?x.n+' · od: '+(x.p.from==='skl'?Core.AL_SKL:core.nameOf(x.p.from))+' · '+x.p.site+' · '+aktD(x.p.datum):'']},
   'POST /api/password':{f:()=>['Promjena lozinke','']}
 };
 /* push osim onima s Aktivnostima ide i administratorima te grupe (g) i primatelju narudžbe (to) */
@@ -184,7 +188,7 @@ R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'))
     gorq:db.gorq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
     sitereq:db.sitereq.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
     poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,fromName:core.nameOf(p.from)})),
-    svOtv:core.svOtvoreni(c.u.id),go:a?null:core.goStats(c.u.id,new Date().getFullYear()),godatumi:a?[]:[...core.goDates(c.u.id)],rev})});
+    svOtv:core.svOtvoreni(c.u.id),alZn:core.alZnW(c.u.id),go:a?null:core.goStats(c.u.id,new Date().getFullYear()),godatumi:a?[]:[...core.goDates(c.u.id)],rev})});
 R('GET','/api/rev',1,c=>c.send(200,{rev}));
 function linkSl(e){db.slreq.forEach(q=>{if(q.entryId===e.id)q.entryId=null});if(e.vrsta!=='Slobodan dan')return;
   const m=e.date.slice(0,7),mine=db.entries.filter(x=>x.uid===e.uid&&x!==e);
@@ -296,14 +300,14 @@ R('PUT','/api/otpremnice/:id/site','ot',c=>{const r=core.otpSetSite(c.u,c.p[0],S
 R('POST','/api/otpremnice/:id/pitanje','ot',c=>{const r=core.otpAsk(c.u,c.p[0],String(c.b.f||''),c.b.text);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
 R('POST','/api/otpremnice/:id/odgovor',1,c=>{const r=core.otpAnswer(c.u,c.p[0],String(c.b.pid||''),c.b.text);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
 R('GET','/api/otpremnice/foto/:f',1,c=>{const f=c.p[0];if(!core.otpName(f)||!fs.existsSync(otpPath(f)))return c.send(404,{e:'Fotografija nije pronađena.'});
-  if(!can(c.u,'ot')&&!core.otpOwn(c.u.id,f))return c.send(403,{e:'Nemate pristup.'});
-  const o=db.otpremnice.find(x=>x.files.includes(f)),nm='otpremnica-'+(o?o.date+'-'+o.site.replace(/[^\w\u00C0-\u024F-]+/g,'_')+'-'+(o.files.indexOf(f)+1):f.slice(0,-4))+'.jpg';
+  if(!can(c.u,'ot')&&!core.otpOwn(c.u.id,f)&&!core.alFoto(f))return c.send(403,{e:'Nemate pristup.'});
+  const o=db.otpremnice.find(x=>x.files.includes(f)),nm=core.alFoto(f)&&!o?'alat-'+f.slice(0,-4):'otpremnica-'+(o?o.date+'-'+o.site.replace(/[^\w\u00C0-\u024F-]+/g,'_')+'-'+(o.files.indexOf(f)+1):f.slice(0,-4))+'.jpg';
   c.raw(200,fs.readFileSync(otpPath(f)),{'Content-Type':'image/jpeg','Cache-Control':'private, max-age=31536000',...(c.q.dl?{'Content-Disposition':"attachment; filename=\"otpremnica.jpg\"; filename*=UTF-8''"+encodeURIComponent(nm)}:{})})});
 R('DELETE','/api/otpremnice/:id',1,c=>{const r=core.otpDelete(c.u,c.p[0],can(c.u,'ot'));if(typeof r==='string')return c.send(400,{e:r});
   r.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();c.send(200,{ok:1})});
 /* poslane fotografije koje nisu postale dio otpremnice (prekinuto slanje) brišu se nakon 2 dana */
 const otpSweep=()=>{try{const old=core.otpExpire(Date.now());if(old.length){old.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();console.log('Obrisane otpremnice starije od '+core.OTP_DANA+' dana, fotografija: '+old.length)}}catch(e){console.error(e)}
-  try{const used=new Set(db.otpremnice.flatMap(o=>o.files).concat(core.svFiles()));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
+  try{const used=new Set(db.otpremnice.flatMap(o=>o.files).concat(core.svFiles(),core.alFiles()));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
 otpSweep();setInterval(otpSweep,6*36e5);
 R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/close',1,c=>{if(noAdm(c))return;if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
@@ -382,11 +386,42 @@ async function svMailN(o){const z=o.zap;if(!z||!z.potpis||!z.emailN)return{};con
   catch(e){z.mailNErr=String(e.message).slice(0,200);save();return{mailN:'PDF naručitelju nije poslan: '+e.message}}}
 R('POST','/api/servisi/:id/zapisnik',1,async c=>{if(noAdm(c)||noNau(c))return;const o=core.svZapisnik(c.u,{...c.b,id:c.p[0]},f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});save();
   const r=await svMail(o),n=await svMailN(o);c.send(200,{ok:1,mail:r.mail,mailTo:r.mailTo||'',mailN:n.mailN||'',mailNTo:n.mailNTo||''})});
+/* ===== ALAT – ZADUŽIVANJE ALATA =====
+   Svi prijavljeni vide popis alata i gdje se koji alat nalazi. Radnik šalje zahtjev "Zaduži alat": za alat u Skladištu alata izdavatelju
+   alata (Postavke → Alat), inače radniku koji alat trenutno duži. "Vrati alat" predaje alat drugom radniku ili u skladište; primatelj
+   potvrđuje primitak (s napomenom) i tek tada se mijenja tko duži alat. Administratori s pravom 'al' vide put svakog alata. */
+const alUrl=ids=>ids.map(id=>db.users.find(u=>u.id===id)).filter(Boolean);
+const alPush=(ids,title,body)=>{const w=[],a=[];alUrl([].concat(ids)).forEach(u=>(u.role==='user'?w:a).push(u.id));if(w.length)pushU(w,title,body,'/#al');if(a.length)pushU(a,title,body,'/#aal')};
+R('GET','/api/alati',1,c=>{if(noNau(c))return;const adm=!!c.q.adm&&can(c.u,'al');
+  c.send(200,{list:core.alList(c.u,adm),zah:core.alZList(c.u,adm),radnici:core.svRadnici(),izd:core.alIzd(c.u),izdNames:core.alIzdIds().map(core.nameOf),skl:Core.AL_SKL})});
+R('POST','/api/alati/foto','al',c=>{if(!core.alIzd(c.u))return c.send(403,{e:'Fotografiju alata dodaje izdavatelj alata.'});const m=/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(c.b.data||''));
+  const buf=m&&Buffer.from(m[1],'base64');if(!buf||buf.length<500||buf[0]!==0xFF||buf[1]!==0xD8)return c.send(400,{e:'Neispravna fotografija.'});
+  const f='u-'+core.otpKey(c.u.id)+'-'+crypto.randomBytes(8).toString('hex')+'.jpg';fs.writeFileSync(otpPath(f),buf);c.send(200,{f})});
+R('POST','/api/alati','al',c=>{const o=core.alSave(c.u,c.b,f=>fs.existsSync(otpPath(f)));if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1,id:o.id})});
+R('DELETE','/api/alati/:id','al',c=>{const o=core.alDelete(c.u,c.p[0]);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1})});
+R('POST','/api/alati/:id/zahtjev',1,c=>{if(noAdm(c)||noNau(c))return;const r=core.alZahtjev(c.u,c.p[0],c.b);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1,toName:r.o.uid?core.nameOf(r.o.uid):'izdavatelj alata'});
+  alPush(r.to,c.u.name+': zahtjev za zaduženje alata',r.o.naziv+(r.z.site?' · za gradilište '+r.z.site:'')+(r.z.nap?'\n'+r.z.nap:''))});
+R('POST','/api/alati/zahtjev/:id/odustani',1,c=>{const r=core.alZOdustani(c.u,c.p[0]);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
+R('POST','/api/alati/zahtjev/:id/odbij',1,c=>{const r=core.alZOdbij(c.u,c.p[0],c.b.nap);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1})});
+R('POST','/api/alati/:id/predaj',1,c=>{if(noNau(c))return;const r=core.alPredaj(c.u,c.p[0],c.b);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1});
+  const p=r.o.pred;alPush(r.to,c.u.name+': predaja alata – potvrdite primitak',r.o.naziv+' · '+(p.to==='skl'?Core.AL_SKL:p.site)+' · '+core.dfmt(p.datum)+(p.nap?'\n'+p.nap:''))});
+R('POST','/api/alati/:id/odustani',1,c=>{const r=core.alPOdustani(c.u,c.p[0]);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1});
+  alPush(r.p.to==='skl'?core.alIzdIds():[r.p.to],'Predaja alata poništena',r.o.naziv+' · predavao/la: '+c.u.name)});
+R('POST','/api/alati/:id/primi',1,c=>{if(noNau(c))return;const r=core.alPrimi(c.u,c.p[0],c.b.nap);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1});
+  alPush(r.p.from==='skl'?[r.p.by]:[r.p.from],c.u.name+': primitak alata potvrđen',r.o.naziv+' · '+r.e.site+(r.e.pnap?'\nNapomena: '+r.e.pnap:''))});
+R('POST','/api/alati/:id/odbij',1,c=>{const r=core.alPOdbij(c.u,c.p[0],c.b.nap);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1});
+  if(r.p.from==='skl')alPush([r.p.by],c.u.name+' nije potvrdio/la primitak alata',r.o.naziv+(r.nap?'\n'+r.nap:''))});
+R('POST','/api/alati/:id/preuzmi','al',c=>{const r=core.alPreuzmi(c.u,c.p[0],c.b);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,{ok:1});
+  alPush([r.from],'Alat je vraćen u skladište',r.o.naziv+' · upisao/la: '+c.u.name)});
+/* izdavatelji alata (Postavke → Alat): odgovaraju na zahtjeve za alat iz skladišta, izdaju i primaju alat i uređuju popis */
+R('GET','/api/alati-izd',2,c=>c.send(200,{kand:core.alIzdKand(),ids:db.alatIzd||[]}));
+R('PUT','/api/alati-izd',2,c=>{const k=core.alIzdKand().map(x=>x.id);db.alatIzd=[...new Set((Array.isArray(c.b.ids)?c.b.ids:[]).map(String))].filter(id=>k.includes(id));save();c.send(200,{ok:1})});
 /* ZNAČKE na tipkama početne stranice administracije: broj primljenih, a neobrađenih stavki po grupi (samo ono što korisnik smije vidjeti) */
 R('GET','/api/znacke',1,c=>{const u=c.u,z={};
   if(can(u,'ot'))z.aot=db.otpremnice.filter(o=>o.ts>(u.otpSeen||0)&&o.uid!==u.id).length;
   if(can(u,'nm'))z.anm=core.nmNeobr(u);
   if(can(u,'sv'))z.asv=core.svCekaPregled();
+  if(can(u,'al'))z.aal=core.alZnA(u);
   const op=k=>db[k].filter(q=>q.status==='open').length;
   if(can(u,'sl'))z.asl=op('slreq');if(can(u,'go'))z.ago=op('gorq');if(can(u,'iz'))z.aiz=op('requests');if(can(u,'gr'))z.agr=op('sitereq');
   z.aev=(z.asl||0)+(z.ago||0)+(z.aiz||0)+(z.agr||0);c.send(200,z)});

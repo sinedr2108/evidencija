@@ -206,7 +206,7 @@
     return { title: 'Radni nalog ' + o.broj + ' – ' + o.klijent, footer: ((firma && firma.naziv) || 'TiDy Connect') + ' – servis, radni nalog ' + o.broj, info, blocks: bl, header: svHeader(firma) };
   };
   function Core(db) {
-    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {};
+    db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {}; if (!Array.isArray(db.alati)) db.alati = []; if (!Array.isArray(db.alatZah)) db.alatZah = []; if (!Array.isArray(db.alatIzd)) db.alatIzd = [];
     db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {};
     db.slreq = db.slreq || [];
     db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
@@ -463,6 +463,129 @@
     const svCekaPregled = () => db.servisi.filter(o => o.status === 'done').length;
     const svOtvoreni = uid => db.servisi.filter(o => o.status === 'open' && o.uids.includes(uid)).length;
     const svFiles = () => db.servisi.flatMap(o => o.zap ? (o.zap.files || []).concat(o.zap.potpis ? [o.zap.potpis] : []) : []);
+    /* ALAT – ZADUŽIVANJE ALATA: alat je u Skladištu alata (uid null) ili ga duži radnik (uid) na gradilištu (site).
+       Zahtjev "Zaduži alat" ide izdavatelju alata kad je alat u skladištu, a inače radniku koji alat trenutno duži.
+       Izdavatelji (db.alatIzd, Postavke → Alat; ako nitko nije odabran, svi administratori) izdaju alat iz skladišta, primaju ga natrag
+       i uređuju popis alata. Predaja ("Vrati alat" / "Izdaj alat") čeka potvrdu primatelja (o.pred), a potvrđena ulazi u put alata (o.put). */
+    const AL_SKL = 'Skladište alata';
+    const alRid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const alIzdKand = () => db.users.filter(u => !u.deleted && !u.disabled && !u.purged && canG(u, 'al')).map(u => ({ id: u.id, name: u.name, role: u.role })).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
+    const alIzdIds = () => { const k = alIzdKand(), L = (Array.isArray(db.alatIzd) ? db.alatIzd : []).filter(id => k.some(x => x.id === id)); return L.length ? L : k.filter(x => x.role === 'admin').map(x => x.id); };
+    const alIzd = u => !!u && alIzdIds().includes(u.id);
+    const alFind = id => db.alati.find(x => x.id === id);
+    const alWho = x => x === 'skl' ? AL_SKL : nameOf(x);
+    /* tko odgovara na zahtjev: radnik koji alat duži, a za alat u skladištu izdavatelji */
+    const alPrimatelji = o => o.uid ? [o.uid] : alIzdIds();
+    const alSmije = (u, o) => o.uid ? o.uid === u.id : alIzd(u);
+    function alSave(u, b, exists) {
+      if (!alIzd(u)) return 'Popis alata uređuje samo izdavatelj alata (Postavke → Alat).';
+      const naziv = svT(b.naziv, 120), oznaka = svT(b.oznaka, 60), opis = svT(b.opis, 1000), foto = String(b.foto || ''), o0 = b.id ? alFind(String(b.id)) : null;
+      if (b.id && !o0) return 'Alat nije pronađen.';
+      if (!naziv) return 'Upišite naziv alata.';
+      if (foto && (!otpName(foto) || (exists && !exists(foto)) || (!(o0 && o0.foto === foto) && !otpOwn(u.id, foto)))) return 'Fotografija nije pronađena. Dodajte je ponovno.';
+      if (oznaka && db.alati.some(x => x !== o0 && x.oznaka && x.oznaka.toLocaleLowerCase('hr') === oznaka.toLocaleLowerCase('hr'))) return 'Alat s oznakom „' + oznaka + '” već postoji.';
+      const now = Date.now();
+      if (o0) { Object.assign(o0, { naziv, oznaka, opis, foto, updated: now, updatedBy: u.id }); return o0; }
+      const o = { id: alRid(), naziv, oznaka, opis, foto, ts: now, by: u.id, uid: null, site: '', since: now, pred: null,
+        put: [{ id: alRid(), ts: now, datum: todayIso(), from: '', to: 'skl', site: AL_SKL, nap: 'Alat unesen u popis', by: u.id, potvBy: u.id, pnap: '' }] };
+      db.alati.push(o); return o;
+    }
+    function alDelete(u, id) {
+      if (!alIzd(u)) return 'Alat briše samo izdavatelj alata.';
+      const i = db.alati.findIndex(x => x.id === id); if (i < 0) return 'Alat nije pronađen.';
+      const [o] = db.alati.splice(i, 1), now = Date.now();
+      db.alatZah.forEach(z => { if (z.alatId === id && z.status === 'open') { z.status = 'cancelled'; z.odg = { ts: now, by: u.id, nap: 'Alat je obrisan iz popisa.' }; } });
+      return o;
+    }
+    const alIso = d => svIso(d) && d <= todayIso();
+    function alZahtjev(u, id, b) {
+      const o = alFind(id); if (!o) return 'Alat nije pronađen.';
+      if (o.uid === u.id) return 'Ovaj alat već dužite.';
+      if (o.pred && o.pred.to === u.id) return 'Ovaj alat vam je već predan. Potvrdite primitak.';
+      if (db.alatZah.some(z => z.alatId === id && z.uid === u.id && z.status === 'open')) return 'Zahtjev za ovaj alat već ste poslali.';
+      const site = svT(b.site, 100), nap = svT(b.nap, 300);
+      if (site && !(db.sites || []).includes(site)) return 'Odaberite gradilište s popisa.';
+      const z = { id: alRid(), alatId: id, uid: u.id, site, nap, ts: Date.now(), status: 'open', to: o.uid || 'skl', odg: null };
+      db.alatZah.push(z); return { z, o, to: alPrimatelji(o) };
+    }
+    const alZFind = id => db.alatZah.find(z => z.id === id);
+    function alZOdustani(u, zid) {
+      const z = alZFind(zid); if (!z || z.uid !== u.id || z.status !== 'open') return 'Zahtjev nije pronađen ili je već riješen.';
+      z.status = 'cancelled'; z.odg = { ts: Date.now(), by: u.id, nap: '' }; return z;
+    }
+    function alZOdbij(u, zid, nap) {
+      const z = alZFind(zid), o = z && alFind(z.alatId); if (!z || !o || z.status !== 'open') return 'Zahtjev nije pronađen ili je već riješen.';
+      if (!alSmije(u, o)) return 'Na ovaj zahtjev odgovara ' + (o.uid ? nameOf(o.uid) + ' (trenutno duži alat).' : 'izdavatelj alata.');
+      z.status = 'rejected'; z.odg = { ts: Date.now(), by: u.id, nap: svT(nap, 300) };
+      notify(z.uid, 'Zahtjev za alat „' + o.naziv + '” je odbio/la ' + nameOf(u.id) + (z.odg.nap ? ' (' + z.odg.nap + ')' : '') + '.', '');
+      return { z, o };
+    }
+    /* predaja: radnik koji duži alat daje ga drugom radniku ili vraća u skladište; izdavatelj izdaje alat iz skladišta */
+    function alPredaj(u, id, b) {
+      const o = alFind(id); if (!o) return 'Alat nije pronađen.';
+      if (o.pred) return 'Predaja ovog alata već čeka potvrdu primatelja (' + alWho(o.pred.to) + ').';
+      if (o.uid ? o.uid !== u.id : !alIzd(u)) return o.uid ? 'Alat može predati samo ' + nameOf(o.uid) + ' (trenutno ga duži).' : 'Alat iz skladišta izdaje izdavatelj alata.';
+      const to = String(b.to || ''), datum = String(b.datum || ''), nap = svT(b.nap, 300); let site = svT(b.site, 100);
+      if (to === 'skl') { if (!o.uid) return 'Alat je već u skladištu.'; site = AL_SKL; }
+      else {
+        if (!svRadnici().some(x => x.id === to)) return 'Odaberite kome predajete alat.';
+        if (to === o.uid) return 'Odaberite drugog radnika.';
+        if (!site) return 'Odaberite gradilište.';
+        if (!(db.sites || []).includes(site)) return 'Odaberite gradilište s popisa.';
+      }
+      if (!alIso(datum)) return svIso(datum) ? 'Datum predaje ne može biti u budućnosti.' : 'Odaberite datum predaje.';
+      const zid = String(b.zid || ''), z = zid ? alZFind(zid) : null;
+      o.pred = { id: alRid(), from: o.uid || 'skl', to, site, datum, nap, ts: Date.now(), by: u.id, zid: z && z.alatId === id ? zid : '' };
+      return { o, to: to === 'skl' ? alIzdIds() : [to] };
+    }
+    function alPOdustani(u, id) {
+      const o = alFind(id); if (!o || !o.pred) return 'Predaja nije pronađena ili je već potvrđena.';
+      if (o.pred.from === 'skl' ? !alIzd(u) : o.pred.from !== u.id) return 'Predaju može poništiti samo onaj tko predaje alat.';
+      const p = o.pred; o.pred = null; return { o, p };
+    }
+    const alPrimaSmije = (u, p) => p.to === 'skl' ? alIzd(u) : p.to === u.id;
+    function alPrimi(u, id, nap) {
+      const o = alFind(id); if (!o || !o.pred) return 'Predaja nije pronađena ili je već potvrđena.';
+      const p = o.pred; if (!alPrimaSmije(u, p)) return 'Primitak potvrđuje ' + (p.to === 'skl' ? 'izdavatelj alata.' : nameOf(p.to) + '.');
+      const now = Date.now(), e = { id: p.id, ts: now, datum: p.datum, from: p.from, to: p.to, site: p.site, nap: p.nap, by: p.by, pts: p.ts, potvBy: u.id, pnap: svT(nap, 300) };
+      if (!Array.isArray(o.put)) o.put = []; o.put.push(e);
+      o.uid = p.to === 'skl' ? null : p.to; o.site = p.to === 'skl' ? '' : p.site; o.since = now; o.pred = null;
+      db.alatZah.forEach(z => { if (z.alatId === id && z.status === 'open' && z.uid === o.uid) { z.status = 'done'; z.odg = { ts: now, by: p.by, nap: '' }; } });
+      return { o, p, e };
+    }
+    function alPOdbij(u, id, nap) {
+      const o = alFind(id); if (!o || !o.pred) return 'Predaja nije pronađena ili je već potvrđena.';
+      const p = o.pred; if (!alPrimaSmije(u, p)) return 'Primitak potvrđuje ' + (p.to === 'skl' ? 'izdavatelj alata.' : nameOf(p.to) + '.');
+      o.pred = null; nap = svT(nap, 300);
+      if (p.from !== 'skl') notify(p.from, nameOf(u.id) + ' nije potvrdio/la primitak alata „' + o.naziv + '”' + (nap ? ' (' + nap + ')' : '') + '. Alat i dalje dužite vi.', '');
+      return { o, p, nap };
+    }
+    /* izdavatelj sam upisuje da je alat vraćen u skladište (npr. radnik ga je donio, a nije ga predao u aplikaciji) */
+    function alPreuzmi(u, id, b) {
+      if (!alIzd(u)) return 'Alat u skladište preuzima izdavatelj alata.';
+      const o = alFind(id); if (!o) return 'Alat nije pronađen.'; if (!o.uid) return 'Alat je već u skladištu.';
+      const datum = String(b.datum || ''); if (!alIso(datum)) return svIso(datum) ? 'Datum ne može biti u budućnosti.' : 'Odaberite datum.';
+      const now = Date.now(), from = o.uid;
+      if (!Array.isArray(o.put)) o.put = [];
+      o.put.push({ id: alRid(), ts: now, datum, from, to: 'skl', site: AL_SKL, nap: '', by: u.id, pts: now, potvBy: u.id, pnap: svT(b.nap, 300), izd: true });
+      o.uid = null; o.site = ''; o.since = now; o.pred = null; return { o, from };
+    }
+    const alPutV = e => ({ ...e, fromName: e.from ? alWho(e.from) : '', toName: alWho(e.to), byName: nameOf(e.by), potvName: nameOf(e.potvBy) });
+    const alView = (o, adm) => ({ id: o.id, naziv: o.naziv, oznaka: o.oznaka, opis: o.opis, foto: o.foto, uid: o.uid, name: o.uid ? nameOf(o.uid) : '', site: o.site, since: o.since,
+      lok: o.uid ? o.site : AL_SKL, pred: o.pred ? { ...o.pred, fromName: alWho(o.pred.from), toName: alWho(o.pred.to), byName: nameOf(o.pred.by) } : null,
+      put: adm ? (o.put || []).map(alPutV) : undefined });
+    const alList = (u, adm) => db.alati.slice().sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr', { numeric: true })).map(o => alView(o, adm));
+    /* zahtjevi: radnik vidi svoje i one na koje on odgovara; administrator s pravom 'al' sve otvorene (odgovara samo izdavatelj za skladište) */
+    function alZList(u, adm) {
+      const t = Date.now() - 30 * 864e5;
+      return db.alatZah.filter(z => { const o = alFind(z.alatId); if (adm) return z.status === 'open' && !!o; if (z.uid === u.id) return z.status === 'open' || (z.odg && z.odg.ts > t); return z.status === 'open' && o && o.uid === u.id; })
+        .sort((a, b) => b.ts - a.ts).slice(0, 500).map(z => { const o = alFind(z.alatId) || {}; return { ...z, name: nameOf(z.uid), naziv: o.naziv || '(obrisan alat)', oznaka: o.oznaka || '', toName: o.uid ? nameOf(o.uid) : AL_SKL, toSkl: !o.uid, moj: !!o.id && z.status === 'open' && alSmije(u, o), odg: z.odg ? { ...z.odg, name: nameOf(z.odg.by) } : null }; });
+    }
+    /* značke: radniku zahtjevi za alat koji duži i predaje koje čekaju njegovu potvrdu; izdavatelju isto za skladište */
+    const alZnW = uid => db.alatZah.filter(z => { const o = z.status === 'open' && alFind(z.alatId); return o && o.uid === uid; }).length + db.alati.filter(o => o.pred && o.pred.to === uid).length;
+    const alZnA = u => alIzd(u) ? db.alatZah.filter(z => { const o = z.status === 'open' && alFind(z.alatId); return o && !o.uid; }).length + db.alati.filter(o => o.pred && o.pred.to === 'skl').length : 0;
+    const alFiles = () => db.alati.map(o => o.foto).filter(Boolean);
+    const alFoto = f => !!f && db.alati.some(o => o.foto === f);
     function otpSetSite(u, id, f, site) {
       const o = db.otpremnice.find(x => x.id === id); if (!o || !o.files.includes(f)) return 'Fotografija nije pronađena.';
       site = String(site || '').trim().slice(0, 100); if (!site) return 'Odaberite ili upišite gradilište.';
@@ -731,8 +854,8 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
-  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE;
+  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata';
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
 })(typeof window !== 'undefined' ? window : this);
