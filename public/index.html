@@ -1470,16 +1470,16 @@ function alRender(){const adm=me.role==='admin',P=adm?'aal':'al';
   $('all').innerHTML=L.length?L.map(alRow).join(''):'<div class="card mu">'+(alData.list.length?'Nema alata za odabrane filtere.':'Popis alata je prazan. Alate unosi izdavatelj alata.')+'</div>';return}
  $('aali').innerHTML='Izdavatelj alata: <b>'+E(alData.izdNames.join(', ')||'–')+'</b>'+(me.full?' (mijenja se u Postavke → Alat – izdavatelji alata)':'')+(alData.izd?'':'. Popis alata uređuje i zahtjeve za alat iz skladišta rješava izdavatelj alata.');
  $('aalnw').classList.toggle('hide',!alData.izd||!!o);
- {const hs=new Map();alData.list.forEach(x=>{if(x.uid)hs.set(x.uid,x.name)});fill($('aalr'),[...hs],'Svi')}
+ {const hs=new Map(alData.radnici.map(r=>[r.id,r.name]));alData.list.forEach(x=>{if(x.uid)hs.set(x.uid,x.name)});fill($('aalr'),[...hs],'Svi')}
  const q=$('aalq').value.trim().toLocaleLowerCase('hr'),st=$('aals').value,hw=$('aalr').value;
  const L=alData.list.filter(x=>(!q||(x.naziv+' '+x.oznaka).toLocaleLowerCase('hr').includes(q))&&(!st||(st==='skl'?!x.uid:st==='zad'?!!x.uid:!!x.pred))&&(!hw||x.uid===hw));
  $('aaln2').textContent='Prikazano '+L.length+' od '+alData.list.length+' alata · u skladištu: '+alData.list.filter(x=>!x.uid).length+' · zaduženo: '+alData.list.filter(x=>x.uid).length;
  $('aall').innerHTML=L.length?L.map(alRow).join(''):'<div class="card mu">'+(alData.list.length?'Nema alata za odabrane filtere.':'Popis alata je prazan.'+(alData.izd?' Dodajte alat gumbom + Novi alat.':''))+'</div>';
  /* put alata s filterima */
  fill($('aapa'),alData.list.map(x=>[x.id,x.naziv+(x.oznaka?' ('+x.oznaka+')':'')]),'Svi alati');
- const all=alData.list.flatMap(x=>(x.put||[]).map(e=>({...e,naziv:x.naziv,alatId:x.id}))),pw=new Map(),ps=new Set();
- all.forEach(e=>{[[e.from,e.fromName],[e.to,e.toName]].forEach(([id,n])=>{if(id&&id!=='skl')pw.set(id,n)});if(e.site)ps.add(e.site)});
- fill($('aapw'),[...pw],'Svi radnici');fill($('aaps'),[...ps].map(x=>[x,x]),'Sva gradilišta');
+ const all=alData.list.flatMap(x=>(x.put||[]).map(e=>({...e,naziv:x.naziv,alatId:x.id}))),pw=new Map(alData.radnici.map(r=>[r.id,r.name])),ps=new Set(me.sites);
+ all.forEach(e=>{[[e.from,e.fromName],[e.to,e.toName]].forEach(([id,n])=>{if(id&&id!=='skl')pw.set(id,n)});if(e.site&&e.site!==alData.skl)ps.add(e.site)});
+ fill($('aapw'),[...pw],'Svi radnici');fill($('aaps'),[...ps].map(x=>[x,x]).concat([[alData.skl,alData.skl]]),'Sva gradilišta');
  const A=$('aapa').value,W=$('aapw').value,S=$('aaps').value,od=$('aapod').value,dO=$('aapdo').value;
  const P2=all.filter(e=>(!A||e.alatId===A)&&(!W||e.from===W||e.to===W)&&(!S||e.site===S)&&(!od||e.datum>=od)&&(!dO||e.datum<=dO)).sort((a,b)=>a.datum<b.datum?1:a.datum>b.datum?-1:b.ts-a.ts);
  $('aapn').textContent='Zapisa: '+P2.length+(P2.length>500?' (prikazano zadnjih 500)':'');$('aapl').innerHTML=alPutT(P2.slice(0,500),true)}
