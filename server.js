@@ -213,6 +213,7 @@ R('POST','/api/slreq',1,c=>{if(noAdm(c)||noNau(c))return;const d=String(c.b.date
 R('POST','/api/slreq/:id/decide','sl',c=>{const q=db.slreq.find(x=>x.id===c.p[0]);if(!q||q.status!=='open')return c.send(404,{e:'Zahtjev nije pronađen ili je već riješen.'});
   q.status=c.b.approve?'approved':'rejected';q.note=String(c.b.note||'').trim().slice(0,200);q.decided=Date.now();q.decidedBy=c.u.id;save();c.send(200,{ok:1});
   pushU(q.uid,'Zahtjev za slobodan dan '+(c.b.approve?'prihvaćen':'odbijen'),aktD(q.date)+(q.note?' ('+q.note+')':''),'/#pt')});
+R('POST','/api/slreq/grupa','sl',c=>{const r=core.slGrupa(c.u.id,c.b);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,r)});
 R('PUT','/api/prijenos','iz',c=>{const u=db.users.find(x=>x.id===c.b.uid&&x.role==='user'&&!x.deleted),v=parseFloat(String(c.b.value).replace(',','.'));
   if(!u)return c.send(404,{e:'Radnik nije pronađen.'});if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   const k=u.id+'|'+c.b.month;
@@ -311,7 +312,7 @@ R('DELETE','/api/otpremnice/:id',1,c=>{const r=core.otpDelete(c.u,c.p[0],can(c.u
 const otpSweep=()=>{try{const old=core.otpExpire(Date.now());if(old.length){old.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();console.log('Obrisane otpremnice starije od '+core.OTP_DANA+' dana, fotografija: '+old.length)}}catch(e){console.error(e)}
   try{const used=new Set(db.otpremnice.flatMap(o=>o.files).concat(core.svFiles(),core.alFiles()));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
 otpSweep();setInterval(otpSweep,6*36e5);
-R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
+R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.concat(db.slreq).forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/close',1,c=>{if(noAdm(c))return;if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   const md=core.missingDays(c.u.id,c.b.month);if(md.length)return c.send(400,{e:'Unos se ne može završiti. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.'});
   const nm=core.noMealDays(c.u.id,c.b.month);if(nm.length)return c.send(400,{e:'Unos se ne može završiti. Odaberite topli obrok (uz bilo koji unos tog dana) za: '+nm.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.'});
