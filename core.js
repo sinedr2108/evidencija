@@ -217,7 +217,7 @@
   function Core(db) {
     db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {}; if (!Array.isArray(db.alati)) db.alati = []; if (!Array.isArray(db.alatZah)) db.alatZah = []; if (!Array.isArray(db.alatIzd)) db.alatIzd = []; if (!Array.isArray(db.alatGrupe)) db.alatGrupe = []; alInv(db);
     db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {};
-    db.slreq = db.slreq || [];
+    db.slreq = db.slreq || []; if (!Array.isArray(db.bezUnosa)) db.bezUnosa = [];
     db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
     const dfmt = d => d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.';
     /* radni dani (pon-pet, bez praznika) od-do, najvise 92 dana; null = neispravan raspon */
@@ -234,36 +234,38 @@
       const ukupno = +g.ukupno || 0, pocetno = +g.pocetno || 0, isk = pocetno + used;
       return { year: +year, ukupno, pocetno, iskoristeno: isk, preostalo: ukupno - isk };
     }
-    const missingDays = (uid, month) => { const have = new Set(db.entries.filter(e => e.uid === uid && e.date.startsWith(month)).map(e => e.date)), u = db.users.find(x => x.id === uid); if (u && u.nau) return []; return weekdays(month).filter(d => !have.has(d)); }; /* naučnik ne mora imati unos za svaki radni dan */
+    const missingDays = (uid, month) => { const bu = buDates(uid), have = new Set(db.entries.filter(e => e.uid === uid && e.date.startsWith(month)).map(e => e.date).concat([...bu])), u = db.users.find(x => x.id === uid); if (u && u.nau) return []; return weekdays(month).filter(d => !have.has(d)); }; /* naučnik ne mora imati unos za svaki radni dan */
     /* until: zadnji datum na koji se obavijest odnosi; dan poslije više se ne prikazuje na početnoj stranici */
     const notify = (uid, text, until) => { db.obav.push({ id: Math.random().toString(36).slice(2) + Date.now().toString(36), uid, text, ts: Date.now(), read: false, until: until || '' }); if (Core.onNotify) Core.onNotify(uid, text); };
-    const approval = (uid, date, ex) => db.slreq.find(q => q.uid === uid && q.status === 'approved' && q.date === date && (!q.entryId || q.entryId === ex));
-    /* SLOBODAN DAN BEZ ZAHTJEVA: administrator radnicima odobri dane (raspon od–do ili popis datuma, samo radni dani).
-       Za svaki dan nastaje odobren zahtjev (source 'admin'), pa radnik za taj dan može odabrati Slobodan dan i bez 8 sati.
-       Preskaču se dani koji već imaju unos, dani u završenom mjesecu i dani koji su već odobreni; zahtjev na čekanju za taj dan se prihvaća. */
-    function slGrupa(by, b) {
+    /* DAN BEZ UNOSA: administrator radniku odobri dan za koji se ništa ne upisuje (db.bezUnosa {id,uid,date,note,ts,by}).
+       Taj dan radnik ne može odabrati za unos, ne traži se za završetak mjeseca i nije na popisu Radnici bez unosa.
+       Preskaču se dani koji već imaju unos, već su označeni ili su u završenom mjesecu. */
+    const buDates = uid => new Set(db.bezUnosa.filter(x => x.uid === uid).map(x => x.date));
+    function buGrupa(by, b) {
       let dates;
-      if (Array.isArray(b.dates)) { const ok = s => /^\d{4}-\d{2}-\d{2}$/.test(s); dates = [...new Set(b.dates.map(String))].filter(ok).sort(); if (!dates.length || dates.length > 92) return 'Neispravni datumi.'; }
+      if (Array.isArray(b.dates)) { dates = [...new Set(b.dates.map(String))].filter(s => /^\d{4}-\d{2}-\d{2}$/.test(s)).sort(); if (!dates.length || dates.length > 92) return 'Neispravni datumi.'; }
       else { dates = rangeDates(String(b.from || ''), b.to ? String(b.to) : ''); if (!dates) return 'Neispravan raspon datuma (najviše 92 dana).'; if (!dates.length) return 'Odabrani datumi nisu radni dani.'; }
-      const ids = [...new Set(Array.isArray(b.uids) ? b.uids : [])].filter(id => db.users.some(u => u.id === id && u.role === 'user' && !u.nau && !u.disabled && !u.deleted));
+      const ids = [...new Set(Array.isArray(b.uids) ? b.uids : [])].filter(id => db.users.some(u => u.id === id && u.role === 'user' && !u.deleted));
       if (!ids.length) return 'Odaberite barem jednog radnika.';
       const note = String(b.note || '').trim().slice(0, 200), now = Date.now(); let radnika = 0, dana = 0, presk = 0;
       ids.forEach(id => {
-        const got = [];
+        const got = [], bu = buDates(id);
         dates.forEach(d => {
-          if (db.closed.includes(id + '|' + d.slice(0, 7)) || db.entries.some(e => e.uid === id && e.date === d)) { presk++; return; }
-          const q0 = db.slreq.find(q => q.uid === id && q.date === d && (q.status === 'open' || (q.status === 'approved' && !q.entryId)));
-          if (q0 && q0.status === 'approved') { presk++; return; }
-          if (q0) Object.assign(q0, { status: 'approved', note, decided: now, decidedBy: by });
-          else db.slreq.push({ id: Math.random().toString(36).slice(2) + now.toString(36) + got.length, uid: id, date: d, reason: note, ts: now, status: 'approved', source: 'admin', decided: now, decidedBy: by, note: '', entryId: null });
-          got.push(d);
+          if (bu.has(d) || db.closed.includes(id + '|' + d.slice(0, 7)) || db.entries.some(e => e.uid === id && e.date === d)) { presk++; return; }
+          db.bezUnosa.push({ id: Math.random().toString(36).slice(2) + now.toString(36) + got.length, uid: id, date: d, note, ts: now, by }); got.push(d);
         });
         if (!got.length) return; radnika++; dana += got.length;
-        notify(id, 'Administrator vam je odobrio slobodan dan: ' + (got.length === 1 ? dfmt(got[0]) : (got.length <= 5 ? got.map(dfmt).join(', ') : dfmt(got[0]) + ' – ' + dfmt(got[got.length - 1])) + ' (' + got.length + ' dana)') + (note ? ' – ' + note : '') + '. Za te dane u ŠIHTERICI možete odabrati Slobodan dan.', got[got.length - 1] < todayIso() ? todayIso() : got[got.length - 1]);
+        notify(id, 'Administrator je ' + (got.length === 1 ? 'dan ' + dfmt(got[0]) + ' označio kao dan bez unosa' : 'dane ' + (got.length <= 5 ? got.map(dfmt).join(', ') : dfmt(got[0]) + ' – ' + dfmt(got[got.length - 1])) + ' (' + got.length + ' dana) označio kao dane bez unosa') + (note ? ' – ' + note : '') + '. Za ' + (got.length === 1 ? 'taj dan' : 'te dane') + ' ništa ne upisujete.', got[got.length - 1] < todayIso() ? todayIso() : got[got.length - 1]);
       });
-      if (!dana) return 'Ništa nije odobreno: odabrani dani već imaju unos, odobrenje ili su u završenom mjesecu.';
+      if (!dana) return 'Ništa nije označeno: odabrani dani već imaju unos, već su dani bez unosa ili su u završenom mjesecu.';
       return { ok: 1, radnika, dana, presk };
     }
+    function buDelete(id) {
+      const i = db.bezUnosa.findIndex(x => x.id === id); if (i < 0) return 'Dan bez unosa nije pronađen.';
+      const x = db.bezUnosa[i]; if (db.closed.includes(x.uid + '|' + x.date.slice(0, 7))) return 'Radnik je završio taj mjesec. Najprije ponovno otvorite mjesec.';
+      db.bezUnosa.splice(i, 1); notify(x.uid, 'Administrator je poništio dan bez unosa ' + dfmt(x.date) + ' Za taj dan upišite unos u ŠIHTERICU.', x.date < todayIso() ? todayIso() : x.date); return null;
+    }
+    const approval = (uid, date, ex) => db.slreq.find(q => q.uid === uid && q.status === 'approved' && q.date === date && (!q.entryId || q.entryId === ex));
     /* PRIJENOS SATI ZA SLOBODAN DAN: prijenos iz prošlog mjeseca = prijenos u sljedeći mjesec prethodnog mjeseca (automatski),
        osim ako ga administrator upiše ručno (db.prijenos). Prijenos u sljedeći mjesec = višak sati za slobodan dan na kraju mjeseca,
        osim ako ga administrator upiše ručno (db.prijenosOut). Lanac kreće od prvog mjeseca u kojem radnik ima unos ili ručni prijenos. */
@@ -310,7 +312,7 @@
       const del = new Set(db.inboxDel[uid] || []), L = [], st = q => ({ status: q.status, note: q.note || '', decided: q.decided || 0, changed: !!q.changed });
       db.poruke.filter(p => p.to.includes(uid)).forEach(p => L.push({ k: 'po', id: p.id, ts: p.ts, t: 'Poruka administratora', text: p.text, from: nameOf(p.from), read: p.reads[uid] || 0 }));
       db.obav.filter(o => o.uid === uid).forEach(o => L.push({ k: 'ob', id: o.id, ts: o.ts, t: 'Obavijest', text: o.text, read: o.read ? 1 : 0 }));
-      db.slreq.filter(q => q.uid === uid && q.source !== 'admin').forEach(q => L.push({ k: 'sl', id: q.id, ts: q.ts, t: 'Zahtjev za slobodan dan', text: dfmt(q.date) + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
+      db.slreq.filter(q => q.uid === uid).forEach(q => L.push({ k: 'sl', id: q.id, ts: q.ts, t: 'Zahtjev za slobodan dan', text: dfmt(q.date) + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
       db.gorq.filter(q => q.uid === uid && q.source !== 'admin').forEach(q => L.push({ k: 'go', id: q.id, ts: q.ts, t: 'Zahtjev za godišnji odmor', text: (q.dates.length === 1 ? dfmt(q.dates[0]) : dfmt(q.dates[0]) + ' – ' + dfmt(q.dates[q.dates.length - 1]) + ' (' + q.dates.length + ' dana)') + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
       db.requests.filter(q => q.uid === uid).forEach(q => L.push({ k: 'mj', id: q.id, ts: q.ts, t: 'Zahtjev za ponovno otvaranje mjeseca', text: q.month.slice(5) + '.' + q.month.slice(0, 4) + '.' + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
       db.sitereq.filter(q => q.uid === uid).forEach(q => L.push({ k: 'gr', id: q.id, ts: q.ts, t: 'Zahtjev za novo gradilište', text: q.text, ...st(q) }));
@@ -701,6 +703,7 @@
       if (PRAZNIK_VRSTE.includes(vrsta) && !(holidays(+d.slice(0, 4)).has(d))) return 'Praznik i Rad na praznik mogu se upisati samo na dan državnog praznika u RH.';
       if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || (!NERAD.includes(vrsta) && !(Number.isInteger(h) && h > 0 && h <= 24))) return 'Unesite datum i sate (cijeli broj od 1 do 24).';
       if (!site && !NERAD.includes(vrsta)) return 'Odaberite gradilište.';
+      if (buDates(u.id).has(d)) return 'Administrator je ' + dfmt(d) + ' označio kao dan bez unosa. Za taj dan se ništa ne upisuje.';
       /* gradilište mora biti s administratorova popisa (stari ručni unosi ostaju valjani pri izmjeni) */
       if (site && !NERAD.includes(vrsta) && !(db.sites || []).includes(site) && !(exceptId && db.entries.some(e => e.id === exceptId && e.site === site))) return 'Gradilište nije na popisu. Pošaljite administratoru zahtjev za novo gradilište.';
       if (!NERAD.includes(vrsta) && d > todayIso()) return 'Radne sate nije moguće upisati za budući datum. Zadnji otključani datum je današnji.';
@@ -770,7 +773,7 @@
       if (f.site || f.vrsta) return [];
       const days = weekdays(month).filter(d => d < today), out = [];
       db.users.filter(u => u.role === 'user' && !u.deleted && !u.disabled && (!f.uid || u.id === f.uid) && !db.closed.includes(u.id + '|' + month)).forEach(u => {
-        const have = new Set(db.entries.filter(e => e.uid === u.id && e.date.startsWith(month)).map(e => e.date)), miss = days.filter(d => !have.has(d));
+        const have = new Set(db.entries.filter(e => e.uid === u.id && e.date.startsWith(month)).map(e => e.date).concat([...buDates(u.id)])), miss = days.filter(d => !have.has(d));
         if (miss.length) out.push({ uid: u.id, name: u.name, dates: miss });
       });
       return out.sort((a, b) => b.dates.length - a.dates.length || a.name.localeCompare(b.name, 'hr'));
@@ -909,7 +912,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, rangeDates, slGrupa, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alGrupe, alGrupaSave, alGrupaDelete, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, buDates, buGrupa, buDelete, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alGrupe, alGrupaSave, alGrupaDelete, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata'; Core.alInv = alInv;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;

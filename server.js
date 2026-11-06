@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=19;
+const DATA_VERSION=20;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -42,7 +42,8 @@ const MIGRATIONS={
   16:d=>{ /* SERVIS – RADNI NALOZI: nalozi koje administrator zadaje radnicima i zapisnici o izvršenom servisu; pravo grupe 'sv' */ if(!Array.isArray(d.servisi))d.servisi=[];if(!d.tvrtka||typeof d.tvrtka!=='object')d.tvrtka={naziv:'TiD-INTEL d.o.o.',adresa:'',oib:'',tel:'',email:'',web:'www.tid-intel.hr',iban:''} },
   17:d=>{ /* ALAT – ZADUŽIVANJE ALATA: popis alata s putem alata, zahtjevi za zaduženje i izdavatelji alata (Postavke → Alat); pravo grupe 'al' */ if(!Array.isArray(d.alati))d.alati=[];if(!Array.isArray(d.alatZah))d.alatZah=[];if(!Array.isArray(d.alatIzd))d.alatIzd=[] },
   18:d=>{ /* ALAT: inventarni broj SA-001… (redom unosa, db.alatZadnji) i datum nabave (alat.nabava) */ require('./core.js').alInv(d);(d.alati||[]).forEach(o=>{if(o.nabava===undefined)o.nabava=''}) },
-  19:d=>{ /* ALAT: grupe alata {id,naziv} (upisuje izdavatelj alata) i grupa svakog alata (alat.grupa, '' = bez grupe) */ if(!Array.isArray(d.alatGrupe))d.alatGrupe=[];(d.alati||[]).forEach(o=>{if(o.grupa===undefined)o.grupa=''}) }
+  19:d=>{ /* ALAT: grupe alata {id,naziv} (upisuje izdavatelj alata) i grupa svakog alata (alat.grupa, '' = bez grupe) */ if(!Array.isArray(d.alatGrupe))d.alatGrupe=[];(d.alati||[]).forEach(o=>{if(o.grupa===undefined)o.grupa=''}) },
+  20:d=>{ /* DANI BEZ UNOSA: administrator radniku označi dan za koji se ništa ne upisuje {id,uid,date,note,ts,by} */ if(!Array.isArray(d.bezUnosa))d.bezUnosa=[] }
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -186,7 +187,7 @@ R('POST','/api/logout',0,c=>c.send(200,{ok:1},{'Set-Cookie':'t=; HttpOnly; Path=
 R('GET','/api/me',1,c=>c.send(200,{id:c.u.id,name:c.u.name,role:c.u.role,prava:pravaOf(c.u),nau:!!c.u.nau,sites:db.sites,meals:db.meals,vrste:core.vrsteOf(c.u)}));
 R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'));
   c.send(200,{entries:db.entries.filter(e=>a||e.uid===c.u.id).map(e=>({...e,vrsta:e.vrsta||'Redovan rad',name:core.nameOf(e.uid)})),closed:db.closed.filter(k=>a||k.startsWith(c.u.id+'|')),
-    requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),prijenos:core.prMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id],todayStr()),prOut:core.prOutMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id]),
+    requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),bezUnosa:db.bezUnosa.filter(x=>a||x.uid===c.u.id).map(x=>({...x,name:core.nameOf(x.uid)})),prijenos:core.prMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id],todayStr()),prOut:core.prOutMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id]),
     gorq:db.gorq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
     sitereq:db.sitereq.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
     poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,fromName:core.nameOf(p.from)})),
@@ -213,7 +214,8 @@ R('POST','/api/slreq',1,c=>{if(noAdm(c)||noNau(c))return;const d=String(c.b.date
 R('POST','/api/slreq/:id/decide','sl',c=>{const q=db.slreq.find(x=>x.id===c.p[0]);if(!q||q.status!=='open')return c.send(404,{e:'Zahtjev nije pronađen ili je već riješen.'});
   q.status=c.b.approve?'approved':'rejected';q.note=String(c.b.note||'').trim().slice(0,200);q.decided=Date.now();q.decidedBy=c.u.id;save();c.send(200,{ok:1});
   pushU(q.uid,'Zahtjev za slobodan dan '+(c.b.approve?'prihvaćen':'odbijen'),aktD(q.date)+(q.note?' ('+q.note+')':''),'/#pt')});
-R('POST','/api/slreq/grupa','sl',c=>{const r=core.slGrupa(c.u.id,c.b);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,r)});
+R('POST','/api/bezunosa','iz',c=>{const r=core.buGrupa(c.u.id,c.b);if(typeof r==='string')return c.send(400,{e:r});save();c.send(200,r)});
+R('DELETE','/api/bezunosa/:id','iz',c=>{const e=core.buDelete(c.p[0]);if(e)return c.send(400,{e});save();c.send(200,{ok:1})});
 R('PUT','/api/prijenos','iz',c=>{const u=db.users.find(x=>x.id===c.b.uid&&x.role==='user'&&!x.deleted),v=parseFloat(String(c.b.value).replace(',','.'));
   if(!u)return c.send(404,{e:'Radnik nije pronađen.'});if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   const k=u.id+'|'+c.b.month;
@@ -312,7 +314,7 @@ R('DELETE','/api/otpremnice/:id',1,c=>{const r=core.otpDelete(c.u,c.p[0],can(c.u
 const otpSweep=()=>{try{const old=core.otpExpire(Date.now());if(old.length){old.forEach(f=>{try{fs.unlinkSync(otpPath(f))}catch(e){}});save();console.log('Obrisane otpremnice starije od '+core.OTP_DANA+' dana, fotografija: '+old.length)}}catch(e){console.error(e)}
   try{const used=new Set(db.otpremnice.flatMap(o=>o.files).concat(core.svFiles(),core.alFiles()));fs.readdirSync(OTP).forEach(f=>{const p=otpPath(f);if(core.otpName(f)&&!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>2*864e5)fs.unlinkSync(p)})}catch(e){console.error(e)}};
 otpSweep();setInterval(otpSweep,6*36e5);
-R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.concat(db.slreq).forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
+R('POST','/api/obav/read',1,c=>{db.obav.forEach(o=>{if(o.uid===c.u.id)o.read=true});db.gorq.forEach(q=>{if(q.uid===c.u.id&&q.source==='admin'&&!q.seen)q.seen=Date.now()});save();c.send(200,{ok:1})});
 R('POST','/api/close',1,c=>{if(noAdm(c))return;if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   const md=core.missingDays(c.u.id,c.b.month);if(md.length)return c.send(400,{e:'Unos se ne može završiti. Nedostaje unos za: '+md.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.'});
   const nm=core.noMealDays(c.u.id,c.b.month);if(nm.length)return c.send(400,{e:'Unos se ne može završiti. Odaberite topli obrok (uz bilo koji unos tog dana) za: '+nm.map(d=>d.slice(8,10)+'.'+d.slice(5,7)+'.').join(', ')+'.'});
