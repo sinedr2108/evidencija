@@ -125,7 +125,8 @@ function initDb(){db=null;_c=null;try{const s=localStorage.getItem(KEY);if(s)db=
  else{const S=seed();if(!Array.isArray(db.servisi))db.servisi=S.servisi;if(!Array.isArray(db.alati)){db.alati=S.alati;db.alatZah=S.alatZah;db.alatIzd=[]}if(!Array.isArray(db.alatGrupe)){db.alatGrupe=S.alatGrupe;db.alati.forEach(o=>{const x=S.alati.find(y=>y.id===o.id);if(x&&!o.grupa)o.grupa=x.grupa})}S.users.forEach(u=>{if(!db.users.some(x=>x.id===u.id)){db.users.push(u);db.entries.push(...S.entries.filter(e=>e.uid===u.id))}});db.entries.forEach(e=>{if(Core.NULA_SATI.includes(e.vrsta))e.hours=0});persist()}}
 initDb();
 /* demo: fotografije otpremnica samo u memoriji (ne preživljavaju ponovno otvaranje) */
-const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];(db.alati||[]).forEach(o=>{if(o.foto&&!DF[o.foto])o.foto=''});if(!Array.isArray(db.narudzbe))db.narudzbe=[];
+const DF={};fotoSrc=f=>DF[f]||'';fotoDl=f=>DF[f]||'';db.otpremnice=[];(db.alati||[]).forEach(o=>{if(o.foto&&!DF[o.foto])o.foto=''});if(!Array.isArray(db.narudzbe))db.narudzbe=[];if(!db.nmDemo){db.nmDemo=1;const st=db.sites||[],t=Date.now(),mk=(id,uid,site,items,h)=>({id,uid,adminId:'u_admin',site,items,ts:t-h*36e5,updated:t-h*36e5,sentTs:t-h*36e5,status:'sent',obr:null,fwd:[]});
+ if(st.length){db.narudzbe.push(mk('nm_demo1','u_ivan',st[0],[{naziv:'Cement CEM II 42,5',jm:'kg',kol:500},{naziv:'Armaturna mreža Q-188',jm:'kom',kol:12}],3),mk('nm_demo2','u_ivan',st[1]||st[0],[{naziv:'Gips ploča 12,5 mm',jm:'m²',kol:80},{naziv:'Vijci za gips 25 mm',jm:'pak',kol:4}],26));persist()}}
 const strs=a=>[...new Set((Array.isArray(a)?a:[]).map(s=>String(s).trim()).filter(Boolean))];
 const mon=m=>/^\d{4}-\d{2}$/.test(m||'');
 const fail=t=>{throw new Error(t)};
@@ -195,6 +196,8 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='GET znacke'){const cg=g=>U.role==='admin'||PR0.includes(g)||(EVF.includes(g)&&PR0.includes('ev')),z={},op=k=>db[k].filter(q=>q.status==='open').length;if(cg('ot'))z.aot=db.otpremnice.filter(o=>o.ts>(U.otpSeen||0)&&o.uid!==U.id).length;if(cg('nm'))z.anm=C.nmNeobr(U);if(cg('sv'))z.asv=C.svCekaPregled();if(cg('al'))z.aal=C.alZnA(U);if(cg('sl'))z.asl=op('slreq');if(cg('go'))z.ago=op('gorq');if(cg('iz'))z.aiz=op('requests');if(cg('gr'))z.agr=op('sitereq');z.aev=(z.asl||0)+(z.ago||0)+(z.aiz||0)+(z.agr||0);out=z}
  else if(key==='POST otpremnice'&&s[1]==='seen'){U.otpSeen=Date.now()}
  else if(key==='POST narudzbe'&&s[2]==='obradi'){const r=C.nmObradi(U,s[1],!!b.obr);if(typeof r==='string')fail(r)}
+ else if(key==='POST narudzbe'&&s[2]==='odbij'){const r=C.nmOdbij(U,s[1],b.odb!==false,b.note);if(typeof r==='string')fail(r);if(r.odb)C.notify(r.uid,'Narudžba materijala za '+r.site+' je odbijena'+(r.odb.note?' ('+r.odb.note+')':'')+'. Odbio/la: '+U.name+'.','')}
+ else if(key==='POST narudzbe'&&s[2]==='obrisi'){const r=C.nmObrisi(U,s[1]);if(typeof r==='string')fail(r)}
  else if(key==='POST narudzbe'&&s[2]==='proslijedi'){const r=C.nmProslijedi(U,s[1],String(b.to||''));if(typeof r==='string')fail(r);out={ok:1,mail:'Demo: e-mail se ovdje ne šalje.',toName:C.nameOf(r.adminId)}}
  else if(key==='POST otpremnice'&&s[1]==='foto'){noAdm();const f='u-'+C.otpKey(U.id)+'-'+uid().replace(/[^0-9a-z]/g,'')+'.jpg';DF[f]=String(b.data||'');out={f}}
  else if(key==='PUT otpremnice'&&s[2]==='site'){adm();const r=C.otpSetSite(U,s[1],String(b.f||''),b.site);if(typeof r==='string')fail(r)}

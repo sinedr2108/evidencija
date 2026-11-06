@@ -352,6 +352,10 @@ R('POST','/api/narudzbe',1,async c=>{if(noAdm(c)||noNau(c))return;const o=core.n
   c.send(200,{ok:1,id:o.id,mail:r.mail,mailTo:r.mailTo||''})});
 R('POST','/api/narudzbe/:id/obradi','nm',c=>{const o=core.nmObradi(c.u,c.p[0],!!c.b.obr);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});
   if(c.b.obr)pushU(o.uid,'Narudžba materijala obrađena',o.site+' · obradio: '+c.u.name,'/#nm')});
+R('POST','/api/narudzbe/:id/odbij','nm',c=>{const v=c.b.odb!==false,o=core.nmOdbij(c.u,c.p[0],v,c.b.note);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});
+  if(v){const t='Narudžba materijala za '+o.site+' je odbijena'+(o.odb.note?' ('+o.odb.note+')':'')+'. Odbio/la: '+c.u.name+'.';core.notify(o.uid,t,'')}});
+R('POST','/api/narudzbe/:id/obrisi','nm',c=>{const o=core.nmObrisi(c.u,c.p[0]);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});
+  pushU(o.uid,'Narudžba materijala obrisana',o.site+' · obrisao: '+c.u.name,'/#nm');if(o.adminId!==c.u.id)pushU(o.adminId,'Narudžba materijala obrisana',o.site+' · naručio: '+core.nameOf(o.uid)+' · obrisao: '+c.u.name,'/#anm')});
 R('POST','/api/narudzbe/:id/proslijedi','nm',async c=>{const o=core.nmProslijedi(c.u,c.p[0],String(c.b.to||''));if(typeof o==='string')return c.send(400,{e:o});save();
   const n=core.nameOf(o.uid);if(o.adminId!==c.u.id)pushU(o.adminId,c.u.name+': proslijeđena narudžba materijala',o.site+' · naručio: '+n,'/#anm');const r=await nmMail(o,'Proslijeđena narudžba materijala za '+o.site,c.u.name+' Vam prosljeđuje narudžbu materijala za '+o.site+' (naručio: '+n+').');
   c.send(200,{ok:1,mail:r.mail,mailTo:r.mailTo||'',toName:core.nameOf(o.adminId)})});
