@@ -241,6 +241,8 @@
        Taj dan radnik ne može odabrati za unos, ne traži se za završetak mjeseca i nije na popisu Radnici bez unosa.
        Preskaču se dani koji već imaju unos, već su označeni ili su u završenom mjesecu. */
     const buDates = uid => new Set(db.bezUnosa.filter(x => x.uid === uid).map(x => x.date));
+    /* fond sati radnika: dani bez unosa ne broje se u fond (fond = radni dani bez dana bez unosa × 8 h) */
+    const fondU = (uid, month) => { const f = fond(month), bu = buDates(uid), n = weekdays(month).filter(d => bu.has(d)).length; return { dani: f.dani - n, dnevno: f.dnevno, sati: (f.dani - n) * f.dnevno, bu: n }; };
     function buGrupa(by, b) {
       let dates;
       if (Array.isArray(b.dates)) { dates = [...new Set(b.dates.map(String))].filter(s => /^\d{4}-\d{2}-\d{2}$/.test(s)).sort(); if (!dates.length || dates.length > 92) return 'Neispravni datumi.'; }
@@ -684,7 +686,7 @@
       m.trans = {};
       Object.entries(g).forEach(([k, x]) => { const mo = k.split('|')[1];
         if (!x.ot || !(db.closed.includes(k) || mo < cur)) return;
-        const pren = Math.min(x.ot, Math.max(0, fond(mo).sati - (x.h - x.ot)));
+        const pren = Math.min(x.ot, Math.max(0, fondU(k.split('|')[0], mo).sati - (x.h - x.ot)));
         if (pren <= 0) return;
         m.trans[k] = r2(pren);
         /* preostali prekovremeni dijele se razmjerno, ali u cijelim satima (pola sata samo ako ga ima u unosima) metodom najvećeg ostatka, da zbroj ostane točan */
@@ -743,9 +745,9 @@
       const list = Object.values(rows).map(r => {
         const v = Object.fromEntries(Object.entries(r.v).map(([k, x]) => [k, r2(x)]));
         /* kao u šihterici: REDOVNI RAD = svi sati + prijenos iz prošlog − prijenos u sljedeći mjesec; PREKOVREMENI = redovni rad − fond (ako je barem 1 h) */
-        const pin = pr(r.uid, month), pout = prOut(r.uid, month).v, red = r2(r.h + pin - pout), u = db.users.find(x => x.id === r.uid) || {}, fs = u.nau ? 0 : norma;
+        const pin = pr(r.uid, month), pout = prOut(r.uid, month).v, red = r2(r.h + pin - pout), u = db.users.find(x => x.id === r.uid) || {}, nr = fondU(r.uid, month).sati, fs = u.nau ? 0 : nr;
         return { uid: r.uid, name: r.name, h: r2(r.h), redovni: applies ? red : null, ot: applies ? (red - fs < 1 ? 0 : r2(red - fs)) : r2(r.ot), otDan: r2(r.ot), pren: applies ? om.trans[r.uid + '|' + month] || 0 : 0, t: r.t, m: r.m, v, days: r.days.size, closed: db.closed.includes(r.uid + '|' + month),
-          prijenos: pr(r.uid, month), prRucno: hasK(db.prijenos, r.uid + '|' + month), bank: stanje(r.uid, month), out: prOut(r.uid, month).v, outRucno: prOut(r.uid, month).rucno, norma: applies ? norma : null, razlika: applies ? r2(r2(r.h) - norma) : null };
+          prijenos: pr(r.uid, month), prRucno: hasK(db.prijenos, r.uid + '|' + month), bank: stanje(r.uid, month), out: prOut(r.uid, month).v, outRucno: prOut(r.uid, month).rucno, norma: applies ? nr : null, fondBu: applies ? fondU(r.uid, month).bu : 0, razlika: applies ? r2(r2(r.h) - nr) : null };
       }).sort((a, b) => a.name.localeCompare(b.name, 'hr'));
       return { cols, vrste: VRSTE, list, norma: { dani: wd, dnevna: dn, sati: norma, applies } };
     }
@@ -831,8 +833,8 @@
       rank('h', 'Najviše odrađenih sati (ukupno)', 'h', U(p => p.h));
       rank('ot', 'Najviše prekovremenih sati', 'h', U(p => p.ot));
       rank('rad', 'Najviše sati redovnog rada', 'h', U(p => p.rad));
-      rank('razlika', 'Najveći višak sati u odnosu na fond', 'h', users.filter(u => P[u.id]).map(u => ({ name: u.name, v: P[u.id].h - fondSum })));
-      rank('manjak', 'Najveći manjak sati u odnosu na fond', 'h', users.filter(u => P[u.id]).map(u => ({ name: u.name, v: fondSum - P[u.id].h })).filter(x => x.v > 0));
+      rank('razlika', 'Najveći višak sati u odnosu na fond', 'h', users.filter(u => P[u.id]).map(u => ({ name: u.name, v: P[u.id].h - months.reduce((a, m) => a + fondU(u.id, m).sati, 0) })));
+      rank('manjak', 'Najveći manjak sati u odnosu na fond', 'h', users.filter(u => P[u.id]).map(u => ({ name: u.name, v: months.reduce((a, m) => a + fondU(u.id, m).sati, 0) - P[u.id].h })).filter(x => x.v > 0));
       rank('dani', 'Najviše dana s upisanim radom', 'dana', U(p => p.dani.size));
       rank('max', 'Najviše sati u jednom danu', 'h', U(p => Math.max(0, ...Object.values(p.dan))));
       rank('d9', 'Najviše dana s 9 i više sati rada', 'dana', U(p => Object.values(p.dan).filter(h => h >= 9).length));
@@ -888,7 +890,7 @@
       const ids = new Set(E.map(e => e.uid)); db.users.filter(u => u.role === 'user' && !u.deleted && !u.disabled && (!uid || u.id === uid)).forEach(u => ids.add(u.id));
       const add = (o, d, h) => { o[d] = r2((o[d] || 0) + h); };
       return [...ids].map(id => {
-        const u = db.users.find(x => x.id === id) || {}, s = { name: nameOf(id), mjesec: MJESECI[m - 1] + ' ' + y + '.', dana: new Date(Date.UTC(y, m, 0)).getUTCDate(), sites: [], sd: {}, pr: {}, go: {}, bo: {}, obrok: {}, teren: {}, prijenos: pr(id, month), prijenosOut: prOut(id, month).v, fond: u.nau ? null : fd.sati };
+        const u = db.users.find(x => x.id === id) || {}, s = { name: nameOf(id), mjesec: MJESECI[m - 1] + ' ' + y + '.', dana: new Date(Date.UTC(y, m, 0)).getUTCDate(), sites: [], sd: {}, pr: {}, go: {}, bo: {}, obrok: {}, teren: {}, prijenos: pr(id, month), prijenosOut: prOut(id, month).v, fond: u.nau ? null : fondU(id, month).sati };
         const st = {};
         E.filter(e => e.uid === id).sort((a, b) => a.date < b.date ? -1 : 1).forEach(e => {
           const d = +e.date.slice(8, 10), v = vr(e);
@@ -912,7 +914,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, buDates, buGrupa, buDelete, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alGrupe, alGrupaSave, alGrupaDelete, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, buDates, fondU, buGrupa, buDelete, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alGrupe, alGrupaSave, alGrupaDelete, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata'; Core.alInv = alInv;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
