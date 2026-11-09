@@ -275,6 +275,10 @@ function chg(kind){return c=>{
   save();c.send(200,{ok:1})}}
 R('POST','/api/slreq/:id/change',['sl','zh'],chg('sl'));R('POST','/api/gorq/:id/change',['go','zh'],chg('go'));R('POST','/api/requests/:id/change',['iz','zh'],chg('mj'));
 R('DELETE','/api/slreq/:id',1,c=>wd(c,'slreq'));R('DELETE','/api/gorq/:id',1,c=>wd(c,'gorq'));R('DELETE','/api/requests/:id',1,c=>wd(c,'requests'));
+/* administrator briše ODBIJENI zahtjev (nestaje i radniku); prihvaćeni i otvoreni se ne brišu */
+R('DELETE','/api/zahtjev/:k/:id',1,c=>{const m={sl:['slreq','sl'],go:['gorq','go'],mj:['requests','iz'],gr:['sitereq','gr']}[c.p[0]];if(!m)return c.send(404,{e:'Nepoznata vrsta zahtjeva.'});
+  if(!can(c.u,m[1]))return c.send(403,{e:'Nemate pravo.'});const i=db[m[0]].findIndex(x=>x.id===c.p[1]);if(i<0)return c.send(404,{e:'Zahtjev nije pronađen.'});
+  if(db[m[0]][i].status!=='rejected')return c.send(400,{e:'Brisati se mogu samo odbijeni zahtjevi.'});db[m[0]].splice(i,1);save();c.send(200,{ok:1})});
 function wd(c,k){if(c.u.role!=='user')return c.send(403,{e:'Samo za radnike.'});const i=db[k].findIndex(x=>x.id===c.p[0]&&x.uid===c.u.id);
   if(i<0)return c.send(404,{e:'Zahtjev nije pronađen.'});if(db[k][i].status!=='open')return c.send(400,{e:'Zahtjev je već riješen i ne može se povući.'});
   db[k].splice(i,1);save();c.send(200,{ok:1})}

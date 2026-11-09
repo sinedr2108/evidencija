@@ -34,6 +34,7 @@ Lozinke putuju mrežom, zato koristite HTTPS: IIS s *URL Rewrite + ARR* kao reve
 Svi podaci su u jednoj datoteci: `data\db.json`. Kopirajte je redovito (npr. Task Scheduler jednom dnevno).
 
 ## 6. Novosti u izvještajima
+- **Brisanje odbijenih zahtjeva** (9.11.2026., bez promjene podataka): u *Odobreni zahtjevi* administrator (s pravom za tu vrstu) briše odbijeni zahtjev (slobodan dan, godišnji, otvaranje mjeseca, novo gradilište) gumbom *Obriši* ili sve odbijene s popisa odjednom; zahtjev nestaje i iz radnikove pošte.
 - **Obavijesti radnicima na početnoj** (9.11.2026., bez promjene podataka): gumb *✉ OBAVIJESTI RADNICIMA* premješten je s Evidencije radnog vremena na početni zaslon administratora (vidi ga tko ima pravo Obavijesti).
 - **Ugrađeni preglednik PDF-a** (9.11.2026., bez promjene podataka): svi PDF-ovi (privici obavijesti, izvještaji, narudžbe, radni nalozi) otvaraju se unutar aplikacije (PDF.js 3.11.174 u `public/pdfjs`, Apache-2.0, poslužuje ga naš server, bez vanjskih servisa) s povećanjem/smanjenjem i gumbom Preuzmi. Ako se PDF ne može prikazati, nudi se spremanje kao prije.
 - **Push obavijest otvara poruku** (9.11.2026., bez promjene podataka): dodir na push obavijest o poruci administratora otvara aplikaciju na toj poruci (na početnoj dok nije pročitana, inače u Porukama i zahtjevima, istaknuta). Adrese iz push obavijesti (npr. #pt, #sv, #nm) sada rade i kad se aplikacija tek otvara.
