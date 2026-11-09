@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=20;
+const DATA_VERSION=21;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -43,7 +43,8 @@ const MIGRATIONS={
   17:d=>{ /* ALAT – ZADUŽIVANJE ALATA: popis alata s putem alata, zahtjevi za zaduženje i izdavatelji alata (Postavke → Alat); pravo grupe 'al' */ if(!Array.isArray(d.alati))d.alati=[];if(!Array.isArray(d.alatZah))d.alatZah=[];if(!Array.isArray(d.alatIzd))d.alatIzd=[] },
   18:d=>{ /* ALAT: inventarni broj SA-001… (redom unosa, db.alatZadnji) i datum nabave (alat.nabava) */ require('./core.js').alInv(d);(d.alati||[]).forEach(o=>{if(o.nabava===undefined)o.nabava=''}) },
   19:d=>{ /* ALAT: grupe alata {id,naziv} (upisuje izdavatelj alata) i grupa svakog alata (alat.grupa, '' = bez grupe) */ if(!Array.isArray(d.alatGrupe))d.alatGrupe=[];(d.alati||[]).forEach(o=>{if(o.grupa===undefined)o.grupa=''}) },
-  20:d=>{ /* DANI BEZ UNOSA: administrator radniku označi dan za koji se ništa ne upisuje {id,uid,date,note,ts,by} */ if(!Array.isArray(d.bezUnosa))d.bezUnosa=[] }
+  20:d=>{ /* DANI BEZ UNOSA: administrator radniku označi dan za koji se ništa ne upisuje {id,uid,date,note,ts,by} */ if(!Array.isArray(d.bezUnosa))d.bezUnosa=[] },
+  21:d=>{ /* PRIVICI U OBAVIJESTIMA RADNICIMA: poruke[].files=[{f,name,size}], datoteke u data/poruke */ (d.poruke||[]).forEach(p=>{if(!Array.isArray(p.files))p.files=[]}) },
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -190,7 +191,7 @@ R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'))
     requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),bezUnosa:db.bezUnosa.filter(x=>a||x.uid===c.u.id).map(x=>({...x,name:core.nameOf(x.uid)})),prijenos:core.prMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id],todayStr()),prOut:core.prOutMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id]),
     gorq:db.gorq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
     sitereq:db.sitereq.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
-    poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,fromName:core.nameOf(p.from)})),
+    poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,files:p.files||[],fromName:core.nameOf(p.from)})),
     svOtv:core.svOtvoreni(c.u.id),alZn:core.alZnW(c.u.id),go:a?null:core.goStats(c.u.id,new Date().getFullYear()),godatumi:a?[]:[...core.goDates(c.u.id)],rev})});
 R('GET','/api/rev',1,c=>c.send(200,{rev}));
 function linkSl(e){db.slreq.forEach(q=>{if(q.entryId===e.id)q.entryId=null});if(e.vrsta!=='Slobodan dan')return;
@@ -278,15 +279,37 @@ function wd(c,k){if(c.u.role!=='user')return c.send(403,{e:'Samo za radnike.'});
   if(i<0)return c.send(404,{e:'Zahtjev nije pronađen.'});if(db[k][i].status!=='open')return c.send(400,{e:'Zahtjev je već riješen i ne može se povući.'});
   db[k].splice(i,1);save();c.send(200,{ok:1})}
 /* Poruke administratora: pojedinačno, odabranima ili svima; radnik ih vidi na početnoj dok ne potvrdi čitanje */
-R('POST','/api/poruke','po',c=>{const t=String(c.b.text||'').trim().slice(0,2000);if(!t)return c.send(400,{e:'Upišite tekst poruke.'});
+/* PRIVICI OBAVIJESTI: fotografija (smanjena u pregledniku) ili dokument do 10 MB, najviše 5 po poruci; čuvaju se dok se poruka ne obriše */
+const PRD=path.join(DIR,'poruke');fs.mkdirSync(PRD,{recursive:true});
+const PR_EXT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'};
+const prOk=f=>/^pp-[a-z0-9]+-[0-9a-f]{16}\.(jpg|jpeg|png|pdf|docx?|xlsx?)$/.test(f),prKey=id=>String(id).replace(/[^a-z0-9]/gi,'').toLowerCase().slice(0,12)||'x';
+const prMagic=(b,x)=>x==='jpg'||x==='jpeg'?b[0]===0xFF&&b[1]===0xD8:x==='png'?b.slice(0,4).toString('hex')==='89504e47':x==='pdf'?b.slice(0,4).toString()==='%PDF':x==='docx'||x==='xlsx'?b.slice(0,2).toString()==='PK':b.slice(0,4).toString('hex')==='d0cf11e0';
+const prSweep=()=>{try{const used=new Set();db.poruke.forEach(p=>(p.files||[]).forEach(x=>used.add(x.f)));fs.readdirSync(PRD).forEach(f=>{const p=path.join(PRD,f);if(!used.has(f)&&Date.now()-fs.statSync(p).mtimeMs>864e5)try{fs.unlinkSync(p)}catch(e){}})}catch(e){console.error(e)}};
+prSweep();setInterval(prSweep,6*36e5);
+R('POST','/api/poruke/prilog','po',c=>{const nm=String(c.b.name||'').trim().slice(0,120)||'privitak',x=(/\.([a-z0-9]+)$/i.exec(nm)||[])[1],ext=x&&x.toLowerCase(),m=/^data:[^;,]*;base64,([A-Za-z0-9+/=]+)$/.exec(String(c.b.data||''));
+  if(!ext||!PR_EXT[ext])return c.send(400,{e:'Dopuštene su fotografije (JPG, PNG) te PDF, Word i Excel dokumenti.'});
+  const buf=m&&Buffer.from(m[1],'base64');if(!buf||buf.length<8)return c.send(400,{e:'Neispravna datoteka.'});
+  if(buf.length>10*1024*1024)return c.send(400,{e:'Datoteka je veća od 10 MB.'});if(!prMagic(buf,ext))return c.send(400,{e:'Sadržaj datoteke ne odgovara vrsti „.'+ext+'”.'});
+  const f='pp-'+prKey(c.u.id)+'-'+crypto.randomBytes(8).toString('hex')+'.'+ext;fs.writeFileSync(path.join(PRD,f),buf);c.send(200,{f,name:nm,size:buf.length})});
+R('GET','/api/poruke/prilog/:f',1,c=>{const f=c.p[0],p=db.poruke.find(x=>(x.files||[]).some(y=>y.f===f));
+  if(!prOk(f)||!fs.existsSync(path.join(PRD,f)))return c.send(404,{e:'Privitak nije pronađen.'});
+  if(!can(c.u,'po')&&!(p&&p.to.includes(c.u.id)))return c.send(403,{e:'Nemate pristup.'});
+  const ext=f.split('.').pop(),nm=p?p.files.find(y=>y.f===f).name:f,img=/^image\//.test(PR_EXT[ext]);
+  c.raw(200,fs.readFileSync(path.join(PRD,f)),{'Content-Type':PR_EXT[ext],'Cache-Control':'private, max-age=31536000',...(!img||c.q.dl?{'Content-Disposition':"attachment; filename=\""+nm.normalize('NFD').replace(/[^\x20-\x7e]/g,'').replace(/"/g,'')+"\"; filename*=UTF-8''"+encodeURIComponent(nm)}:{})})});
+R('POST','/api/poruke','po',c=>{const t=String(c.b.text||'').trim().slice(0,2000);
+  const fl=(Array.isArray(c.b.files)?c.b.files:[]).slice(0,6).map(x=>({f:String(x&&x.f||''),name:String(x&&x.name||'').trim().slice(0,120)||'privitak'}));
+  if(fl.length>5)return c.send(400,{e:'Najviše 5 privitaka po poruci.'});
+  if(fl.some(x=>!prOk(x.f)||!x.f.startsWith('pp-'+prKey(c.u.id)+'-')||!fs.existsSync(path.join(PRD,x.f))))return c.send(400,{e:'Privitak nije pronađen. Dodajte ga ponovno.'});
+  fl.forEach(x=>x.size=fs.statSync(path.join(PRD,x.f)).size);
+  if(!t&&!fl.length)return c.send(400,{e:'Upišite tekst poruke.'});
   const act=db.users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled).map(u=>u.id);
   const to=c.b.all?act:[...new Set(Array.isArray(c.b.uids)?c.b.uids:[])].filter(id=>act.includes(id));
   if(!to.length)return c.send(400,{e:'Odaberite barem jednog radnika.'});
-  db.poruke.push({id:crypto.randomUUID(),from:c.u.id,text:t,ts:Date.now(),to,all:!!c.b.all,reads:{}});save();c.send(200,{ok:1,n:to.length});
-  pushU(to,'Nova poruka: '+c.u.name,t,'/')});
+  db.poruke.push({id:crypto.randomUUID(),from:c.u.id,text:t,ts:Date.now(),to,all:!!c.b.all,reads:{},files:fl});save();c.send(200,{ok:1,n:to.length});
+  pushU(to,'Nova poruka: '+c.u.name,(t||'')+(fl.length?(t?' ':'')+'📎 '+fl.length+(fl.length===1?' privitak':' privitka'):''),'/')});
 R('POST','/api/poruke/:id/read',1,c=>{const p=db.poruke.find(x=>x.id===c.p[0]&&x.to.includes(c.u.id));if(!p)return c.send(404,{e:'Poruka nije pronađena.'});
   if(!p.reads[c.u.id])p.reads[c.u.id]=Date.now();save();c.send(200,{ok:1})});
-R('DELETE','/api/poruke/:id','po',c=>{const i=db.poruke.findIndex(x=>x.id===c.p[0]);if(i<0)return c.send(404,{e:'Poruka nije pronađena.'});db.poruke.splice(i,1);save();c.send(200,{ok:1})});
+R('DELETE','/api/poruke/:id','po',c=>{const i=db.poruke.findIndex(x=>x.id===c.p[0]);if(i<0)return c.send(404,{e:'Poruka nije pronađena.'});const[p0]=db.poruke.splice(i,1);save();(p0.files||[]).forEach(x=>{try{fs.unlinkSync(path.join(PRD,x.f))}catch(e){}});c.send(200,{ok:1})});
 /* Pošta radnika (gumb s pismom) */
 R('GET','/api/inbox',1,c=>c.send(200,core.inbox(c.u.id)));
 R('DELETE','/api/inbox/:k/:id',1,c=>{if(!core.inboxHide(c.u.id,c.p[0],c.p[1]))return c.send(404,{e:'Stavka nije pronađena.'});save();c.send(200,{ok:1})});
@@ -535,7 +558,7 @@ http.createServer((req,res)=>{
     return raw(200,fs.readFileSync(path.join(__dirname,'public','logo.png')),{'Content-Type':'image/png','Cache-Control':'public, max-age=86400'});
   if(req.method==='GET'&&url.pathname==='/core.js')
     return raw(200,fs.readFileSync(path.join(__dirname,'core.js')),{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-cache'});
-  let body='';req.on('data',d=>{body+=d;if(body.length>1e6)req.destroy()});
+  const lim=url.pathname==='/api/poruke/prilog'?15e6:1e6;let body='';req.on('data',d=>{body+=d;if(body.length>lim)req.destroy()});
   req.on('end',()=>{
     for(const [m,re,auth,fn,key] of routes){
       const x=m===req.method&&re.exec(url.pathname);if(!x)continue;

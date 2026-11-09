@@ -200,7 +200,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
   </div>
   <div id="p-pt" class="pg hide"><div class="card pub" id="ptpub"></div><div class="mu" style="margin-bottom:8px">Poruke i obavijesti koje ste primili te zahtjevi koje ste poslali, najnovije na vrhu. Na kraju mjeseca automatski ostaje samo 5 najnovijih.</div><div id="ptl"></div></div>
   <div id="p-up" class="pg hide"><div class="card upute">
-   <p class="mu">Upute za radnike · ažurirano 6.11.2026.</p>
+   <p class="mu">Upute za radnike · ažurirano 9.11.2026.</p>
    <div class="uh" data-h="hm">
    <h3>Prijava</h3>
    <ul><li>Otvorite adresu aplikacije koju ste dobili e-mailom i upišite korisničko ime i lozinku.</li>
@@ -215,7 +215,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <ul><li><b>Naučnik</b> na početnoj stranici ima samo <b>ŠIHTERICU</b>. Vrste upisa su <b>Praktična nastava</b> (gradilište, odrađeni sati i topli obrok kao kod ostalih, bez terenskog dodatka), <b>Bolest</b> i <b>Odobren izostanak</b> (0 sati, upisuju se automatski). Naučnik ne mora imati unos za svaki radni dan, pa mjesec može završiti i s praznim danima. Poruke, obavijesti i završavanje mjeseca rade kao kod ostalih.</li>
    <li><b>Obavijesti</b> – odluke administratora o vašim zahtjevima. Vide se do kraja dana na koji se odnose; administrator vidi da ste ih pročitali čim otvorite početnu stranicu.</li>
    <li><b>Novo gradilište</b> – kad administrator doda novo gradilište, obavijest se prikaže pri prvom sljedećem otvaranju aplikacije.</li>
-   <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada.</li>
+   <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada. Ako poruka ima <b>privitak</b>, fotografiju otvorite dodirom na sličicu, a dokument (PDF, Word, Excel) gumbom s njegovim imenom.</li>
    <li><b>Gumb s pismom</b> (gore, uz Lozinka i Odjava) – sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište) s njihovim statusom, najnovije na vrhu. Crveni broj na gumbu je broj nepročitanih poruka. Svaku stavku možete obrisati gumbom ✕ (briše se samo iz vaše pošte). Na kraju mjeseca automatski ostaje samo 5 najnovijih.</li>
    <li>Plavi gumb <b>?</b> dolje desno postoji na svakoj stranici i otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>.</li>
    <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUČI MATERIJAL</b>, <b>SERVIS – RADNI NALOZI</b> i <b>ALAT</b>. Broj sa zvonom na tipki SERVIS – RADNI NALOZI pokazuje koliko vas servisa čeka, a na tipki ALAT koliko zahtjeva i predaja alata čeka vas.</li>
@@ -478,6 +478,10 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
   </div>
   <div id="p-apo" class="pg hide"><div class="card">
    <label for="pt">Tekst poruke</label><textarea id="pt" rows="5" maxlength="2000" style="width:100%;box-sizing:border-box;font:inherit;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)" placeholder="Npr. Sutra je sastanak u 7 h na gradilištu…"></textarea>
+   <div style="margin-top:10px"><b>Privici</b> <span class="mu">(fotografija ili dokument PDF, Word, Excel; najviše 5, do 10 MB)</span></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><button class="sm" id="ppcam" type="button">📷 Fotoaparat</button><button class="sm" id="ppgal" type="button">🖼️ Galerija</button><button class="sm" id="ppdoc" type="button">📎 Dokument</button></div>
+   <input type="file" id="ppfc" accept="image/*" capture="environment" class="hide"><input type="file" id="ppfg" accept="image/*" multiple class="hide"><input type="file" id="ppfd" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,image/jpeg,image/png" multiple class="hide">
+   <div id="ppl"></div>
    <div style="margin-top:10px"><b>Primatelji</b></div>
    <label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="radio" name="pk" value="all" checked style="width:auto"> Svi radnici</label>
    <label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="radio" name="pk" value="sel" style="width:auto"> Odabrani radnici (jedan ili više)</label>
@@ -487,7 +491,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <h2>Poslane poruke</h2><div id="pl"></div>
   </div>
   <div id="p-aup" class="pg hide"><div class="card upute">
-   <p class="mu">Upute za administratore · ažurirano 6.11.2026.</p>
+   <p class="mu">Upute za administratore · ažurirano 9.11.2026.</p>
    <div class="uh" data-h="ahm">
    <h3>Početna stranica</h3>
    <ul><li>Na vrhu su <b>zahtjevi na čekanju</b>: slobodan dan, godišnji odmor, ponovno otvaranje mjeseca i novo gradilište. Svaki prihvatite ili odbijte, po želji s napomenom. Radnik odluku odmah vidi na svojoj početnoj stranici i u pošti.</li>
@@ -583,6 +587,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <div class="uh" data-h="apo">
    <h3>OBAVIJESTI RADNICIMA</h3>
    <ul><li>Upišite tekst poruke, odaberite <b>sve radnike</b> ili <b>odabrane radnike</b> i kliknite <b>Pošalji poruku</b>.</li>
+   <li><b>Privici</b>: uz poruku možete priložiti do 5 datoteka (svaka do 10 MB). <b>📷 Fotoaparat</b> odmah snima fotografiju, <b>🖼️ Galerija</b> bira fotografije s uređaja, a <b>📎 Dokument</b> PDF, Word ili Excel datoteku. Fotografije se prije slanja smanje. Privitak uklanjate s ✕ prije slanja. Poruka može biti i samo privitak bez teksta.</li>
    <li>Radnik poruku vidi na početnoj stranici dok ne klikne <i>Pročitao/la sam</i>.</li>
    <li>Ispod su poslane poruke: „Pročitalo x / y“ i za svakog radnika vrijeme čitanja ili „nije pročitano“. Poruku možete obrisati.</li></ul>
    </div>
@@ -747,7 +752,7 @@ function draw(){
   $('obv').innerHTML=obav.map(o=>'<div style="margin-bottom:6px"><b>Obavijest:</b> '+E(o.text)+'</div>').join('')+'<button class="sm pri" id="obok">U redu</button>'}
  $('snw').innerHTML=me.role==='admin'?'':snShow.map(x=>'<div class="card" style="border-left:5px solid var(--gr)"><b>Administrator je dodao novo gradilište „'+E(x)+'“.</b><div class="mu">Sada ga možete odabrati u ŠIHTERICI.</div></div>').join('');
  if(me.role!=='admin'){const dd=x=>new Date(x).toLocaleDateString('hr-HR');$('srs').innerHTML=sitereq.filter(r=>r.status==='open').map(r=>'<div class="mu" style="margin:6px 0">Zahtjev za gradilište „'+E(r.text)+'“ ('+dd(r.ts)+') čeka administratora. <button class="sm" data-wd="sitereq|'+E(r.id)+'">Odustani od zahtjeva</button></div>').join('')}
- $('por').innerHTML=me.role==='admin'?'':poruke.map(x=>'<div class="card" style="border-left:5px solid #db2777"><div class="mu">Poruka administratora · '+E(x.fromName)+' · '+new Date(x.ts).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</div><div style="white-space:pre-wrap;margin:6px 0 10px;font-size:16px">'+E(x.text)+'</div><button class="sm pri" data-prd="'+E(x.id)+'">Pročitao/la sam</button></div>').join('');
+ $('por').innerHTML=me.role==='admin'?'':poruke.map(x=>'<div class="card" style="border-left:5px solid #db2777"><div class="mu">Poruka administratora · '+E(x.fromName)+' · '+new Date(x.ts).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</div><div style="white-space:pre-wrap;margin:6px 0 10px;font-size:16px">'+E(x.text)+'</div>'+prHtml(x.files)+'<button class="sm pri" data-prd="'+E(x.id)+'">Pročitao/la sam</button></div>').join('');
 {const dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.',t0=today(),L=[];
  slreq.filter(r=>r.uid===me.id&&r.status!=='open').forEach(r=>{if(r.date>=t0)L.push({k:'sl',r,end:r.date,t:'Zahtjev za slobodan dan ('+dd(r.date)+')'})});
  gorq.filter(r=>r.uid===me.id&&r.status!=='open'&&r.source!=='admin').forEach(r=>{const e=r.dates[r.dates.length-1];if(e>=t0)L.push({k:'go',r,end:e,t:'Zahtjev za godišnji odmor ('+(r.dates.length===1?dd(r.dates[0]):dd(r.dates[0])+' – '+dd(e)+', '+r.dates.length+' dana')+')'})});
@@ -781,7 +786,7 @@ function applyPage(){const adm=me&&me.role==='admin',home=adm?'ahm':'hm';
 function setPage(p){page=p;try{if(p==='hm'||p==='ahm'){if(location.hash)history.pushState(null,'',location.pathname+location.search)}else location.hash=p}catch(e){}draw();window.scrollTo(0,0)}
 document.querySelectorAll('.tile').forEach(b=>b.onclick=()=>setPage(b.dataset.pg));
 /* OTPREMNICE: fotografija se u pregledniku smanji (najviše 1600 px, < 0,9 MB) i šalje zasebno, zatim zapis otpremnice */
-let otPend=[],otList=[],fotoSrc=f=>'/api/otpremnice/foto/'+encodeURIComponent(f),fotoDl=f=>fotoSrc(f)+'?dl=1';
+let otPend=[],otList=[],fotoSrc=f=>(/^pp-/.test(f)?'/api/poruke/prilog/':'/api/otpremnice/foto/')+encodeURIComponent(f),fotoDl=f=>fotoSrc(f)+'?dl=1';
 async function shrink(file){const src=URL.createObjectURL(file);try{const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('Fotografija se ne može učitati. Pokušajte ponovno ili odaberite drugu.'));i.src=src});
  const s=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),cv=document.createElement('canvas');cv.width=Math.round(img.naturalWidth*s);cv.height=Math.round(img.naturalHeight*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
  let q=.8,d=cv.toDataURL('image/jpeg',q);while(d.length>900000&&q>.3){q-=.1;d=cv.toDataURL('image/jpeg',q)}if(d.length>990000)throw new Error('Fotografija je prevelika.');return d}finally{URL.revokeObjectURL(src)}}
@@ -872,7 +877,7 @@ function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',a
  $('ptl').innerHTML=inbox.items.length?inbox.items.map(x=>{const req=x.status!==undefined;
   const s=!req?(x.read?'<span class="mu">pročitano</span>':'<b style="color:var(--er)">nepročitano</b>'):stTxt(x)+(x.changed?' <span class="mu">(odluka izmijenjena)</span>':'')+(x.decided?' <span class="mu">· '+ts(x.decided)+'</span>':'');
   return '<div class="card" style="border-left:5px solid '+C[x.k]+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(x.t)+'</b><div class="mu">'+(req?'poslano ':'')+ts(x.ts)+(x.from?' · '+E(x.from):'')+'</div></div><span><button class="x" data-ptd="'+E(x.k+'|'+x.id)+'" aria-label="Obriši" title="Obriši">✕</button></span></div>'
-   +'<div style="white-space:pre-wrap;margin:6px 0">'+E(x.text)+'</div><div>'+s+'</div>'+(x.note?'<div class="mu">Napomena: '+E(x.note)+'</div>':'')+'</div>'}).join(''):'<div class="card mu">Nema poruka ni zahtjeva.</div>'}
+   +'<div style="white-space:pre-wrap;margin:6px 0">'+E(x.text)+'</div>'+prHtml(x.files)+'<div>'+s+'</div>'+(x.note?'<div class="mu">Napomena: '+E(x.note)+'</div>':'')+'</div>'}).join(''):'<div class="card mu">Nema poruka ni zahtjeva.</div>'}
 $('ptb').onclick=()=>setPage('pt');
 $('ptl').onclick=async e=>{const b=e.target.closest('[data-ptd]');if(!b)return;const[k,id]=b.dataset.ptd.split('|');
  if(!await cf('Obrisati ovu stavku iz vaše pošte? Administratoru i u izvještajima ostaje zapisana.'))return;try{await api('DELETE','inbox/'+k+'/'+id);await load()}catch(x){toast(x.message)}};
@@ -1041,16 +1046,34 @@ function drawSlRep(){
  const m=today().slice(0,7),dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.';
  const L=users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled).map(u=>{const b=stanjeU(u.id,m,entries.filter(e=>e.uid===u.id)),rs=slreq.filter(r=>r.uid===u.id&&((r.status==='approved'&&(r.date.slice(0,7)>=m))||r.status==='open')).sort((a,c)=>a.date<c.date?-1:1);return{u,b,rs}}).filter(x=>x.b>=5||x.rs.some(r=>r.status==='approved')).sort((a,b)=>b.b-a.b||a.u.name.localeCompare(b.u.name,'hr'));
  $('slu').innerHTML=L.length?'<table><tr><th>Radnik</th><th class="n">Sati za slobodan dan</th><th>Status</th></tr>'+L.map(x=>'<tr><td>'+E(x.u.name)+'</td><td class="n"><b>'+f1(x.b)+'</b></td><td>'+(x.rs.length?x.rs.map(r=>(r.status==='approved'?'<b style="color:var(--ok)">Odobreno</b>':'Na čekanju')+' '+dd(r.date)+(r.entryId?' (iskorišteno)':'')).join('<br>'):'<span class="mu">–</span>')+'</td></tr>').join('')+'</table>':'<span class="mu">Nijedan radnik nema 5 ili više sati za slobodan dan ni odobren slobodan dan.</span>'}
+/* PRIVICI OBAVIJESTI: fotografije se smanjuju kao kod otpremnica, dokumenti (PDF, Word, Excel) šalju se kakvi jesu do 10 MB */
+let ppPend=[];const prImg=f=>/\.(jpe?g|png)$/i.test(f),prKb=n=>n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(n/1024))+' kB';
+function prHtml(fl){if(!fl||!fl.length)return '';const im=fl.filter(x=>prImg(x.f)).map(x=>x.f);
+ return '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 10px">'+fl.map(x=>prImg(x.f)?'<a href="'+fotoSrc(x.f)+'" data-fv="'+E(im.join(',')+'|'+im.indexOf(x.f))+'" data-fvc="'+E(x.name)+'" title="'+E(x.name)+'" style="display:block;width:84px;height:84px"><img src="'+fotoSrc(x.f)+'" alt="'+E(x.name)+'" loading="lazy" style="width:84px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)"></a>'
+  :'<button class="sm" data-prf="'+E(x.f)+'" data-prn="'+E(x.name)+'" style="max-width:100%;text-align:left">📄 '+E(x.name)+(x.size?' <span class="mu">('+prKb(x.size)+')</span>':'')+'</button>').join('')+'</div>'}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-prf]');if(b){e.preventDefault();fileOut(fotoDl(b.dataset.prf),b.dataset.prn)}});
+function ppDraw(){$('ppl').innerHTML=ppPend.map((x,i)=>'<div class="row"><span>'+(prImg(x.name)||x.img?'🖼️ ':'📄 ')+E(x.name)+(x.busy?' <span class="mu">– učitavam…</span>':x.size?' <span class="mu">('+prKb(x.size)+')</span>':'')+'</span><button class="x" data-ppx="'+i+'" aria-label="Ukloni privitak" title="Ukloni">✕</button></div>').join('')}
+$('ppl').onclick=e=>{const b=e.target.closest('[data-ppx]');if(b){ppPend.splice(+b.dataset.ppx,1);ppDraw()}};
+const rdUrl=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('Datoteka se ne može pročitati.'));r.readAsDataURL(f)});
+async function ppAdd(files){for(const f of [...files]){if(ppPend.length>=5){toast('Najviše 5 privitaka po poruci.');break}
+  const img=/^image\//.test(f.type)||/\.(jpe?g|png|heic|heif|webp)$/i.test(f.name),it={name:img?(f.name.replace(/\.[^.]+$/,'')||'fotografija')+'.jpg':f.name,busy:1,img};
+  if(!img&&!/\.(pdf|docx?|xlsx?)$/i.test(f.name)){toast('Dopuštene su fotografije te PDF, Word i Excel dokumenti.');continue}
+  if(!img&&f.size>10*1048576){toast('Datoteka '+f.name+' je veća od 10 MB.');continue}
+  ppPend.push(it);ppDraw();
+  try{const d=img?await shrink(f):await rdUrl(f),r=await api('POST','poruke/prilog',{name:it.name,data:img?d:d.replace(/^data:[^;,]*;base64,/,'data:application/octet-stream;base64,')});Object.assign(it,{f:r.f,size:r.size,busy:0})}
+  catch(x){ppPend.splice(ppPend.indexOf(it),1);toast(x.message)}ppDraw()}}
+$('ppcam').onclick=()=>$('ppfc').click();$('ppgal').onclick=()=>$('ppfg').click();$('ppdoc').onclick=()=>$('ppfd').click();
+['ppfc','ppfg','ppfd'].forEach(id=>$(id).onchange=async e=>{const fl=e.target.files;await ppAdd(fl);e.target.value=''});
 function drawPo(){const ws=users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled),sel=[...document.querySelectorAll('#pg input:checked')].map(i=>i.value),ft=x=>new Date(x).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
  $('pg').innerHTML=ws.map(u=>'<label style="display:flex;align-items:center;gap:8px;color:var(--tx);margin:4px 0"><input type="checkbox" style="width:auto" value="'+E(u.id)+'"'+(sel.includes(u.id)?' checked':'')+'> '+E(u.name)+'</label>').join('')||'<span class="mu">Nema aktivnih radnika.</span>';
- $('pl').innerHTML=poruke.length?poruke.map(p=>{const n=p.to.length,r=p.to.filter(id=>p.reads[id]).length;return '<div class="card"><div class="mu">'+ft(p.ts)+' · poslao/la '+E(p.fromName)+' · '+(p.all?'svim radnicima':n===1?E(p.toNames[p.to[0]]):n+' radnika')+'</div><div style="white-space:pre-wrap;margin:6px 0">'+E(p.text)+'</div>'+
+ $('pl').innerHTML=poruke.length?poruke.map(p=>{const n=p.to.length,r=p.to.filter(id=>p.reads[id]).length;return '<div class="card"><div class="mu">'+ft(p.ts)+' · poslao/la '+E(p.fromName)+' · '+(p.all?'svim radnicima':n===1?E(p.toNames[p.to[0]]):n+' radnika')+'</div><div style="white-space:pre-wrap;margin:6px 0">'+E(p.text)+'</div>'+prHtml(p.files)+
   '<details'+(n===1?' open':'')+'><summary style="cursor:pointer"><b style="color:'+(r===n?'var(--ok)':'var(--tx)')+'">Pročitalo: '+r+' / '+n+'</b></summary>'+p.to.slice().sort((a,b)=>(p.reads[a]?1:0)-(p.reads[b]?1:0)||String(p.toNames[a]).localeCompare(p.toNames[b],'hr')).map(id=>'<div class="row"><span>'+E(p.toNames[id])+'</span>'+(p.reads[id]?'<span style="color:var(--ok)">pročitano '+ft(p.reads[id])+'</span>':'<span style="color:var(--er)">nije pročitano</span>')+'</div>').join('')+'</details>'+
   '<button class="sm" data-pdel="'+E(p.id)+'" style="margin-top:8px">Obriši poruku</button></div>'}).join(''):'<div class="card mu">Još nema poslanih poruka.</div>'}
 document.querySelectorAll('input[name=pk]').forEach(r=>r.onchange=()=>$('pgw').classList.toggle('hide',document.querySelector('input[name=pk]:checked').value!=='sel'));
 $('ps').onclick=async()=>{const all=document.querySelector('input[name=pk]:checked').value==='all',uids=[...document.querySelectorAll('#pg input:checked')].map(i=>i.value);
- if(!$('pt').value.trim())return say('pm','Upišite tekst poruke.');if(!all&&!uids.length)return say('pm','Odaberite barem jednog radnika.');
+ if(ppPend.some(x=>x.busy))return say('pm','Pričekajte da se privici učitaju.');if(!$('pt').value.trim()&&!ppPend.length)return say('pm','Upišite tekst poruke ili dodajte privitak.');if(!all&&!uids.length)return say('pm','Odaberite barem jednog radnika.');
  if(!await cf('Poslati poruku '+(all?'svim radnicima':uids.length===1?'radniku '+(users.find(u=>u.id===uids[0])||{}).name:uids.length+' radnika')+'?'))return;
- try{const r=await api('POST','poruke',{text:$('pt').value,all,uids});$('pt').value='';document.querySelectorAll('#pg input').forEach(i=>i.checked=false);say('pm','Poruka je poslana ('+r.n+' radnika) ✓',1);await load()}catch(e){say('pm',e.message)}};
+ try{const r=await api('POST','poruke',{text:$('pt').value,all,uids,files:ppPend.map(x=>({f:x.f,name:x.name}))});$('pt').value='';ppPend=[];ppDraw();document.querySelectorAll('#pg input').forEach(i=>i.checked=false);say('pm','Poruka je poslana ('+r.n+' radnika) ✓',1);await load()}catch(e){say('pm',e.message)}};
 $('sr').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const r=sitereq.find(x=>x.id===(b.dataset.sra||b.dataset.srn));if(!r)return;
  try{if(b.dataset.sra){const nm=await pr('Naziv gradilišta kako će se prikazivati radnicima:',r.text);if(nm===null)return;if(!nm.trim())return toast('Upišite naziv.');await api('POST','sitereq/'+r.id+'/decide',{approve:true,name:nm});toast('Gradilište „'+nm.trim()+'“ je dodano. Radnici će dobiti obavijest.')}
   else{const n=await pr('Razlog odbijanja (neobavezno):');if(n===null)return;await api('POST','sitereq/'+r.id+'/decide',{approve:false,note:n})}await load()}catch(x){toast(x.message)}};

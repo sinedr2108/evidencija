@@ -312,7 +312,7 @@
     const ymOf = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1); };
     function inbox(uid) {
       const del = new Set(db.inboxDel[uid] || []), L = [], st = q => ({ status: q.status, note: q.note || '', decided: q.decided || 0, changed: !!q.changed });
-      db.poruke.filter(p => p.to.includes(uid)).forEach(p => L.push({ k: 'po', id: p.id, ts: p.ts, t: 'Poruka administratora', text: p.text, from: nameOf(p.from), read: p.reads[uid] || 0 }));
+      db.poruke.filter(p => p.to.includes(uid)).forEach(p => L.push({ k: 'po', id: p.id, ts: p.ts, t: 'Poruka administratora', text: p.text, files: p.files || [], from: nameOf(p.from), read: p.reads[uid] || 0 }));
       db.obav.filter(o => o.uid === uid).forEach(o => L.push({ k: 'ob', id: o.id, ts: o.ts, t: 'Obavijest', text: o.text, read: o.read ? 1 : 0 }));
       db.slreq.filter(q => q.uid === uid).forEach(q => L.push({ k: 'sl', id: q.id, ts: q.ts, t: 'Zahtjev za slobodan dan', text: dfmt(q.date) + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
       db.gorq.filter(q => q.uid === uid && q.source !== 'admin').forEach(q => L.push({ k: 'go', id: q.id, ts: q.ts, t: 'Zahtjev za godišnji odmor', text: (q.dates.length === 1 ? dfmt(q.dates[0]) : dfmt(q.dates[0]) + ' – ' + dfmt(q.dates[q.dates.length - 1]) + ' (' + q.dates.length + ' dana)') + (q.reason ? ' – ' + q.reason : ''), ...st(q) }));
