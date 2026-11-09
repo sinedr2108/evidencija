@@ -600,7 +600,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <li>Filteri: godina, vrsta, status (prihvaćeno, odbijeno, na čekanju) i radnik.</li>
    <li>Uz svaku odluku piše tko ju je donio i kada te je li je radnik vidio.</li>
    <li><b>Promijeni u odbijeno/prihvaćeno</b> mijenja odluku; radnik dobiva novu obavijest. Odluka se ne može mijenjati kad je datum prošao ili je radnik dan već iskoristio.</li>
-   <li><b>Obriši</b> uz odbijeni zahtjev (ili <b>Obriši sve odbijene</b> za popis prema filterima) trajno briše odbijeni zahtjev, i kod administratora i iz radnikove pošte. Prihvaćeni zahtjevi i oni na čekanju ne mogu se brisati.</li></ul>
+   <li><b>Obriši</b> uz odbijeni zahtjev (ili <b>Obriši sve odbijene</b> za popis prema filterima) trajno briše odbijeni zahtjev, i kod administratora i iz radnikove pošte. Gumb <b>Obriši</b> ima i svaki odbijeni zahtjev u dijelu „Riješeno” na karticama zahtjeva na početnoj stranici (slobodan dan, godišnji odmor, otvaranje mjeseca). Prihvaćeni zahtjevi i oni na čekanju ne mogu se brisati.</li></ul>
    </div>
    <div class="uh" data-h="ast">
    <h3>STATISTIKA</h3>
@@ -724,7 +724,7 @@ const sn=r=>r.status==='open'?'':r.seen?'viđeno '+new Date(r.seen).toLocaleStri
 const chBtn=(r,k)=>{if(k==='gr')return '';const ev=k==='sl'?r.date:k==='go'?r.dates[0]:'';if(ev&&today()>ev)return '<span class="mu">odluka se više ne može mijenjati (datum je prošao)</span>';return '<button class="sm" data-ch="'+k+'|'+E(r.id)+'|'+(r.status==='approved'?'0':'1')+'">Promijeni u '+(r.status==='approved'?'odbijeno':'prihvaćeno')+'</button>'};
 const stTxt=r=>r.status==='approved'?'<b style="color:var(--ok)">prihvaćeno</b>':r.status==='rejected'?'<b style="color:var(--er)">odbijeno</b>':'<b>na čekanju</b>';
 const who=r=>r.status==='open'?'':(r.status==='approved'?'odobrio: ':'odbio: ')+(r.decidedBy?E((users.find(u=>u.id===r.decidedBy)||{}).name||'?'):'–')+(r.decided?' · '+new Date(r.decided).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'');
-const DI=(r,t,k,extra)=>'<div class="dr"><div class="dt"><b>'+E(r.name)+'</b> · '+t+extra+'</div><div class="ds">'+stTxt(r)+'<span class="mu">'+who(r)+'</span><span class="mu">'+sn(r)+'</span>'+chBtn(r,k)+'</div></div>';
+const DI=(r,t,k,extra)=>'<div class="dr"><div class="dt"><b>'+E(r.name)+'</b> · '+t+extra+'</div><div class="ds">'+stTxt(r)+'<span class="mu">'+who(r)+'</span><span class="mu">'+sn(r)+'</span>'+chBtn(r,k)+(r.status==='rejected'?'<button class="sm" data-zdd="'+k+'|'+E(r.id)+'|'+E(r.name)+'">Obriši</button>':'')+'</div></div>';
 const DR=(l,k,t)=>'<div class="mu" style="margin-top:10px">Riješeno (prikazuje se do dana na koji se odnosi):</div>'+l.map(r=>DI(r,t(r),k,r.changed?' <span class="mu">(odluka izmijenjena)</span>':'')).join('');
 const NERAD=Core.NERAD,rd=n=>Math.round(n*100)/100,dm=d=>d.slice(8,10)+'.'+d.slice(5,7)+'.';
 function draw(){
@@ -1122,6 +1122,7 @@ function drawZh(){
 ['zy','zt','zs','zw'].forEach(i=>$(i).onchange=drawZh);
 /* brisanje odbijenih zahtjeva (zahtjev nestaje i iz radnikove pošte) */
 let zhL=[];const zhDel=async l=>{let n=0;for(const x of l){try{await api('DELETE','zahtjev/'+x.k+'/'+encodeURIComponent(x.r.id));n++}catch(e){toast(e.message);break}}if(n)toast(n===1?'Odbijeni zahtjev je obrisan.':'Obrisano odbijenih zahtjeva: '+n+'.');await load()};
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-zdd]');if(!b)return;const[k,id,...nm]=b.dataset.zdd.split('|');if(!await cf('Obrisati ovaj odbijeni zahtjev ('+nm.join('|')+')? Nestat će i iz radnikove pošte.'))return;b.disabled=true;zhDel([{k,r:{id}}])});
 $('p-azh').addEventListener('click',async e=>{const b=e.target.closest('[data-zdel]');if(b){const[k,id]=b.dataset.zdel.split('|'),x=zhL.find(z=>z.k===k&&z.r.id===id);if(!x||!await cf('Obrisati ovaj odbijeni zahtjev ('+x.t+', '+x.r.name+')? Nestat će i iz radnikove pošte.'))return;b.disabled=true;return zhDel([x])}
  if(e.target.id==='zdall'){const l=zhL.filter(x=>x.r.status==='rejected');if(!l.length||!await cf('Obrisati sve odbijene zahtjeve s popisa ('+l.length+')? Nestat će i iz pošte radnika.'))return;e.target.disabled=true;zhDel(l)}});
 function drawOb(){
