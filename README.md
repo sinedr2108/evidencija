@@ -34,6 +34,7 @@ Lozinke putuju mrežom, zato koristite HTTPS: IIS s *URL Rewrite + ARR* kao reve
 Svi podaci su u jednoj datoteci: `data\db.json`. Kopirajte je redovito (npr. Task Scheduler jednom dnevno).
 
 ## 6. Novosti u izvještajima
+- **Obrisani odbijeni zahtjevi ostaju radniku** (9.11.2026., bez promjene verzije podataka): *Obriši* uz odbijeni zahtjev skriva ga samo kod administratora (`adel`); radnik ga i dalje vidi u pošti do datuma na koji se odnosi (slobodan dan: taj dan, godišnji: zadnji dan, otvaranje mjeseca: kraj mjeseca, novo gradilište: 30 dana od brisanja), nakon toga server ga trajno briše (pri pokretanju i svakih 6 h).
 - **Obriši i na početnoj** (9.11.2026., bez promjene podataka): odbijeni zahtjevi u dijelu „Riješeno” na karticama zahtjeva na početnoj stranici administratora (slobodan dan, godišnji odmor, otvaranje mjeseca) također imaju gumb *Obriši*.
 - **Brisanje odbijenih zahtjeva** (9.11.2026., bez promjene podataka): u *Odobreni zahtjevi* administrator (s pravom za tu vrstu) briše odbijeni zahtjev (slobodan dan, godišnji, otvaranje mjeseca, novo gradilište) gumbom *Obriši* ili sve odbijene s popisa odjednom; zahtjev nestaje i iz radnikove pošte.
 - **Obavijesti radnicima na početnoj** (9.11.2026., bez promjene podataka): gumb *✉ OBAVIJESTI RADNICIMA* premješten je s Evidencije radnog vremena na početni zaslon administratora (vidi ga tko ima pravo Obavijesti).

@@ -188,9 +188,9 @@ R('POST','/api/logout',0,c=>c.send(200,{ok:1},{'Set-Cookie':'t=; HttpOnly; Path=
 R('GET','/api/me',1,c=>c.send(200,{id:c.u.id,name:c.u.name,role:c.u.role,prava:pravaOf(c.u),nau:!!c.u.nau,sites:db.sites,meals:db.meals,vrste:core.vrsteOf(c.u)}));
 R('GET','/api/data',1,c=>{const a=c.u.role==='admin'||(!!c.q.adm&&can(c.u,'ev'));
   c.send(200,{entries:db.entries.filter(e=>a||e.uid===c.u.id).map(e=>({...e,vrsta:e.vrsta||'Redovan rad',name:core.nameOf(e.uid)})),closed:db.closed.filter(k=>a||k.startsWith(c.u.id+'|')),
-    requests:db.requests.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),bezUnosa:db.bezUnosa.filter(x=>a||x.uid===c.u.id).map(x=>({...x,name:core.nameOf(x.uid)})),prijenos:core.prMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id],todayStr()),prOut:core.prOutMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id]),
-    gorq:db.gorq.filter(q=>a||q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
-    sitereq:db.sitereq.filter(r=>a||r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
+    requests:db.requests.filter(r=>a?!r.adel:r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),slreq:db.slreq.filter(q=>a?!q.adel:q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),bezUnosa:db.bezUnosa.filter(x=>a||x.uid===c.u.id).map(x=>({...x,name:core.nameOf(x.uid)})),prijenos:core.prMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id],todayStr()),prOut:core.prOutMap(a?db.users.filter(u=>u.role==='user').map(u=>u.id):[c.u.id]),
+    gorq:db.gorq.filter(q=>a?!q.adel:q.uid===c.u.id).map(q=>({...q,name:core.nameOf(q.uid)})),obav:a?[]:db.obav.filter(o=>o.uid===c.u.id&&!o.read&&(!o.until||o.until>=todayStr())),
+    sitereq:db.sitereq.filter(r=>a?!r.adel:r.uid===c.u.id).map(r=>({...r,name:core.nameOf(r.uid)})),siteNews:a?[]:db.siteNews.filter(n=>n.ts>(c.u.siteSeen||0)).map(n=>n.site),
     poruke:a?db.poruke.slice().sort((x,y)=>y.ts-x.ts).map(p=>({...p,fromName:core.nameOf(p.from),toNames:Object.fromEntries(p.to.map(id=>[id,core.nameOf(id)]))})):db.poruke.filter(p=>p.to.includes(c.u.id)&&!p.reads[c.u.id]).map(p=>({id:p.id,text:p.text,ts:p.ts,files:p.files||[],fromName:core.nameOf(p.from)})),
     svOtv:core.svOtvoreni(c.u.id),alZn:core.alZnW(c.u.id),go:a?null:core.goStats(c.u.id,new Date().getFullYear()),godatumi:a?[]:[...core.goDates(c.u.id)],rev})});
 R('GET','/api/rev',1,c=>c.send(200,{rev}));
@@ -278,7 +278,10 @@ R('DELETE','/api/slreq/:id',1,c=>wd(c,'slreq'));R('DELETE','/api/gorq/:id',1,c=>
 /* administrator briše ODBIJENI zahtjev (nestaje i radniku); prihvaćeni i otvoreni se ne brišu */
 R('DELETE','/api/zahtjev/:k/:id',1,c=>{const m={sl:['slreq','sl'],go:['gorq','go'],mj:['requests','iz'],gr:['sitereq','gr']}[c.p[0]];if(!m)return c.send(404,{e:'Nepoznata vrsta zahtjeva.'});
   if(!can(c.u,m[1]))return c.send(403,{e:'Nemate pravo.'});const i=db[m[0]].findIndex(x=>x.id===c.p[1]);if(i<0)return c.send(404,{e:'Zahtjev nije pronađen.'});
-  if(db[m[0]][i].status!=='rejected')return c.send(400,{e:'Brisati se mogu samo odbijeni zahtjevi.'});db[m[0]].splice(i,1);save();c.send(200,{ok:1})});
+  if(db[m[0]][i].status!=='rejected')return c.send(400,{e:'Brisati se mogu samo odbijeni zahtjevi.'});db[m[0]][i].adel={ts:Date.now(),by:c.u.id};zhSweep();save();c.send(200,{ok:1})});
+/* Obrisani odbijeni zahtjev (adel) nestaje samo kod administratora; radnik ga vidi do datuma zahtjeva (core.zhDo), zatim se trajno briše */
+const zhSweep=()=>{const t=todayStr();let n=0;for(const k of ['slreq','gorq','requests','sitereq']){const l=db[k].filter(q=>!(q.adel&&core.zhDo(k,q)<t));n+=db[k].length-l.length;db[k]=l}return n};
+if(zhSweep())save();setInterval(()=>{if(zhSweep())save()},6*36e5);
 function wd(c,k){if(c.u.role!=='user')return c.send(403,{e:'Samo za radnike.'});const i=db[k].findIndex(x=>x.id===c.p[0]&&x.uid===c.u.id);
   if(i<0)return c.send(404,{e:'Zahtjev nije pronađen.'});if(db[k][i].status!=='open')return c.send(400,{e:'Zahtjev je već riješen i ne može se povući.'});
   db[k].splice(i,1);save();c.send(200,{ok:1})}
