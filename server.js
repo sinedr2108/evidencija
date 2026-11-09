@@ -305,8 +305,8 @@ R('POST','/api/poruke','po',c=>{const t=String(c.b.text||'').trim().slice(0,2000
   const act=db.users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled).map(u=>u.id);
   const to=c.b.all?act:[...new Set(Array.isArray(c.b.uids)?c.b.uids:[])].filter(id=>act.includes(id));
   if(!to.length)return c.send(400,{e:'Odaberite barem jednog radnika.'});
-  db.poruke.push({id:crypto.randomUUID(),from:c.u.id,text:t,ts:Date.now(),to,all:!!c.b.all,reads:{},files:fl});save();c.send(200,{ok:1,n:to.length});
-  pushU(to,'Nova poruka: '+c.u.name,(t||'')+(fl.length?(t?' ':'')+'📎 '+fl.length+(fl.length===1?' privitak':' privitka'):''),'/')});
+  const pid=crypto.randomUUID();db.poruke.push({id:pid,from:c.u.id,text:t,ts:Date.now(),to,all:!!c.b.all,reads:{},files:fl});save();c.send(200,{ok:1,n:to.length});
+  pushU(to,'Nova poruka: '+c.u.name,(t||'')+(fl.length?(t?' ':'')+'📎 '+fl.length+(fl.length===1?' privitak':' privitka'):''),'/#po-'+pid)});
 R('POST','/api/poruke/:id/read',1,c=>{const p=db.poruke.find(x=>x.id===c.p[0]&&x.to.includes(c.u.id));if(!p)return c.send(404,{e:'Poruka nije pronađena.'});
   if(!p.reads[c.u.id])p.reads[c.u.id]=Date.now();save();c.send(200,{ok:1})});
 R('DELETE','/api/poruke/:id','po',c=>{const i=db.poruke.findIndex(x=>x.id===c.p[0]);if(i<0)return c.send(404,{e:'Poruka nije pronađena.'});const[p0]=db.poruke.splice(i,1);save();(p0.files||[]).forEach(x=>{try{fs.unlinkSync(path.join(PRD,x.f))}catch(e){}});c.send(200,{ok:1})});

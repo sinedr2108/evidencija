@@ -73,6 +73,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
 .calg button.tod{border-width:2px;border-color:var(--sh)}.calg button.sel{background:var(--sh);border-color:var(--sh);color:var(--shx);opacity:1}
 .calk{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--mu);margin-top:6px}.calk i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 .logo{display:block;height:46px;width:auto;margin:6px 0 10px}
+@keyframes flash{0%,60%{box-shadow:0 0 0 4px #db2777}100%{box-shadow:none}}.flash{animation:flash 2.4s ease-out}
 </style></head><body><main>
 <img class="logo" src="/logo.png" alt="Logo tvrtke">
 <!--LOGIN--><section id="login" class="card hide" style="margin-top:40px">
@@ -207,7 +208,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <li>Nakon prve prijave promijenite lozinku: na početnoj stranici gumb <b>Lozinka</b>.</li>
    <li>Aplikaciju dodajte na početni zaslon mobitela: Chrome → izbornik ⋮ → <i>Dodaj na početni zaslon</i>; iPhone (Safari) → <i>Dijeli</i> → <i>Dodaj na početni zaslon</i>. Ikona ima logo tvrtke i naziv TiDy Connect; ako imate stari prečac, obrišite ga i dodajte ponovno.</li>
    <li>Ako zaboravite lozinku, javite se administratoru – on vam može poslati nove podatke za prijavu.</li>
-   <li><b>Obavijesti na mobitelu:</b> na početnoj stranici dodirnite <b>Uključi obavijesti</b> i dopustite ih. Mobitel vam tada javi novu poruku administratora, odluku o zahtjevu, novi radni nalog za servis, obrađenu narudžbu materijala, pitanje o otpremnici i novo gradilište i kad je aplikacija zatvorena. Na <b>Androidu</b> radi u Chromeu, a na <b>iPhoneu</b> (iOS 16.4 ili noviji) samo kad aplikaciju otvorite s ikone na početnom zaslonu. Uključuje se posebno na svakom uređaju, a isključuje u dijelu <b>Poruke i obavijesti</b>; odjavom se obavijesti na tom uređaju zaustave do sljedeće prijave.</li>
+   <li><b>Obavijesti na mobitelu:</b> na početnoj stranici dodirnite <b>Uključi obavijesti</b> i dopustite ih. Mobitel vam tada javi novu poruku administratora, odluku o zahtjevu, novi radni nalog za servis, obrađenu narudžbu materijala, pitanje o otpremnici i novo gradilište i kad je aplikacija zatvorena. Na <b>Androidu</b> radi u Chromeu, a na <b>iPhoneu</b> (iOS 16.4 ili noviji) samo kad aplikaciju otvorite s ikone na početnom zaslonu. Uključuje se posebno na svakom uređaju, a isključuje u dijelu <b>Poruke i obavijesti</b>; odjavom se obavijesti na tom uređaju zaustave do sljedeće prijave. Dodir na obavijest o poruci administratora otvara aplikaciju izravno na toj poruci.</li>
    <li>Aplikacija se <b>sama osvježava</b> (svakih desetak sekundi): odluke, poruke i obavijesti administratora pojavit će se bez odjave i ponovne prijave. Dok upisujete tekst, osvježavanje čeka da završite.</li></ul>
    </div>
    <div class="uh" data-h="hm">
@@ -703,7 +704,7 @@ async function load(){
  me.evf=me.full||me.prava.includes('ev')?EVF:me.pa?EVF.filter(g=>me.prava.includes(g)):[];me.ak=me.full||(me.pa&&me.prava.includes('ak'));
  me.grp=me.full?['ot','ev','al','nm','sv']:me.pa?['ot','ev','al','nm','sv'].filter(g=>g==='ev'?me.evf.length:me.prava.includes(g)):[];
  const d=await api('GET','data'+(me.pa?'?adm=1':''));entries=d.entries;closed=d.closed;reqs=d.requests||[];prij=d.prijenos||{};prOut=d.prOut||{};slreq=d.slreq||[];bezU=d.bezUnosa||[];gorq=d.gorq||[];obav=d.obav||[];poruke=d.poruke||[];sitereq=d.sitereq||[];if(d.siteNews&&d.siteNews.length){snShow=[...new Set(snShow.concat(d.siteNews))];api('POST','sitenews/seen').catch(()=>{})}go=d.go||null;godatumi=d.godatumi||[];svOtv=d.svOtv||0;alZn=d.alZn||0;liveRev=d.rev;if(me.role==='admin'){users=(await api('GET','users')).sort((a,b)=>abc(a.name,b.name));zn=await api('GET','znacke').catch(()=>({}))}else inbox=await api('GET','inbox')}catch(e){return}
- $('login').classList.add('hide');$('app').classList.remove('hide');draw();
+ $('login').classList.add('hide');$('app').classList.remove('hide');draw();hashGo();
 }
 const mine=()=>entries.filter(e=>e.uid===me.id);
 const mealTaken=(d,x)=>mine().some(e=>e.date===d&&e.meal&&e.id!==x);
@@ -752,7 +753,7 @@ function draw(){
   $('obv').innerHTML=obav.map(o=>'<div style="margin-bottom:6px"><b>Obavijest:</b> '+E(o.text)+'</div>').join('')+'<button class="sm pri" id="obok">U redu</button>'}
  $('snw').innerHTML=me.role==='admin'?'':snShow.map(x=>'<div class="card" style="border-left:5px solid var(--gr)"><b>Administrator je dodao novo gradilište „'+E(x)+'“.</b><div class="mu">Sada ga možete odabrati u ŠIHTERICI.</div></div>').join('');
  if(me.role!=='admin'){const dd=x=>new Date(x).toLocaleDateString('hr-HR');$('srs').innerHTML=sitereq.filter(r=>r.status==='open').map(r=>'<div class="mu" style="margin:6px 0">Zahtjev za gradilište „'+E(r.text)+'“ ('+dd(r.ts)+') čeka administratora. <button class="sm" data-wd="sitereq|'+E(r.id)+'">Odustani od zahtjeva</button></div>').join('')}
- $('por').innerHTML=me.role==='admin'?'':poruke.map(x=>'<div class="card" style="border-left:5px solid #db2777"><div class="mu">Poruka administratora · '+E(x.fromName)+' · '+new Date(x.ts).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</div><div style="white-space:pre-wrap;margin:6px 0 10px;font-size:16px">'+E(x.text)+'</div>'+prHtml(x.files)+'<button class="sm pri" data-prd="'+E(x.id)+'">Pročitao/la sam</button></div>').join('');
+ $('por').innerHTML=me.role==='admin'?'':poruke.map(x=>'<div class="card" id="por-'+E(x.id)+'" style="border-left:5px solid #db2777"><div class="mu">Poruka administratora · '+E(x.fromName)+' · '+new Date(x.ts).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+'</div><div style="white-space:pre-wrap;margin:6px 0 10px;font-size:16px">'+E(x.text)+'</div>'+prHtml(x.files)+'<button class="sm pri" data-prd="'+E(x.id)+'">Pročitao/la sam</button></div>').join('');
 {const dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.',t0=today(),L=[];
  slreq.filter(r=>r.uid===me.id&&r.status!=='open').forEach(r=>{if(r.date>=t0)L.push({k:'sl',r,end:r.date,t:'Zahtjev za slobodan dan ('+dd(r.date)+')'})});
  gorq.filter(r=>r.uid===me.id&&r.status!=='open'&&r.source!=='admin').forEach(r=>{const e=r.dates[r.dates.length-1];if(e>=t0)L.push({k:'go',r,end:e,t:'Zahtjev za godišnji odmor ('+(r.dates.length===1?dd(r.dates[0]):dd(r.dates[0])+' – '+dd(e)+', '+r.dates.length+' dana')+')'})});
@@ -876,7 +877,7 @@ function drawPt(){const adm=me.role==='admin';$('ptb').classList.toggle('hide',a
  const ts=t=>new Date(t).toLocaleString('hr-HR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),C={po:'#db2777',ob:'var(--ac)',sl:'var(--yl)',go:'var(--pu)',mj:'var(--sh)',gr:'var(--gr)'};
  $('ptl').innerHTML=inbox.items.length?inbox.items.map(x=>{const req=x.status!==undefined;
   const s=!req?(x.read?'<span class="mu">pročitano</span>':'<b style="color:var(--er)">nepročitano</b>'):stTxt(x)+(x.changed?' <span class="mu">(odluka izmijenjena)</span>':'')+(x.decided?' <span class="mu">· '+ts(x.decided)+'</span>':'');
-  return '<div class="card" style="border-left:5px solid '+C[x.k]+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(x.t)+'</b><div class="mu">'+(req?'poslano ':'')+ts(x.ts)+(x.from?' · '+E(x.from):'')+'</div></div><span><button class="x" data-ptd="'+E(x.k+'|'+x.id)+'" aria-label="Obriši" title="Obriši">✕</button></span></div>'
+  return '<div class="card" id="ptc-'+E(x.k+'-'+x.id)+'" style="border-left:5px solid '+C[x.k]+'"><div class="row" style="padding:0;border:0;align-items:flex-start"><div><b>'+E(x.t)+'</b><div class="mu">'+(req?'poslano ':'')+ts(x.ts)+(x.from?' · '+E(x.from):'')+'</div></div><span><button class="x" data-ptd="'+E(x.k+'|'+x.id)+'" aria-label="Obriši" title="Obriši">✕</button></span></div>'
    +'<div style="white-space:pre-wrap;margin:6px 0">'+E(x.text)+'</div>'+prHtml(x.files)+'<div>'+s+'</div>'+(x.note?'<div class="mu">Napomena: '+E(x.note)+'</div>':'')+'</div>'}).join(''):'<div class="card mu">Nema poruka ni zahtjeva.</div>'}
 $('ptb').onclick=()=>setPage('pt');
 $('ptl').onclick=async e=>{const b=e.target.closest('[data-ptd]');if(!b)return;const[k,id]=b.dataset.ptd.split('|');
@@ -884,7 +885,13 @@ $('ptl').onclick=async e=>{const b=e.target.closest('[data-ptd]');if(!b)return;c
 /* kućica: iz ŠIHTERICE, GODIŠNJEG, SLOBODNOG DANA i IZVJEŠTAJA natrag na Evidenciju radnog vremena, inače na početnu */
 $('home').onclick=()=>setPage(page==='up'||page==='aup'?upBack:['sh','go','sl','iz'].includes(page)?'ev':['aiz','asl','ago','agr','apo','azh','ast','aob'].includes(page)?'aev':me.role==='admin'?'ahm':'hm');
 $('avb').onclick=async()=>{setAdmView(!me.pa);page=me.pa?'hm':'ahm';await load();window.scrollTo(0,0)};$('psb').onclick=()=>setPage('aps');$('upb').onclick=()=>{upFrom=upBack=page;setPage(me.role==='admin'?'aup':'up')};$('upa').onclick=()=>{upFrom='up';draw();window.scrollTo(0,0)};$('aupa').onclick=()=>{upFrom='aup';draw();window.scrollTo(0,0)};
-window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);page=TIT[p]?p:'hm';if(me)draw()});
+/* adresa iz push obavijesti: #stranica ili #po-<id> (otvara primljenu poruku: na početnoj dok nije pročitana, inače u Porukama i zahtjevima) */
+async function hashGo(){let h='';try{h=decodeURIComponent(location.hash.slice(1))}catch(e){}if(!me||!h)return;
+ if(h.startsWith('po-')){const id=h.slice(3),un=poruke.some(x=>x.id===id);
+  if(!un&&!(inbox.items||[]).some(x=>x.k==='po'&&x.id===id)&&!hashGo.re){hashGo.re=1;try{await load()}finally{hashGo.re=0}return}page=un?'hm':'pt';try{history.replaceState(null,'',location.pathname+location.search+(un?'':'#pt'))}catch(e){}draw();
+  setTimeout(()=>{const el=document.getElementById('por-'+id)||document.getElementById('ptc-po-'+id);if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}},80);return}
+ if(TIT[h]&&page!==h){page=h;draw()}}
+window.addEventListener('hashchange',()=>{const p=location.hash.slice(1);if(p.startsWith('po-'))return hashGo();page=TIT[p]?p:'hm';if(me)draw()});
 const isHol=d=>/^\d{4}-\d{2}-\d{2}$/.test(d)&&Core.holidays(+d.slice(0,4)).has(d);
 const slOk=d=>slreq.some(r=>r.uid===me.id&&r.status==='approved'&&r.date===d&&(!r.entryId||r.entryId===editId));
 /* stanje sati za slobodan dan: ručni prijenos u sljedeći mjesec ima prednost pred izračunom */
