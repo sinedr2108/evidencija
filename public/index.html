@@ -216,7 +216,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <ul><li><b>Naučnik</b> na početnoj stranici ima samo <b>ŠIHTERICU</b>. Vrste upisa su <b>Praktična nastava</b> (gradilište, odrađeni sati i topli obrok kao kod ostalih, bez terenskog dodatka), <b>Bolest</b> i <b>Odobren izostanak</b> (0 sati, upisuju se automatski). Naučnik ne mora imati unos za svaki radni dan, pa mjesec može završiti i s praznim danima. Poruke, obavijesti i završavanje mjeseca rade kao kod ostalih.</li>
    <li><b>Obavijesti</b> – odluke administratora o vašim zahtjevima. Vide se do kraja dana na koji se odnose; administrator vidi da ste ih pročitali čim otvorite početnu stranicu.</li>
    <li><b>Novo gradilište</b> – kad administrator doda novo gradilište, obavijest se prikaže pri prvom sljedećem otvaranju aplikacije.</li>
-   <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada. Ako poruka ima <b>privitak</b>, fotografiju otvorite dodirom na sličicu, a dokument (PDF, Word, Excel) gumbom s njegovim imenom.</li>
+   <li><b>Poruke administratora</b> – obavijesti koje vam pošalje administrator (ružičasti rub). Ostaju na početnoj stranici dok ne kliknete <b>Pročitao/la sam</b>; administrator tada vidi da ste poruku pročitali i kada. Ako poruka ima <b>privitak</b>, fotografiju otvorite dodirom na sličicu, a dokument (PDF, Word, Excel) gumbom s njegovim imenom. <b>PDF</b> se otvara u aplikaciji (gumbi − i + za veličinu, <b>Preuzmi</b> za spremanje ili dijeljenje, <b>← Natrag</b> za povratak).</li>
    <li><b>Gumb s pismom</b> (gore, uz Lozinka i Odjava) – sve poruke i obavijesti koje ste primili te zahtjevi koje ste poslali (slobodan dan, godišnji, ponovno otvaranje mjeseca, novo gradilište) s njihovim statusom, najnovije na vrhu. Crveni broj na gumbu je broj nepročitanih poruka. Svaku stavku možete obrisati gumbom ✕ (briše se samo iz vaše pošte). Na kraju mjeseca automatski ostaje samo 5 najnovijih.</li>
    <li>Plavi gumb <b>?</b> dolje desno postoji na svakoj stranici i otvara upute baš za tu stranicu. Na dnu uputa je gumb <b>Sve upute</b>.</li>
    <li>Glavni dijelovi: <b>OTPREMNICE</b>, <b>EVIDENCIJA RADNOG VREMENA</b>, <b>NARUČI MATERIJAL</b>, <b>SERVIS – RADNI NALOZI</b> i <b>ALAT</b>. Broj sa zvonom na tipki SERVIS – RADNI NALOZI pokazuje koliko vas servisa čeka, a na tipki ALAT koliko zahtjeva i predaja alata čeka vas.</li>
@@ -589,6 +589,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <h3>OBAVIJESTI RADNICIMA</h3>
    <ul><li>Upišite tekst poruke, odaberite <b>sve radnike</b> ili <b>odabrane radnike</b> i kliknite <b>Pošalji poruku</b>.</li>
    <li><b>Privici</b>: uz poruku možete priložiti do 5 datoteka (svaka do 10 MB). <b>📷 Fotoaparat</b> odmah snima fotografiju, <b>🖼️ Galerija</b> bira fotografije s uređaja, a <b>📎 Dokument</b> PDF, Word ili Excel datoteku. Fotografije se prije slanja smanje. Privitak uklanjate s ✕ prije slanja. Poruka može biti i samo privitak bez teksta.</li>
+   <li><b>PDF dokumenti</b> (privici, izvještaji, narudžbe, radni nalozi) otvaraju se u ugrađenom pregledniku unutar aplikacije, bez vanjske aplikacije. <b>Preuzmi</b> ih sprema na uređaj ili nudi dijeljenje.</li>
    <li>Radnik poruku vidi na početnoj stranici dok ne klikne <i>Pročitao/la sam</i>.</li>
    <li>Ispod su poslane poruke: „Pročitalo x / y“ i za svakog radnika vrijeme čitanja ili „nije pročitano“. Poruku možete obrisati.</li></ul>
    </div>
@@ -666,6 +667,10 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
  <div id="otvc"><img id="otvi" alt="Fotografija"></div>
  <div id="otvt" style="color:#fff;margin-top:8px;text-align:center;font-size:14px"></div>
  <div class="fl" style="margin-top:8px;flex-wrap:wrap;justify-content:center"><button class="sm" id="otvp" aria-label="Prethodna">‹ Prethodna</button><button class="sm" id="otvz">Povećaj</button><button class="sm" id="otvd">Preuzmi</button><button class="sm" id="otvn" aria-label="Sljedeća">Sljedeća ›</button><button class="sm pri" id="otvx">✕ Natrag</button></div></div>
+<div id="pdv" class="hide" role="dialog" aria-modal="true" aria-label="PDF dokument" style="position:fixed;inset:0;background:#525659;z-index:61;display:flex;flex-direction:column">
+ <div style="display:flex;align-items:center;gap:6px;padding:8px;background:var(--card);border-bottom:1px solid var(--bd)"><button class="sm" id="pdx" aria-label="Natrag">← Natrag</button><div id="pdn" style="flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+  <button class="sm" id="pdm" aria-label="Smanji">−</button><button class="sm" id="pdp" aria-label="Povećaj">+</button><button class="sm" id="pdd">Preuzmi</button></div>
+ <div id="pdc" style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px 0;text-align:center"></div><div id="pdi" class="mu" style="position:absolute;bottom:10px;left:0;right:0;text-align:center;pointer-events:none"><span style="background:var(--card);padding:4px 10px;border-radius:12px"></span></div></div>
 <div id="fo" class="hide" role="dialog" aria-modal="true" aria-label="Datoteka" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px"><div class="card" style="max-width:420px;width:100%">
  <div style="font-weight:600">Datoteka je spremna</div><div class="mu" id="fon" style="margin-top:4px;word-break:break-all"></div>
  <button class="big" id="fos" style="margin-top:14px">Otvori / podijeli</button><button class="sm" id="fod" style="width:100%;margin-top:8px">Spremi na uređaj</button>
@@ -974,17 +979,31 @@ function foShow(b,name){const fl=new File([b],name,{type:b.type||'application/oc
  $('fo').classList.remove('hide');ovOpen(()=>{$('fo').classList.add('hide');foB=null})}
 $('fos').onclick=async()=>{if(!foB)return;try{await navigator.share({files:[foB.fl],title:foB.name})}catch(e){if(e&&e.name!=='AbortError'&&foB){blobSave(foB.b,foB.name);toast('Dijeljenje nije uspjelo, datoteka je spremljena na uređaj.')}}};
 $('fod').onclick=()=>{if(foB)blobSave(foB.b,foB.name)};$('fox').onclick=ovClose;$('fo').onclick=e=>{if(e.target.id==='fo')ovClose()};
+/* UGRAĐENI PREGLEDNIK PDF-a (PDF.js u public/pdfjs): PDF se otvara unutar aplikacije; Preuzmi ga sprema ili nudi dijeljenje */
+let pdS=null;const pdLib=()=>window.pdfjsLib?Promise.resolve(window.pdfjsLib):new Promise((res,rej)=>{const s=document.createElement('script');s.src='/pdfjs/pdf.min.js';s.onload=()=>{pdfjsLib.GlobalWorkerOptions.workerSrc='/pdfjs/pdf.worker.min.js';res(pdfjsLib)};s.onerror=()=>rej(new Error('Preglednik PDF-a se ne može učitati.'));document.head.appendChild(s)});
+const isPdf=(b,name)=>/pdf/i.test(b&&b.type||'')||/\.pdf$/i.test(name||'');
+async function pdfShow(b,name){let doc;try{const L=await pdLib();doc=await L.getDocument({data:new Uint8Array(await b.arrayBuffer()),isEvalSupported:false,standardFontDataUrl:'/pdfjs/standard_fonts/'}).promise}catch(e){if(isMob())foShow(b,name);else blobSave(b,name);return}
+ pdS={b,name,doc,z:1,gen:0};$('pdn').textContent=name;$('pdv').classList.remove('hide');document.body.style.overflow='hidden';
+ ovOpen(()=>{$('pdv').classList.add('hide');document.body.style.overflow='';if(pdS){pdS.doc.destroy();pdS=null}$('pdc').innerHTML=''});pdDraw()}
+async function pdDraw(){if(!pdS)return;const S=pdS,g=++S.gen,c=$('pdc'),w=c.clientWidth-16,dpr=Math.min(window.devicePixelRatio||1,3),sc=c.scrollTop/(c.scrollHeight||1);c.innerHTML='';
+ for(let i=1;i<=S.doc.numPages;i++){if(S.gen!==g||pdS!==S)return;const pg=await S.doc.getPage(i),v0=pg.getViewport({scale:1}),k=Math.min(w/v0.width,2.5)*S.z,v=pg.getViewport({scale:k*dpr}),cv=document.createElement('canvas');
+  cv.width=Math.floor(v.width);cv.height=Math.floor(v.height);cv.style.width=Math.floor(v.width/dpr)+'px';cv.style.height=Math.floor(v.height/dpr)+'px';cv.style.display='block';cv.style.margin='0 auto 8px';cv.style.background='#fff';cv.style.boxShadow='0 1px 4px rgba(0,0,0,.4)';
+  c.appendChild(cv);await pg.render({canvasContext:cv.getContext('2d'),viewport:v}).promise;if(i===1&&sc)c.scrollTop=sc*c.scrollHeight}
+ const t=$('pdi').firstChild;t.textContent=S.doc.numPages+(S.doc.numPages===1?' stranica':S.doc.numPages<5?' stranice':' stranica');$('pdi').style.opacity=1;setTimeout(()=>{$('pdi').style.opacity=0},1800)}
+$('pdx').onclick=ovClose;$('pdp').onclick=()=>{if(pdS&&pdS.z<4){pdS.z=Math.min(4,pdS.z*1.25);pdDraw()}};$('pdm').onclick=()=>{if(pdS&&pdS.z>.5){pdS.z=Math.max(.5,pdS.z/1.25);pdDraw()}};
+$('pdd').onclick=()=>{if(!pdS)return;if(isMob())foShow(pdS.b,pdS.name);else blobSave(pdS.b,pdS.name)};
+let pdRz=0;window.addEventListener('resize',()=>{if(!pdS)return;clearTimeout(pdRz);pdRz=setTimeout(pdDraw,300)});
 async function fileOut(src,name){let b;
  try{const r=await fetch(src,{credentials:'same-origin'});if(!r.ok){let m='Preuzimanje nije uspjelo.';try{m=(await r.json()).e||m}catch(e){}return toast(m)}
   b=await r.blob();const cd=r.headers.get('Content-Disposition')||'',m1=/filename\*=UTF-8''([^;]+)/i.exec(cd),m2=/filename="([^"]+)"/i.exec(cd);
   try{name=m1?decodeURIComponent(m1[1]):m2?m2[1]:name}catch(e){}name=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/[^\w.\- ]+/g,'_')}catch(e){return toast('Preuzimanje nije uspjelo. Provjerite vezu.')}
- if(isMob())foShow(b,name);else blobSave(b,name)}
-function saveFile(name,data,mime){const b=new Blob([data],{type:mime});if(isMob())foShow(b,name);else blobSave(b,name)}
+ if(isPdf(b,name))return pdfShow(b,name);if(isMob())foShow(b,name);else blobSave(b,name)}
+function saveFile(name,data,mime){const b=new Blob([data],{type:mime});if(isPdf(b,name))return pdfShow(b,name);if(isMob())foShow(b,name);else blobSave(b,name)}
 $('izpdf').onclick=()=>{const mode=$('izp').value,m=$('izm').value;if(!m)return toast('Odaberite mjesec.');
  const lab=mode==='y'?m.slice(0,4)+'.':m.slice(5)+'.'+m.slice(0,4)+'.',blocks=[];['h','s','b','g'].forEach(t=>blocks.push(...htmlBlocks(izHtml(t))));
  const d=Core.pdf({title:'Izvještaj – '+me.name,info:['Razdoblje: '+(mode==='y'?'cijela godina ':'')+lab,'Izrađeno: '+new Date().toLocaleString('hr-HR')],footer:'TiDy Connect – '+me.name,blocks});
  const nm='izvjestaj-'+me.name.toLowerCase().replace(/[čć]/g,'c').replace(/đ/g,'d').replace(/š/g,'s').replace(/ž/g,'z').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+(mode==='y'?m.slice(0,4):m)+'.pdf';
- try{saveFile(nm,d,'application/pdf');toast('PDF je spremljen: '+nm)}catch(e){toast('Spremanje nije uspjelo: '+e.message)}};
+ try{saveFile(nm,d,'application/pdf')}catch(e){toast('Spremanje nije uspjelo: '+e.message)}};
 $('izt').onclick=e=>{const b=e.target.closest('button');if(!b)return;izTab=b.dataset.t;drawIzvj()};
 $('izp').onchange=()=>{drawIzvj()};$('izm').onchange=()=>{drawIzvj()};
 function drawIzv(){const m=$('zmj').value;if(m)$('pirp').innerHTML=hoursTable(m)}

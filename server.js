@@ -552,6 +552,9 @@ http.createServer((req,res)=>{
   /* ikone za početni zaslon mobitela (logo tvrtke) i manifest */
   {const IK={'/icon-192.png':'image/png','/icon-512.png':'image/png','/icon-maskable-512.png':'image/png','/apple-touch-icon.png':'image/png','/apple-touch-icon-precomposed.png':'image/png','/favicon.png':'image/png','/badge-96.png':'image/png','/logo-pdf.jpg':'image/jpeg','/favicon.ico':'image/png','/manifest.webmanifest':'application/manifest+json'},t=req.method==='GET'&&IK[url.pathname];
    if(t){const f=url.pathname==='/apple-touch-icon-precomposed.png'?'apple-touch-icon.png':url.pathname==='/favicon.ico'?'favicon.png':url.pathname.slice(1);return raw(200,fs.readFileSync(path.join(__dirname,'public',f)),{'Content-Type':t,'Cache-Control':'public, max-age=86400'})}}
+  /* ugrađeni preglednik PDF-a (PDF.js iz public/pdfjs, bez vanjskih servisa) */
+  {const m=req.method==='GET'&&/^\/pdfjs\/((?:standard_fonts\/)?[A-Za-z0-9_][A-Za-z0-9_.-]*\.(js|pfb|ttf))$/.exec(url.pathname);
+   if(m){const f=path.join(__dirname,'public','pdfjs',m[1]);if(!fs.existsSync(f))return raw(404,'');return raw(200,fs.readFileSync(f),{'Content-Type':m[2]==='js'?'application/javascript; charset=utf-8':m[2]==='ttf'?'font/ttf':'application/octet-stream','Cache-Control':'public, max-age=604800'})}}
   if(req.method==='GET'&&url.pathname==='/sw.js')
     return raw(200,fs.readFileSync(path.join(__dirname,'public','sw.js')),{'Content-Type':'application/javascript; charset=utf-8','Cache-Control':'no-cache','Service-Worker-Allowed':'/'});
   if(req.method==='GET'&&url.pathname==='/logo.png')

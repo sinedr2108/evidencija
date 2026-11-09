@@ -268,6 +268,8 @@ import json,os
 SD=P+'predlosci/sihterica/'
 siht={f:('B64:'+base64.b64encode(open(SD+f,'rb').read()).decode() if f.endswith('.png') else open(SD+f,encoding='utf-8').read()) for f in sorted(os.listdir(SD))}
 core=core+'\n'+open(P+'sihterica.js',encoding='utf-8').read()+'\nconst SIHT=Object.fromEntries(Object.entries('+json.dumps(siht,ensure_ascii=False).replace('</','<\\/')+').map(([k,v])=>[k,v.startsWith("B64:")?Uint8Array.from(atob(v.slice(4)),c=>c.charCodeAt(0)):v]));\n'
-out='<meta charset="utf-8">\n<title>TiDy Connect demo</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>'+style+'</style>\n<main>'+html+'</main>\n<script>'+core+'</script>\n<script>'+script+'</script>\n'
+J='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/'  # demo: PDF.js s jsdelivra (nema servera)
+script=script.replace("'/pdfjs/pdf.min.js'","'"+J+"build/pdf.min.js'").replace("'/pdfjs/pdf.worker.min.js'","'"+J+"build/pdf.worker.min.js'").replace("'/pdfjs/standard_fonts/'","'"+J+"standard_fonts/'")
+out='<!DOCTYPE html>\n<meta charset="utf-8">\n<title>TiDy Connect demo</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>'+style+'</style>\n<main>'+html+'</main>\n<script>'+core+'</script>\n<script>'+script+'</script>\n'
 open(sys.argv[2] if len(sys.argv)>2 else 'evidencija-demo.html','w',encoding='utf-8').write(out)
 print(len(out))
