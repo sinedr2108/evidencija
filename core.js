@@ -177,7 +177,7 @@
   const nmNum = v => String(Math.round(v * 1000) / 1000).replace('.', ',');
   const nmDt = t => { const d = new Date(t), p = n => String(n).padStart(2, '0'); return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear() + '. ' + p(d.getHours()) + ':' + p(d.getMinutes()); };
   const nmDoc = o => ({ title: 'Narudžba materijala – ' + o.site, footer: 'TiDy Connect – narudžba materijala',
-    info: ['Naručio: ' + (o.name || ''), 'Primatelj: ' + (o.adminName || ''), 'Gradilište: ' + o.site, (o.status === 'sent' ? 'Poslano: ' + nmDt(o.sentTs) : 'Nije poslano (spremljeno ' + nmDt(o.updated || o.ts) + ')')],
+    info: ['Naručio: ' + (o.name || ''), 'Primatelj: ' + (o.adminName || ''), 'Gradilište: ' + o.site, (o.status === 'sent' ? 'Poslano: ' + nmDt(o.sentTs) : 'Nije poslano (spremljeno ' + nmDt(o.updated || o.ts) + ')')].concat(o.izm && o.izm.length ? ['IZMIJENJENA narudžba, zadnja izmjena: ' + nmDt(o.izm[o.izm.length - 1].ts)] : []),
     blocks: [{ table: [{ head: true, cells: [{ t: 'R. br.', right: true }, { t: 'Materijal' }, { t: 'Količina', right: true }, { t: 'Jed. mjera' }] }].concat(o.items.map((it, i) => ({ cells: [{ t: (i + 1) + '.', right: true }, { t: it.naziv }, { t: nmNum(it.kol), right: true }, { t: it.jm }] }))) }] });
   /* zbroj istog materijala (naziv bez obzira na velika/mala slova) u istoj jediničnoj mjeri */
   const nmTotal = list => { const m = new Map(); list.forEach(o => o.items.forEach(it => { const k = it.naziv.trim().toLocaleLowerCase('hr') + '|' + it.jm; const x = m.get(k) || { naziv: it.naziv.trim(), jm: it.jm, kol: 0, n: 0 }; x.kol += it.kol; x.n++; m.set(k, x); })); return [...m.values()].sort((a, b) => a.naziv.localeCompare(b.naziv, 'hr') || a.jm.localeCompare(b.jm, 'hr')); };
@@ -369,8 +369,9 @@
         .sort((a, b) => a.p - b.p || a.naziv.localeCompare(b.naziv, 'hr', { sensitivity: 'base', numeric: true })).slice(0, max).map(({ naziv, jm }) => ({ naziv, jm }));
     }
     function nmSave(u, b) {
-      const adminId = String(b.adminId || ''), site = String(b.site || '').trim(), items = Array.isArray(b.items) ? b.items : [];
-      if (!nmPrimatelji().some(x => x.id === adminId)) return 'Odaberite administratora kojem šaljete narudžbu.';
+      const site = String(b.site || '').trim(), items = Array.isArray(b.items) ? b.items : [];
+      const old = b.id ? db.narudzbe.find(x => x.id === b.id && x.uid === u.id) : null, adminId = old && old.status === 'sent' ? old.adminId : String(b.adminId || '');
+      if (!(old && old.status === 'sent') && !nmPrimatelji().some(x => x.id === adminId)) return 'Odaberite administratora kojem šaljete narudžbu.';
       if (!(db.sites || []).includes(site)) return 'Odaberite gradilište s popisa.';
       if (!items.length) return 'Dodajte barem jednu stavku materijala.';
       if (items.length > 200) return 'Najviše 200 stavki po narudžbi.';
@@ -383,7 +384,10 @@
         it.push({ naziv, jm, kol });
       }
       const now = Date.now(); let o;
-      if (b.id) { o = db.narudzbe.find(x => x.id === b.id && x.uid === u.id); if (!o) return 'Narudžba nije pronađena.'; if (o.status === 'sent') return 'Poslana narudžba se više ne može mijenjati.'; }
+      if (b.id) { o = db.narudzbe.find(x => x.id === b.id && x.uid === u.id); if (!o) return 'Narudžba nije pronađena.'; if (o.status === 'sent') {
+        /* IZMJENA POSLANE narudžbe: dok nije obrađena ni odbijena; primatelj (i nakon prosljeđivanja) ostaje isti, ostaje poslana, bilježi se izmjena */
+        if (o.obr) return 'Narudžba je već obrađena i više se ne može mijenjati.'; if (o.odb) return 'Narudžba je odbijena i više se ne može mijenjati.'; if (!b.send) return 'Poslana narudžba ne može se vratiti u neposlane.';
+        Object.assign(o, { site, items: it, updated: now }); o.izm = (o.izm || []).concat({ ts: now }).slice(-50); return o; } }
       else { o = { id: Math.random().toString(36).slice(2) + now.toString(36), uid: u.id, ts: now }; db.narudzbe.push(o); }
       Object.assign(o, { adminId, site, items: it, updated: now, status: b.send ? 'sent' : 'unsent' });
       if (b.send) o.sentTs = now; else o.cancelTs = now;

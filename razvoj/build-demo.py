@@ -210,7 +210,7 @@ async function api(m,u,b){b=b||{};const [p,qs]=u.split('?'),Q=Object.fromEntries
  else if(key==='DELETE otpremnice'){const r=C.otpDelete(U,s[1]);if(typeof r==='string')fail(r);r.forEach(f=>delete DF[f])}
  else if(key==='GET narudzbe'&&s[1]==='nazivi'){out=C.nmNazivi(Q.q)}
  else if(key==='GET narudzbe'){out={list:C.nmList(U,!!Q.adm&&C.canG(U,'nm'),!!Q.svi),primatelji:C.nmPrimatelji(),jm:Core.NM_JM}}
- else if(key==='POST narudzbe'){noAdm();const o=C.nmSave(U,b);if(typeof o==='string')fail(o);if(o.status==='sent'){o.obr=null;o.fwd=[]}out={ok:1,id:o.id,mail:o.status==='sent'?'Demo: e-mail se ovdje ne šalje; na pravom serveru primatelj dobiva e-mail s PDF-om.':''}}
+ else if(key==='POST narudzbe'){noAdm();const izm=!!b.id&&db.narudzbe.some(x=>x.id===b.id&&x.uid===U.id&&x.status==='sent');const o=C.nmSave(U,b);if(typeof o==='string')fail(o);if(o.status==='sent'&&!izm){o.obr=null;o.fwd=[]}out={ok:1,id:o.id,mail:o.status==='sent'?'Demo: e-mail se ovdje ne šalje; na pravom serveru primatelj dobiva e-mail s PDF-om.':''}}
  else if(key==='DELETE narudzbe'){noAdm();const r=C.nmDelete(U,s[1]);if(typeof r==='string')fail(r);out={ok:1}}
  else if(key==='GET tvrtka'){out=Object.assign({naziv:'TiD-INTEL d.o.o.',adresa:'',oib:'',tel:'',email:'',web:'www.tid-intel.hr',iban:''},db.tvrtka||{})}
  else if(key==='PUT tvrtka'){adm();db.tvrtka={};Core.TVRTKA.forEach(k=>db.tvrtka[k]=String(b[k]||'').trim())}
