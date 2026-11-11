@@ -139,7 +139,7 @@ const AKT={
   'DELETE /api/otpremnice/:id':{pre:c=>db.otpremnice.find(x=>x.id===c.p[0]),f:(c,o)=>['Obrisana otpremnica',o?(o.site||'Odluka administratora')+' · '+aktD(o.date):'']},
   'POST /api/otpremnice/:id/odgovor':{pre:c=>db.otpremnice.find(x=>x.id===c.p[0]),f:(c,o)=>['Odgovor na pitanje o otpremnici',(o?(core.otpSite(o,o.files[0])||'Odluka administratora')+' · '+aktD(o.date)+'\n':'')+aktS(c.b.text)]},
   'POST /api/poruke/:id/read':{pre:c=>db.poruke.find(x=>x.id===c.p[0]),f:(c,p)=>['Pročitana poruka',p?aktS(p.text):'']},
-  'POST /api/narudzbe':{f:(c,_,o)=>[o&&o.izm?'Narudžba materijala izmijenjena':c.b.send?'Narudžba materijala poslana':'Narudžba materijala spremljena (nije poslana)',String(c.b.site||'')+' · primatelj: '+core.nameOf(String(c.b.adminId||''))+' · stavki: '+(Array.isArray(c.b.items)?c.b.items.length:0)]},
+  'POST /api/narudzbe':{f:(c,_,o)=>[o&&o.isp?'Ispravljena odbijena narudžba materijala (ponovno poslana)':o&&o.izm?'Narudžba materijala izmijenjena':c.b.send?'Narudžba materijala poslana':'Narudžba materijala spremljena (nije poslana)',String(c.b.site||'')+' · primatelj: '+core.nameOf(String(c.b.adminId||''))+' · stavki: '+(Array.isArray(c.b.items)?c.b.items.length:0)]},
   'DELETE /api/narudzbe/:id':{pre:c=>db.narudzbe.find(x=>x.id===c.p[0]&&x.uid===c.u.id),f:(c,o)=>['Obrisana neposlana narudžba materijala',o?o.site+' · stavki: '+o.items.length:'']},
   'POST /api/servisi/:id/zapisnik':{pre:c=>db.servisi.find(x=>x.id===c.p[0]),f:(c,o)=>['Zapisnik o izvršenom servisu',o?o.broj+' · '+o.klijent+' · '+o.adresa+(c.b.stanje==='dalje'?'\nPotrebna dodatna intervencija':''):'']},
   'POST /api/alati/:id/zahtjev':{pre:c=>db.alati.find(x=>x.id===c.p[0]),f:(c,o)=>['Zahtjev za zaduženje alata',(o?o.naziv+' · trenutno: '+(o.uid?core.nameOf(o.uid)+' · '+o.site:Core.AL_SKL):'')+(c.b.site?'\nZa gradilište: '+aktS(c.b.site):'')+aktN(aktS(c.b.nap))]},
@@ -381,11 +381,11 @@ async function nmMail(o,subject,text){const a=db.users.find(x=>x.id===o.adminId)
   try{await M.t.sendMail({from:M.from,to:a.email,subject,text,
       attachments:[{filename:'narudzba-materijala-'+o.site.replace(/[^\wÀ-ɏ-]+/g,'_').slice(0,60)+'.pdf',content:Buffer.from(Core.pdf(Core.nmDoc(v)))}]});o.mailTs=Date.now();delete o.mailErr;save();return{mail:'',mailTo:a.email}}
   catch(e){o.mailErr=String(e.message).slice(0,200);save();return{mail:'E-mail nije poslan: '+e.message}}}
-R('POST','/api/narudzbe',1,async c=>{if(noAdm(c)||noNau(c))return;const izm=!!c.b.id&&db.narudzbe.some(x=>x.id===c.b.id&&x.uid===c.u.id&&x.status==='sent');
+R('POST','/api/narudzbe',1,async c=>{if(noAdm(c)||noNau(c))return;const was=c.b.id?db.narudzbe.find(x=>x.id===c.b.id&&x.uid===c.u.id&&x.status==='sent'):null,izm=!!was,isp=!!(was&&was.odb);
   const o=core.nmSave(c.u,c.b);if(typeof o==='string')return c.send(400,{e:o});if(o.status==='sent'&&!izm){o.obr=null;o.fwd=[]}save();
   if(o.status!=='sent')return c.send(200,{ok:1,id:o.id});
-  const r=izm?await nmMail(o,'IZMIJENJENA narudžba materijala za '+o.site,c.u.name+' je izmijenio/la poslanu narudžbu materijala za '+o.site+'. U privitku je nova verzija.'):await nmMail(o,'Narudžba materijala za '+o.site,c.u.name+' Vam šalje narudžbu materijala za '+o.site+'.');
-  c.send(200,{ok:1,id:o.id,izm:izm?1:0,mail:r.mail,mailTo:r.mailTo||''})});
+  const r=izm?await nmMail(o,(isp?'ISPRAVLJENA':'IZMIJENJENA')+' narudžba materijala za '+o.site,c.u.name+(isp?' je ispravio/la odbijenu narudžbu materijala za '+o.site+' i ponovno je poslao/la. U privitku je nova verzija.':' je izmijenio/la poslanu narudžbu materijala za '+o.site+'. U privitku je nova verzija.')):await nmMail(o,'Narudžba materijala za '+o.site,c.u.name+' Vam šalje narudžbu materijala za '+o.site+'.');
+  c.send(200,{ok:1,id:o.id,izm:izm?1:0,isp:isp?1:0,mail:r.mail,mailTo:r.mailTo||''})});
 R('POST','/api/narudzbe/:id/obradi','nm',c=>{const o=core.nmObradi(c.u,c.p[0],!!c.b.obr);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});
   if(c.b.obr)pushU(o.uid,'Narudžba materijala obrađena',o.site+' · obradio: '+c.u.name,'/#nm')});
 R('POST','/api/narudzbe/:id/odbij','nm',c=>{const v=c.b.odb!==false,o=core.nmOdbij(c.u,c.p[0],v,c.b.note);if(typeof o==='string')return c.send(400,{e:o});save();c.send(200,{ok:1});

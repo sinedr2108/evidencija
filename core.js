@@ -385,9 +385,9 @@
       }
       const now = Date.now(); let o;
       if (b.id) { o = db.narudzbe.find(x => x.id === b.id && x.uid === u.id); if (!o) return 'Narudžba nije pronađena.'; if (o.status === 'sent') {
-        /* IZMJENA POSLANE narudžbe: dok nije obrađena ni odbijena; primatelj (i nakon prosljeđivanja) ostaje isti, ostaje poslana, bilježi se izmjena */
-        if (o.obr) return 'Narudžba je već obrađena i više se ne može mijenjati.'; if (o.odb) return 'Narudžba je odbijena i više se ne može mijenjati.'; if (!b.send) return 'Poslana narudžba ne može se vratiti u neposlane.';
-        Object.assign(o, { site, items: it, updated: now }); o.izm = (o.izm || []).concat({ ts: now }).slice(-50); return o; } }
+        /* IZMJENA POSLANE narudžbe: dok nije obrađena (odbijenu radnik ispravlja i ponovno šalje: odbijanje se briše, ostaje u povijesti izmjena); primatelj (i nakon prosljeđivanja) ostaje isti, ostaje poslana, bilježi se izmjena */
+        if (o.obr) return 'Narudžba je već obrađena i više se ne može mijenjati.'; if (!b.send) return 'Poslana narudžba ne može se vratiti u neposlane.';
+        Object.assign(o, { site, items: it, updated: now }); o.izm = (o.izm || []).concat(o.odb ? { ts: now, odb: o.odb } : { ts: now }).slice(-50); o.odb = null; return o; } }
       else { o = { id: Math.random().toString(36).slice(2) + now.toString(36), uid: u.id, ts: now }; db.narudzbe.push(o); }
       Object.assign(o, { adminId, site, items: it, updated: now, status: b.send ? 'sent' : 'unsent' });
       if (b.send) o.sentTs = now; else o.cancelTs = now;
