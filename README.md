@@ -34,7 +34,7 @@ Lozinke putuju mrežom, zato koristite HTTPS: IIS s *URL Rewrite + ARR* kao reve
 Svi podaci su u jednoj datoteci: `data\db.json`. Kopirajte je redovito (npr. Task Scheduler jednom dnevno).
 
 ## 6. Novosti u izvještajima
-- **Nadopuna do fonda** (19.11.2026., bez promjene podataka): na kraju mjeseca manjak redovnog rada do mjesečnog fonda uzima se iz sati za slobodan dan (najviše do 0), a u prijenos u sljedeći mjesec ide ostatak; vrijedi i za ručno stanje, ne za naučnike.
+- **Nadopuna do fonda** (19.11.2026., bez promjene podataka): na kraju mjeseca manjak redovnog rada do mjesečnog fonda uzima se iz sati za slobodan dan (najviše do 0), a u prijenos u sljedeći mjesec ide ostatak; vrijedi od studenog 2026. i za ručno stanje, ne za naučnike.
 - **Ručno stanje sati za slobodan dan** (19.11.2026., DATA_VERSION 22): ručno upisan *prijenos u sljedeći mjesec* je stanje u trenutku upisa, a aplikacija od njega dalje broji nove dane (≥ 9 h +1, slobodan dan −8); prije je ručni broj ostajao nepromijenjen. Postojeći ručni upisi vrijede od prvog dana svog mjeseca (tada su uneseni).
 - **Izmjena poslane narudžbe** (11.11.2026., bez promjene verzije podataka): radnik može urediti poslanu narudžbu materijala dok nije obrađena, a odbijenu ispraviti i ponovno poslati (opet neobrađena) (primatelj ostaje isti, i nakon prosljeđivanja); primatelj dobiva obavijest i e-mail s PDF-om „IZMIJENJENA narudžba”, a narudžba bilježi izmjene (`izm`).
 - **Push vodi na stavku** (9.11.2026., bez promjene podataka): push obavijest administratoru o radnji radnika otvara izravno zahtjev, otpremnicu, narudžbu ili radni nalog (istaknut), a ne popis Aktivnosti; u Aktivnostima radnika gumb *Otvori* radi isto.

@@ -280,7 +280,7 @@
       return r2(+db.prijenosOut[k] + bank(ents, m, 0) - bank(ents.filter(e => (e.ts || 0) <= T), m, 0)); };
     /* NADOPUNA DO FONDA (19.11.2026.): na kraju mjeseca (od zadnjeg dana) manjak redovnog rada do mjesečnog fonda uzima se iz sati za slobodan dan,
        a u prijenos u sljedeći mjesec ide ostatak (najviše do 0, ne u minus). Redovni rad = svi sati + prijenos iz prošlog − prijenos u sljedeći (kao šihterica). Naučnik nema fond. */
-    const endOut = (uid, ents, m, inn, S) => { const u = db.users.find(x => x.id === uid) || {}; if (u.nau || S <= 0) return r2(S);
+    const endOut = (uid, ents, m, inn, S) => { const u = db.users.find(x => x.id === uid) || {}; if (u.nau || S <= 0 || m < '2026-11') return r2(S); /* od studenog 2026., raniji mjeseci ostaju kako su obračunati */
       const h = ents.reduce((a, e) => a + (e.date.startsWith(m) ? hrs(e) : 0), 0), def = fondU(uid, m).sati - (h + inn - S);
       return def > 0 ? r2(S - Math.min(def, S)) : r2(S); };
     const outOf = (uid, ents, m, inn, today) => { const k = uid + '|' + m, end = today >= m + '-' + pad(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate());
