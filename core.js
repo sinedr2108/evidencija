@@ -879,7 +879,7 @@
       const mealNames = [...new Set(db.meals.concat(E.map(e => e.meal).filter(Boolean)))];
       mealNames.forEach(mn => rank('ob:' + mn, 'Topli obrok – ' + mn, 'obroka', U(p => p.ob[mn] || 0)));
       if (!isYear) {
-        rank('bank', 'Najviše sati za slobodan dan (stanje)', 'h', users.map(u => ({ name: u.name, v: stanje(u.id, period) })).filter(x => x.v !== 0), { all: true });
+        rank('bank', 'Najviše sati za slobodan dan (stanje)', 'h', users.filter(u => !u.nau).map(u => ({ name: u.name, v: stanje(u.id, period) })).filter(x => x.v !== 0), { all: true });
         rank('miss', 'Najviše radnih dana bez unosa', 'dana', ms.map(x => ({ name: x.name, v: x.dates.length })));
       }
       const pairs = []; users.forEach(u => P[u.id] && Object.entries(P[u.id].site).forEach(([s, h]) => pairs.push({ name: u.name + ' · ' + s, v: h })));
