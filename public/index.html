@@ -438,7 +438,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
   </div>
   <div id="p-asl" class="pg hide">
   <h2>Slobodni dani</h2><div class="card wrap" id="slb"></div>
-  <h2>Sati za slobodan dan i odobrenja</h2><div class="note">Trenutni mjesec. Prikazani su radnici s 5 ili više sati za slobodan dan i radnici s odobrenim zahtjevom.</div><div class="card wrap" id="slu"></div>
+  <h2>Sati za slobodan dan i odobrenja</h2><div class="note">Trenutni mjesec, svi radnici (bez naučnika), od najviše sati prema najmanje, s odobrenim zahtjevima i zahtjevima na čekanju.</div><div class="card wrap" id="slu"></div>
   </div>
   <div id="p-ago" class="pg hide">
   <h2 id="gah">Godišnji odmor</h2><div class="card" id="goa">
@@ -572,7 +572,7 @@ textarea{width:100%;box-sizing:border-box;padding:12px;font:inherit;border:1px s
    <div class="uh" data-h="asl">
    <h3>SLOBODNI DANI</h3>
    <ul><li>Popis tko je kada koristio slobodan dan u odabranom mjesecu, s oznakom je li uz odobren zahtjev.</li>
-   <li>Na dnu je tablica za trenutni mjesec: radnici s 5 ili više sati za slobodan dan i radnici s odobrenim zahtjevom (odobreno, iskorišteno ili na čekanju).</li>
+   <li>Na dnu je tablica za trenutni mjesec: svi radnici osim naučnika sa satima za slobodan dan i zahtjevima (odobreno, iskorišteno ili na čekanju).</li>
    <li>Pravilo: svaki dan s 9 ili više sati rada donosi 1 sat; slobodan dan oduzima 8 sati. Radnik s 8 ili više sati sam odabire slobodan dan, a s manje šalje zahtjev koji odobravate na početnoj stranici.</li></ul>
    </div>
    <div class="uh" data-h="ago">
@@ -1080,8 +1080,8 @@ $('shp').onchange=drawSh;$('shs').onchange=drawSh;
 $('shx').onclick=()=>fileOut('/api/sitehours.xlsx?'+shq()+'&t='+Date.now(),'sati-po-gradilistima.xlsx');$('shc2').onclick=()=>fileOut('/api/sitehours.csv?'+shq()+'&t='+Date.now(),'sati-po-gradilistima.csv');
 function drawSlRep(){
  const m=today().slice(0,7),dd=x=>x.slice(8,10)+'.'+x.slice(5,7)+'.'+x.slice(0,4)+'.';
- const L=users.filter(u=>u.role==='user'&&!u.deleted&&!u.disabled).map(u=>{const b=stanjeU(u.id,m,entries.filter(e=>e.uid===u.id)),rs=slreq.filter(r=>r.uid===u.id&&((r.status==='approved'&&(r.date.slice(0,7)>=m))||r.status==='open')).sort((a,c)=>a.date<c.date?-1:1);return{u,b,rs}}).filter(x=>x.b>=5||x.rs.some(r=>r.status==='approved')).sort((a,b)=>b.b-a.b||a.u.name.localeCompare(b.u.name,'hr'));
- $('slu').innerHTML=L.length?'<table><tr><th>Radnik</th><th class="n">Sati za slobodan dan</th><th>Status</th></tr>'+L.map(x=>'<tr><td>'+E(x.u.name)+'</td><td class="n"><b>'+f1(x.b)+'</b></td><td>'+(x.rs.length?x.rs.map(r=>(r.status==='approved'?'<b style="color:var(--ok)">Odobreno</b>':'Na čekanju')+' '+dd(r.date)+(r.entryId?' (iskorišteno)':'')).join('<br>'):'<span class="mu">–</span>')+'</td></tr>').join('')+'</table>':'<span class="mu">Nijedan radnik nema 5 ili više sati za slobodan dan ni odobren slobodan dan.</span>'}
+ const L=users.filter(u=>u.role==='user'&&!u.nau&&!u.deleted&&!u.disabled).map(u=>{const b=stanjeU(u.id,m,entries.filter(e=>e.uid===u.id)),rs=slreq.filter(r=>r.uid===u.id&&((r.status==='approved'&&(r.date.slice(0,7)>=m))||r.status==='open')).sort((a,c)=>a.date<c.date?-1:1);return{u,b,rs}}).sort((a,b)=>b.b-a.b||a.u.name.localeCompare(b.u.name,'hr'));
+ $('slu').innerHTML=L.length?'<table><tr><th>Radnik</th><th class="n">Sati za slobodan dan</th><th>Status</th></tr>'+L.map(x=>'<tr><td>'+E(x.u.name)+'</td><td class="n"><b>'+f1(x.b)+'</b></td><td>'+(x.rs.length?x.rs.map(r=>(r.status==='approved'?'<b style="color:var(--ok)">Odobreno</b>':'Na čekanju')+' '+dd(r.date)+(r.entryId?' (iskorišteno)':'')).join('<br>'):'<span class="mu">–</span>')+'</td></tr>').join('')+'</table>':'<span class="mu">Nema radnika.</span>'}
 /* PRIVICI OBAVIJESTI: fotografije se smanjuju kao kod otpremnica, dokumenti (PDF, Word, Excel) šalju se kakvi jesu do 10 MB */
 let ppPend=[];const prImg=f=>/\.(jpe?g|png)$/i.test(f),prKb=n=>n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(n/1024))+' kB';
 function prHtml(fl){if(!fl||!fl.length)return '';const im=fl.filter(x=>prImg(x.f)).map(x=>x.f);
