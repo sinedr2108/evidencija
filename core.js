@@ -144,19 +144,82 @@
         y -= 10;
       }
     });
+    return pdfBytes(pages, imgs, W, H, doc.title, (i, N) => '0.42 g BT /F1 8 Tf ' + M + ' 22 Td ' + pStr((doc.footer || '') + '   Stranica ' + (i + 1) + ' / ' + N) + ' Tj ET');
+  }
+  /* zajednički zapis PDF datoteke: stranice (popis naredbi), JPEG slike, veličina stranice, naslov i podnožje */
+  function pdfBytes(pages, imgs, W, H, title, foot0) {
     const N = pages.length, objs = [], add = s => { objs.push(s); return objs.length; };
     const xo = imgs.map((m, i) => { const bin = Array.from(m.d, b => String.fromCharCode(b)).join(''); return add('<< /Type /XObject /Subtype /Image /Width ' + m.pw + ' /Height ' + m.ph + ' /ColorSpace /' + (m.cs === 1 ? 'DeviceGray' : 'DeviceRGB') + ' /BitsPerComponent 8 /Filter /DCTDecode /Length ' + bin.length + ' >>\nstream\n' + bin + '\nendstream'); });
     const xr0 = xo.length ? ' /XObject << ' + xo.map((o, i) => '/Im' + i + ' ' + o + ' 0 R').join(' ') + ' >>' : '';
     const enc = '<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences [127 /dcroat 129 /Ccaron 141 /ccaron 143 /Cacute 144 /cacute 157 /Dcroat] >>';
     const cat = add(''), pgs = add(''), f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding ' + enc + ' >>'), f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding ' + enc + ' >>');
-    const kids = pages.map((p, i) => { const foot = '0.42 g BT /F1 8 Tf ' + M + ' 22 Td ' + pStr((doc.footer || '') + '   Stranica ' + (i + 1) + ' / ' + N) + ' Tj ET'; const body = p.concat([foot]).join('\n'); const st = add('<< /Length ' + body.length + ' >>\nstream\n' + body + '\nendstream'); return add('<< /Type /Page /Parent ' + pgs + ' 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >>' + xr0 + ' >> /Contents ' + st + ' 0 R >>'); });
+    const kids = pages.map((p, i) => { const foot = foot0(i, N); const body = p.concat([foot]).join('\n'); const st = add('<< /Length ' + body.length + ' >>\nstream\n' + body + '\nendstream'); return add('<< /Type /Page /Parent ' + pgs + ' 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /Font << /F1 ' + f1 + ' 0 R /F2 ' + f2 + ' 0 R >>' + xr0 + ' >> /Contents ' + st + ' 0 R >>'); });
     objs[cat - 1] = '<< /Type /Catalog /Pages ' + pgs + ' 0 R >>'; objs[pgs - 1] = '<< /Type /Pages /Kids [' + kids.map(k => k + ' 0 R').join(' ') + '] /Count ' + N + ' >>';
-    const info = add('<< /Title ' + pStr(doc.title || '') + ' /Producer (TiDy Connect) >>');
+    const info = add('<< /Title ' + pStr(title || '') + ' /Producer (TiDy Connect) >>');
     let out = '%PDF-1.4\n%\xe2\xe3\xcf\xd3\n'; const off = [];
     objs.forEach((o, i) => { off.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
     const xr = out.length; out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + off.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('');
     out += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root ' + cat + ' 0 R /Info ' + info + ' 0 R >>\nstartxref\n' + xr + '\n%%EOF\n';
     const u = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) u[i] = out.charCodeAt(i) & 255; return u;
+  }
+  /* Šihterice u PDF-u: isti raspored kao Excel predložak, A4 položeno, jedan radnik po stranici */
+  function sihPdf(list, month, logo) {
+    const W = 842, H = 595, M = 24, pages = [], imgs = [], y0 = +month.slice(0, 4), m0 = +month.slice(5, 7), hol = holidays(y0);
+    const DN = ['Ne', 'Po', 'Ut', 'Sr', 'Če', 'Pe', 'Su'], LW = 168, TW = 46, DW = (W - 2 * M - LW - TW) / 31, RH = 16.5;
+    const num = n => { n = r2(+n || 0); return String(n).replace('.', ','); };
+    const sum = o => r2(Object.values(o || {}).reduce((a, x) => a + (+x || 0), 0));
+    let lk = -1; if (logo) { const z = jpgSize(logo); if (z) { lk = 0; imgs.push({ d: logo, pw: z.w, ph: z.h, cs: z.c }); } }
+    list.forEach(s => {
+      const ops = []; pages.push(ops);
+      const fill = (x, y, w, h, c) => ops.push(c + ' rg ' + x.toFixed(1) + ' ' + y.toFixed(1) + ' ' + w.toFixed(1) + ' ' + h.toFixed(1) + ' re f');
+      const text = (x, y, t, size, bold, col) => ops.push((col || '0 g') + ' BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x.toFixed(1) + ' ' + y.toFixed(1) + ' Td ' + pStr(t) + ' Tj ET');
+      const ctext = (x, w, y, t, size, bold, col) => text(x + (w - pW(t, size, bold)) / 2, y, t, size, bold, col);
+      const fit = (t, w, size, bold) => { t = String(t); if (pW(t, size, bold) <= w) return t; while (t.length > 1 && pW(t + '…', size, bold) > w) t = t.slice(0, -1); return t + '…'; };
+      let y = H - M;
+      if (lk >= 0) { const im = imgs[lk], lh = 40, lw = Math.min(160, lh * im.pw / im.ph); ops.push('q ' + lw.toFixed(1) + ' 0 0 ' + (lw * im.ph / im.pw).toFixed(1) + ' ' + M + ' ' + (y - lw * im.ph / im.pw).toFixed(1) + ' cm /Im0 Do Q'); }
+      ctext(M, W - 2 * M, y - 18, 'EVIDENCIJA RADNOG VREMENA', 15, true);
+      y -= 58; text(M, y, 'IME I PREZIME:', 9, false, '0.42 g'); text(M + 74, y, fit(s.name, 330, 12, true), 12, true);
+      const mw = pW(s.mjesec, 12, true); text(W - M - mw - 92, y, 'MJESEC I GODINA:', 9, false, '0.42 g'); text(W - M - mw, y, s.mjesec, 12, true);
+      y -= 10;
+      const xD = d => M + LW + (d - 1) * DW, xT = M + LW + 31 * DW, rows = [];
+      const wk = d => { const w = new Date(Date.UTC(y0, m0 - 1, d)).getUTCDay(); return w === 0 || w === 6 || hol.has(month + '-' + pad(d)); };
+      let tot = 0;
+      const sites = s.sites.slice(0, 10); while (sites.length < 10) sites.push({ name: '', d: {} });
+      rows.push({ k: 'dan' }, { k: 'tj' }, { k: 'hdr', l: 'NAZIV GRADILIŠTA' });
+      sites.forEach(st => { const t = sum(st.d); tot += t; rows.push({ l: st.name, d: st.d, t: st.name ? t : null }); });
+      [['SLOBODNI DAN', s.sd], ['PRAZNIK', s.pr], ['GODIŠNJI', s.go], ['BOLOVANJE', s.bo]].forEach(([l, o]) => { const t = sum(o); tot += t; rows.push({ l, d: o, t: Object.keys(o || {}).length ? t : null, sd: l === 'SLOBODNI DAN' }); });
+      tot += +s.prijenos || 0; tot -= +s.prijenosOut || 0; tot = r2(tot);
+      const ot = tot - (s.fond || 0) < 1 ? 0 : r2(tot - (s.fond || 0));
+      rows.push({ l: 'PRIJENOS SATI IZ PROŠLOG MJESECA:', t: s.prijenos ? s.prijenos : null, sum: 1 }, { l: 'PRIJENOS SATI U SLIJEDEĆI MJESEC:', t: s.prijenosOut ? s.prijenosOut : null, sum: 1 },
+        { l: 'REDOVNI RAD', t: tot, sum: 1, b: 1 }, { l: 'FOND SATI ZA MJESEC', t: s.fond === null || s.fond === undefined ? null : s.fond, sum: 1 }, { l: 'PREKOVREMENI SATI', t: ot, sum: 1, b: 1 },
+        { l: 'TOPLI OBROK (VLASTITI TROŠAK)', d: s.obrok, t: sum(s.obrok) }, { l: 'TERENSKI DODATAK', d: s.teren, t: sum(s.teren) });
+      const top = y;
+      /* pozadine: vikendi i praznici sivo, slobodni dani crveno, dani izvan mjeseca tamnije */
+      for (let d = 1; d <= 31; d++) { const x = xD(d), h = rows.length * RH;
+        if (d > s.dana) fill(x, top - h, DW, h, '0.82 0.82 0.82');
+        else if (wk(d)) fill(x, top - h, DW, h, '0.93 0.93 0.93');
+        if (d <= s.dana && s.sd && s.sd[d] !== undefined) fill(x, top - 2 * RH, DW, 2 * RH, '1 0.62 0.62'); }
+      rows.forEach((r, i) => { const yt = top - i * RH, yb = yt - RH, ty = yb + 4.2;
+        if (r.k === 'dan') { fill(M, yb, LW, RH, '0.85 0.89 0.95'); fill(xT, yb, TW, RH, '0.85 0.89 0.95'); for (let d = 1; d <= s.dana; d++) fill(xD(d), yb, DW, RH, s.sd && s.sd[d] !== undefined ? '1 0.62 0.62' : '0.85 0.89 0.95'); text(M + 4, ty, 'Dan u mjesecu:', 8, true); for (let d = 1; d <= s.dana; d++) ctext(xD(d), DW, ty, String(d), 8, true); ctext(xT, TW, ty, 'Ukupno', 8, true); return; }
+        if (r.k === 'tj') { for (let d = 1; d <= s.dana; d++) ctext(xD(d), DW, ty, DN[new Date(Date.UTC(y0, m0 - 1, d)).getUTCDay()], 6.5, false, '0.35 g'); return; }
+        if (r.k === 'hdr') { fill(M, yb, LW, RH, '0.85 0.89 0.95'); text(M + 4, ty, r.l, 8, true); return; }
+        if (r.sum) fill(M, yb, LW, RH, '0.96 0.96 0.96');
+        if (r.b) fill(xT, yb, TW, RH, '0.85 0.89 0.95');
+        if (r.l) text(M + 4, ty, fit(r.l, LW - 8, 7.5, !!r.sum), 7.5, !!r.sum);
+        Object.entries(r.d || {}).forEach(([d, v]) => { if (+d <= s.dana) ctext(xD(+d), DW, ty, num(v), 7.5, false, r.sd ? '0.75 0 0 rg' : '0 g'); });
+        if (r.t !== null && r.t !== undefined) ctext(xT, TW, ty, num(r.t), 8, true); });
+      /* mreža */
+      const bot = top - rows.length * RH; let g = '0.55 G 0.4 w';
+      rows.forEach((r, i) => { g += ' ' + M + ' ' + (top - i * RH).toFixed(1) + ' m ' + (W - M) + ' ' + (top - i * RH).toFixed(1) + ' l'; });
+      g += ' ' + M + ' ' + bot.toFixed(1) + ' m ' + (W - M) + ' ' + bot.toFixed(1) + ' l';
+      const vl = [M, M + LW].concat(Array.from({ length: 31 }, (_, d) => xD(d + 2))).concat([W - M]);
+      vl.forEach(x => { g += ' ' + x.toFixed(1) + ' ' + top.toFixed(1) + ' m ' + x.toFixed(1) + ' ' + bot.toFixed(1) + ' l'; });
+      ops.push(g + ' S');
+      ops.push('0 G 1 w ' + M + ' ' + bot.toFixed(1) + ' ' + (W - 2 * M) + ' ' + (top - bot).toFixed(1) + ' re S');
+      const yp = bot - 34; text(M, yp, 'Potpis radnika: ______________________________', 9); text(W - M - 260, yp, 'Potpis odgovorne osobe: ______________________', 9);
+    });
+    if (!pages.length) pages.push([]);
+    return pdfBytes(pages, imgs, W, H, 'Šihterice ' + month, (i, N) => '0.42 g BT /F1 7 Tf ' + M + ' 12 Td ' + pStr('TiDy Connect   Stranica ' + (i + 1) + ' / ' + N) + ' Tj ET');
   }
   function xlsxFile(sheets) {
     const H = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
@@ -948,6 +1011,6 @@
     }
     return { manOut, zhDo, mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmOdbij, nmObrisi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, buDates, fondU, buGrupa, buDelete, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alGrupe, alGrupaSave, alGrupaDelete, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
-  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata'; Core.alInv = alInv;
+  Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.sihPdf = sihPdf; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata'; Core.alInv = alInv;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
 })(typeof window !== 'undefined' ? window : this);

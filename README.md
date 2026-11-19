@@ -34,6 +34,7 @@ Lozinke putuju mrežom, zato koristite HTTPS: IIS s *URL Rewrite + ARR* kao reve
 Svi podaci su u jednoj datoteci: `data\db.json`. Kopirajte je redovito (npr. Task Scheduler jednom dnevno).
 
 ## 6. Novosti u izvještajima
+- **Šihterice (PDF)** (19.11.2026., bez promjene podataka): novi gumb u Izvještajima daje iste šihterice kao Excel, ali kao PDF (A4 položeno, logo, jedna stranica po radniku, vikendi i praznici sivo, slobodni dani crveno, mjesto za potpis); otvara se u aplikaciji s mogućnošću preuzimanja. Ako je odabran radnik, samo njegova.
 - **Sati za slobodan dan – svi radnici** (19.11.2026.): tablica na stranici Slobodni dani prikazuje sve radnike osim naučnika (bez granice od 5 h, od najviše sati); naučnici su izbačeni i iz statistike „Najviše sati za slobodan dan”.
 - **Nadopuna do fonda** (19.11.2026., bez promjene podataka): na kraju mjeseca manjak redovnog rada do mjesečnog fonda uzima se prvo iz sati za slobodan dan (najviše do 0, ostatak ide u prijenos), zatim iz prekovremenih, a ako ni to nije dovoljno ostaje stvarni manjak; vrijedi od studenog 2026. i za ručno stanje, ne za naučnike.
 - **Ručno stanje sati za slobodan dan** (19.11.2026., DATA_VERSION 22): ručno upisan *prijenos u sljedeći mjesec* je stanje u trenutku upisa, a aplikacija od njega dalje broji nove dane (≥ 9 h +1, slobodan dan −8); prije je ručni broj ostajao nepromijenjen. Postojeći ručni upisi vrijede od prvog dana svog mjeseca (tada su uneseni).

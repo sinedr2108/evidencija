@@ -68,6 +68,7 @@ assert m
 script=script[:m.start()]+script[m.end():]
 rep("$('pr').onclick=()=>print();\n","")
 blk('EXPORT',"""async function doExport(kind){const m=$('rm').value;if(!/^\\d{4}-\\d{2}$/.test(m))return;const f={uid:$('fw').value,site:$('fs').value,vrsta:$('fv').value},t=todayStr();
+ if(kind==='sihp'){const sl=core().sihterice(m,f.uid);if(!sl.length){toast('Nema radnika za taj mjesec.');return}return pdfShow(new Blob([Core.sihPdf(sl,m,null)],{type:'application/pdf'}),'sihterice-'+m+'.pdf')}
  const nm=kind==='sih'?'sihterice-'+m+'.xlsx':kind==='xlsx'?'izvjestaj-'+m+'.xlsx':({det:'unosi-',day:'sati-po-danima-',site:'po-gradilistima-',mis:'bez-unosa-',sum:'sazetak-'}[kind]||'sazetak-')+m+'.csv';
  try{const d=await claude.use('downloads');if(!d){toast('Preuzimanje nije dostupno u ovom prikazu.');return}
   const sl=kind==='sih'&&core().sihterice(m,f.uid);if(sl&&!sl.length){toast('Nema radnika za taj mjesec.');return}
