@@ -274,11 +274,18 @@
     const hasK = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
     const nextM = m => { let y = +m.slice(0, 4), mo = +m.slice(5, 7) + 1; if (mo > 12) { y++; mo = 1; } return y + '-' + pad(mo); };
     /* automatski prijenos u sljedeći mjesec je 0 do zadnjeg dana mjeseca, a tada se računa višak sati za slobodan dan */
-    const autoOut = (ents, m, inn, today) => today < m + '-' + pad(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate()) ? 0 : r2(bank(ents, m, inn));
     /* RUČNO STANJE (19.11.2026.): administratorov upis u „Prijenos u sljedeći mjesec” je stanje sati za slobodan dan u trenutku upisa (db.prijenosOutTs);
        dalje se broji normalno: + razlika bank-a između sadašnjih unosa i unosa koji su postojali u trenutku upisa (novi dani >= 9 h +1, novi slobodni dani −8) */
     const manOut = (uid, m, ents) => { const k = uid + '|' + m, T = +db.prijenosOutTs[k] || 0; ents = ents || db.entries.filter(e => e.uid === uid);
       return r2(+db.prijenosOut[k] + bank(ents, m, 0) - bank(ents.filter(e => (e.ts || 0) <= T), m, 0)); };
+    /* NADOPUNA DO FONDA (19.11.2026.): na kraju mjeseca (od zadnjeg dana) manjak redovnog rada do mjesečnog fonda uzima se iz sati za slobodan dan,
+       a u prijenos u sljedeći mjesec ide ostatak (najviše do 0, ne u minus). Redovni rad = svi sati + prijenos iz prošlog − prijenos u sljedeći (kao šihterica). Naučnik nema fond. */
+    const endOut = (uid, ents, m, inn, S) => { const u = db.users.find(x => x.id === uid) || {}; if (u.nau || S <= 0) return r2(S);
+      const h = ents.reduce((a, e) => a + (e.date.startsWith(m) ? hrs(e) : 0), 0), def = fondU(uid, m).sati - (h + inn - S);
+      return def > 0 ? r2(S - Math.min(def, S)) : r2(S); };
+    const outOf = (uid, ents, m, inn, today) => { const k = uid + '|' + m, end = today >= m + '-' + pad(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate());
+      if (hasK(db.prijenosOut, k)) { const S = manOut(uid, m, ents); return end ? endOut(uid, ents, m, inn, S) : S; }
+      return end ? endOut(uid, ents, m, inn, r2(bank(ents, m, inn))) : 0; };
     function prChain(uid, m) {
       const ents = db.entries.filter(e => e.uid === uid), p = uid + '|';
       let f = null; ents.forEach(e => { const x = e.date.slice(0, 7); if (!f || x < f) f = x; });
@@ -288,7 +295,7 @@
       if (!f || m < f) cur = m;
       for (let n = 0; n < 1200; n++) {
         const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (f && cur > f ? carry : 0);
-        const out = hasK(db.prijenosOut, k) ? manOut(uid, cur, ents) : autoOut(ents, cur, inn, todayIso());
+        const out = outOf(uid, ents, cur, inn, todayIso());
         if (cur === m) { res.in = r2(inn); res.out = r2(out); return res; }
         carry = out; cur = nextM(cur);
       }
@@ -306,7 +313,7 @@
         Object.keys(db.prijenos).concat(Object.keys(db.prijenosOut)).forEach(k => { if (k.startsWith(p)) { const x = k.slice(p.length); if (!f || x < f) f = x; } });
         if (!f) return; const ents = db.entries.filter(e => e.uid === uid); let carry = 0;
         for (let cur = f, n = 0; cur <= last && n < 1200; cur = nextM(cur), n++) { const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (cur > f ? carry : 0);
-          if (inn) out[k] = r2(inn); carry = hasK(db.prijenosOut, k) ? manOut(uid, cur, ents) : autoOut(ents, cur, inn, today); } });
+          if (inn) out[k] = r2(inn); carry = outOf(uid, ents, cur, inn, today); } });
       return out;
     }
     /* do kojeg datuma radnik vidi zahtjev koji je administrator obrisao (sl: dan, go: zadnji dan, mj: kraj mjeseca, gr: 30 dana od brisanja) */
