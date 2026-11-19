@@ -45,7 +45,7 @@ const MIGRATIONS={
   19:d=>{ /* ALAT: grupe alata {id,naziv} (upisuje izdavatelj alata) i grupa svakog alata (alat.grupa, '' = bez grupe) */ if(!Array.isArray(d.alatGrupe))d.alatGrupe=[];(d.alati||[]).forEach(o=>{if(o.grupa===undefined)o.grupa=''}) },
   20:d=>{ /* DANI BEZ UNOSA: administrator radniku označi dan za koji se ništa ne upisuje {id,uid,date,note,ts,by} */ if(!Array.isArray(d.bezUnosa))d.bezUnosa=[] },
   21:d=>{ /* PRIVICI U OBAVIJESTIMA RADNICIMA: poruke[].files=[{f,name,size}], datoteke u data/poruke */ (d.poruke||[]).forEach(p=>{if(!Array.isArray(p.files))p.files=[]}) },
-  22:d=>{ /* RUČNO STANJE SATI ZA SLOBODAN DAN: vrijeme upisa {uid|mjesec: ts}; postojeći ručni upisi vrijede od trenutka nadogradnje */ if(!d.prijenosOutTs||typeof d.prijenosOutTs!=='object')d.prijenosOutTs={};const t=Date.now();Object.keys(d.prijenosOut||{}).forEach(k=>{if(!d.prijenosOutTs[k])d.prijenosOutTs[k]=t}) },
+  22:d=>{ /* RUČNO STANJE SATI ZA SLOBODAN DAN: vrijeme upisa {uid|mjesec: ts}; postojeći ručni upisi uneseni su prvog dana u mjesecu (Denis 19.11.2026.), pa vrijede od početka tog mjeseca */ if(!d.prijenosOutTs||typeof d.prijenosOutTs!=='object')d.prijenosOutTs={};Object.keys(d.prijenosOut||{}).forEach(k=>{const m=k.split('|')[1]||'';if(!d.prijenosOutTs[k]&&/^\d{4}-\d{2}$/.test(m))d.prijenosOutTs[k]=new Date(+m.slice(0,4),+m.slice(5,7)-1,1).getTime()}) },
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
