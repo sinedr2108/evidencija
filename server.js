@@ -12,7 +12,7 @@ const save=()=>{fs.writeFileSync(DB+'.tmp',JSON.stringify(db));fs.renameSync(DB+
    db.version je verzija oblika podataka. Nova verzija aplikacije nikad ne briše ni ne preimenuje postojeće podatke,
    nego ih po potrebi nadogradi kroz MIGRATIONS (svaka se izvodi točno jednom, redom). Prije svake nadogradnje
    i pri svakom pokretanju sprema se kopija u data/backup. Starija verzija aplikacije odbija raditi s novijim podacima. */
-const DATA_VERSION=21;
+const DATA_VERSION=22;
 const MIGRATIONS={
   1:d=>{ /* početna verzija: osiguraj sve zbirke koje su dodavane tijekom razvoja */
     for(const k of ['users','entries','closed','sites','requests','slreq','gorq','obav'])if(!Array.isArray(d[k]))d[k]=[];
@@ -45,6 +45,7 @@ const MIGRATIONS={
   19:d=>{ /* ALAT: grupe alata {id,naziv} (upisuje izdavatelj alata) i grupa svakog alata (alat.grupa, '' = bez grupe) */ if(!Array.isArray(d.alatGrupe))d.alatGrupe=[];(d.alati||[]).forEach(o=>{if(o.grupa===undefined)o.grupa=''}) },
   20:d=>{ /* DANI BEZ UNOSA: administrator radniku označi dan za koji se ništa ne upisuje {id,uid,date,note,ts,by} */ if(!Array.isArray(d.bezUnosa))d.bezUnosa=[] },
   21:d=>{ /* PRIVICI U OBAVIJESTIMA RADNICIMA: poruke[].files=[{f,name,size}], datoteke u data/poruke */ (d.poruke||[]).forEach(p=>{if(!Array.isArray(p.files))p.files=[]}) },
+  22:d=>{ /* RUČNO STANJE SATI ZA SLOBODAN DAN: vrijeme upisa {uid|mjesec: ts}; postojeći ručni upisi vrijede od trenutka nadogradnje */ if(!d.prijenosOutTs||typeof d.prijenosOutTs!=='object')d.prijenosOutTs={};const t=Date.now();Object.keys(d.prijenosOut||{}).forEach(k=>{if(!d.prijenosOutTs[k])d.prijenosOutTs[k]=t}) },
 };
 const BK=path.join(DIR,'backup');
 const stamp=()=>new Date().toISOString().replace(/[-:]/g,'').replace('T','-').slice(0,13);
@@ -226,8 +227,8 @@ R('PUT','/api/prijenos','iz',c=>{const u=db.users.find(x=>x.id===c.b.uid&&x.role
   if(!u)return c.send(404,{e:'Radnik nije pronađen.'});if(!valid(c.b.month))return c.send(400,{e:'Neispravan mjesec.'});
   const k=u.id+'|'+c.b.month;
   /* kind 'out': prijenos u sljedeći mjesec; prazno = opet automatski (višak sati za slobodan dan) */
-  if(c.b.kind==='out'){if(c.b.value===''||c.b.value===null||c.b.value===undefined){delete db.prijenosOut[k];save();return c.send(200,{ok:1})}
-    if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});db.prijenosOut[k]=Math.round(v*100)/100;save();return c.send(200,{ok:1})}
+  if(c.b.kind==='out'){if(c.b.value===''||c.b.value===null||c.b.value===undefined){delete db.prijenosOut[k];delete db.prijenosOutTs[k];save();return c.send(200,{ok:1})}
+    if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});db.prijenosOut[k]=Math.round(v*100)/100;db.prijenosOutTs[k]=Date.now();save();return c.send(200,{ok:1})}
   /* prazno = automatski (prijenos u sljedeći mjesec prošlog mjeseca); broj, i 0, = ručno */
   if(c.b.value===''||c.b.value===null||c.b.value===undefined){delete db.prijenos[k];save();return c.send(200,{ok:1})}
   if(!isFinite(v)||Math.abs(v)>1000)return c.send(400,{e:'Unesite broj sati (može biti negativan).'});

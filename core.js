@@ -216,7 +216,7 @@
   }
   function Core(db) {
     db.requests = db.requests || []; if (!Array.isArray(db.servisi)) db.servisi = []; if (!db.svZadnji || typeof db.svZadnji !== 'object') db.svZadnji = {}; if (!Array.isArray(db.alati)) db.alati = []; if (!Array.isArray(db.alatZah)) db.alatZah = []; if (!Array.isArray(db.alatIzd)) db.alatIzd = []; if (!Array.isArray(db.alatGrupe)) db.alatGrupe = []; alInv(db);
-    db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {};
+    db.prijenos = db.prijenos || {}; db.prijenosOut = db.prijenosOut || {}; db.prijenosOutTs = db.prijenosOutTs || {};
     db.slreq = db.slreq || []; if (!Array.isArray(db.bezUnosa)) db.bezUnosa = [];
     db.godisnji = db.godisnji || {}; db.gorq = db.gorq || []; db.obav = db.obav || []; db.poruke = db.poruke || []; db.sitereq = db.sitereq || []; db.siteNews = db.siteNews || []; db.inboxDel = db.inboxDel || {}; db.otpremnice = db.otpremnice || []; db.otpSites = db.otpSites || [];
     const dfmt = d => d.slice(8, 10) + '.' + d.slice(5, 7) + '.' + d.slice(0, 4) + '.';
@@ -275,6 +275,10 @@
     const nextM = m => { let y = +m.slice(0, 4), mo = +m.slice(5, 7) + 1; if (mo > 12) { y++; mo = 1; } return y + '-' + pad(mo); };
     /* automatski prijenos u sljedeći mjesec je 0 do zadnjeg dana mjeseca, a tada se računa višak sati za slobodan dan */
     const autoOut = (ents, m, inn, today) => today < m + '-' + pad(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate()) ? 0 : r2(bank(ents, m, inn));
+    /* RUČNO STANJE (19.11.2026.): administratorov upis u „Prijenos u sljedeći mjesec” je stanje sati za slobodan dan u trenutku upisa (db.prijenosOutTs);
+       dalje se broji normalno: + razlika bank-a između sadašnjih unosa i unosa koji su postojali u trenutku upisa (novi dani >= 9 h +1, novi slobodni dani −8) */
+    const manOut = (uid, m, ents) => { const k = uid + '|' + m, T = +db.prijenosOutTs[k] || 0; ents = ents || db.entries.filter(e => e.uid === uid);
+      return r2(+db.prijenosOut[k] + bank(ents, m, 0) - bank(ents.filter(e => (e.ts || 0) <= T), m, 0)); };
     function prChain(uid, m) {
       const ents = db.entries.filter(e => e.uid === uid), p = uid + '|';
       let f = null; ents.forEach(e => { const x = e.date.slice(0, 7); if (!f || x < f) f = x; });
@@ -284,7 +288,7 @@
       if (!f || m < f) cur = m;
       for (let n = 0; n < 1200; n++) {
         const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (f && cur > f ? carry : 0);
-        const out = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : autoOut(ents, cur, inn, todayIso());
+        const out = hasK(db.prijenosOut, k) ? manOut(uid, cur, ents) : autoOut(ents, cur, inn, todayIso());
         if (cur === m) { res.in = r2(inn); res.out = r2(out); return res; }
         carry = out; cur = nextM(cur);
       }
@@ -293,8 +297,8 @@
     const pr = (uid, m) => prChain(uid, m).in;
     const prOut = (uid, m) => { const c = prChain(uid, m); return { v: c.out, rucno: c.outRucno }; };
     /* stanje sati za slobodan dan u mjesecu: ručno upisan prijenos u sljedeći mjesec ima prednost pred izračunom */
-    const stanje = (uid, m, ents) => hasK(db.prijenosOut, uid + '|' + m) ? +db.prijenosOut[uid + '|' + m] : bank(ents || db.entries.filter(e => e.uid === uid), m, pr(uid, m));
-    const prOutMap = uids => { const o = {}; Object.keys(db.prijenosOut).forEach(k => { if (uids.includes(k.split('|')[0])) o[k] = +db.prijenosOut[k]; }); return o; };
+    const stanje = (uid, m, ents) => hasK(db.prijenosOut, uid + '|' + m) ? manOut(uid, m, ents) : bank(ents || db.entries.filter(e => e.uid === uid), m, pr(uid, m));
+    const prOutMap = uids => { const o = {}; Object.keys(db.prijenosOut).forEach(k => { const [uid, m] = k.split('|'); if (uids.includes(uid)) o[k] = manOut(uid, m); }); return o; };
     /* učinkoviti prijenosi za klijenta: svaki mjesec od prvog do sljedećeg mjeseca */
     function prMap(uids, today) {
       const out = {}, last = nextM(today.slice(0, 7));
@@ -302,7 +306,7 @@
         Object.keys(db.prijenos).concat(Object.keys(db.prijenosOut)).forEach(k => { if (k.startsWith(p)) { const x = k.slice(p.length); if (!f || x < f) f = x; } });
         if (!f) return; const ents = db.entries.filter(e => e.uid === uid); let carry = 0;
         for (let cur = f, n = 0; cur <= last && n < 1200; cur = nextM(cur), n++) { const k = p + cur, inn = hasK(db.prijenos, k) ? +db.prijenos[k] : (cur > f ? carry : 0);
-          if (inn) out[k] = r2(inn); carry = hasK(db.prijenosOut, k) ? +db.prijenosOut[k] : autoOut(ents, cur, inn, today); } });
+          if (inn) out[k] = r2(inn); carry = hasK(db.prijenosOut, k) ? manOut(uid, cur, ents) : autoOut(ents, cur, inn, today); } });
       return out;
     }
     /* do kojeg datuma radnik vidi zahtjev koji je administrator obrisao (sl: dan, go: zadnji dan, mj: kraj mjeseca, gr: 30 dana od brisanja) */
@@ -932,7 +936,7 @@
       if (t.mis.rows.length) list.push(t.mis);
       return xlsxFile(list);
     }
-    return { zhDo, mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmOdbij, nmObrisi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, buDates, fondU, buGrupa, buDelete, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alGrupe, alGrupaSave, alGrupaDelete, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
+    return { manOut, zhDo, mealFix, noMealDays, sihterice, prMap, prOutMap, stanje, prChain, VRSTE, NERAD, VRSTE_NAU, vrsteOf, nameOf, nmNazivi, nmObradi, nmOdbij, nmObrisi, nmProslijedi, nmNeobr, check, rec, summary, daily, sitesRep, rowsList, slobodni, stats, missingDays, buDates, fondU, buGrupa, buDelete, rangeDates, goDates, goStats, notify, inbox, inboxHide, inboxClean, otpKey, otpName, otpOwn, otpCheck, otpList, otpDelete, OTP_ADMIN, nmPrimatelji, nmSave, svRadnici, svSave, svZapisnik, svPregled, svDorada, svOtkazi, svSakrij, svObrisi, svView, svList, svCekaPregled, svOtvoreni, svFiles, AL_SKL, alGrupe, alGrupaSave, alGrupaDelete, alIzdKand, alIzdIds, alIzd, alSave, alDelete, alZahtjev, alZOdustani, alZOdbij, alPredaj, alPOdustani, alPrimi, alPOdbij, alPreuzmi, alList, alZList, alZnW, alZnA, alFiles, alFoto, alPrimatelji, nmList, nmDelete, nmView, canG, OTP_DANA, otpExpire, otpSite, otpSitesAll, otpSetSite, otpAsk, otpAnswer, dfmt, siteHours, siteCsv, siteXlsx, missing, report, tables, csv, xlsx, workdays, holidays, fond, weekdays, bank, pr, approval };
   }
   Core.zip = zip; Core.VRSTE = VRSTE; Core.NERAD = NERAD; Core.VRSTE_NAU = VRSTE_NAU; Core.NULA_SATI = NULA_SATI; Core.PRAZNIK_VRSTE = PRAZNIK_VRSTE; Core.workdays = workdays; Core.fond = fond; Core.bank = bank; Core.weekdays = weekdays; Core.holidays = holidays; Core.pdf = pdfDoc; Core.NM_JM = NM_JM; Core.nmDoc = nmDoc; Core.nmTotal = nmTotal; Core.nmNum = nmNum; Core.svDoc = svDoc; Core.TVRTKA = TVRTKA; Core.SV_ST = SV_ST; Core.SV_STANJE = SV_STANJE; Core.AL_SKL = 'Skladište alata'; Core.alInv = alInv;
   if (typeof module !== 'undefined' && module.exports) module.exports = Core; else root.Core = Core;
